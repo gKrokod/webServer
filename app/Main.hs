@@ -9,7 +9,6 @@ main = do
   putStrLn "132"
   putStrLn "ddd"
   let b = "Petro"
--- $> print "vovo" 
   putStrLn b
   pure ()
 
