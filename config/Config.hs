@@ -21,7 +21,7 @@ data ConfigDB = ConfigDB {
 
 --for work 
 loadConfigDB :: IO (Either String ConfigDB)
-loadConfigDB =  eitherDecode <$> L.readFile "config/db.conf"
+loadConfigDB =  eitherDecode <$> L.readFile "config/db.cfg"
 
 -- for testing
 createConfigFile :: IO ()
@@ -34,5 +34,5 @@ createConfigFile = do
     , cPassword = ""
   } 
   let configToJSON = encode testConfig :: BC.ByteString
-  L.writeFile "config/db.conf" (configToJSON)
+  L.writeFile "config/db.cfg" (configToJSON)
 
