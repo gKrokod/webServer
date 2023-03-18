@@ -1,2 +1,5 @@
+*.cfg
 .stack-work/
-*~
+.vscode
+.history
+*.db

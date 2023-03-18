@@ -1,30 +1,34 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RecordWildCards            #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE DerivingStrategies         #-}
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE DataKinds       #-}
+{-# LANGUAGE DerivingStrategies #-}
+--
+--
+-- {-# LANGUAGE MultiParamTypeClasses      #-}
+-- {-# LANGUAGE GADTs                      #-}
+-- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+-- {-# LANGUAGE RecordWildCards            #-}
+-- {-# LANGUAGE FlexibleInstances          #-}
+-- {-# LANGUAGE StandaloneDeriving         #-}
 
 module Main (main) where
 
 import Data.Text
-import Control.Monad.IO.Class
+-- import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Control.Monad.Logger 
-
 import qualified Database.Persist.TH as PTH
-import Database.Persist 
+-- import Database.Persist 
 import Database.Persist.Postgresql 
-
-connString :: ConnectionString
-connString = "host=127.0.0.1 port=5432 user= dbname= password="
+import Data.Aeson
+import GHC.Generics (Generic)
+import qualified Data.ByteString.Lazy.Char8 as BC
+import qualified Data.ByteString.Lazy as L
+import Config (loadConfigDB, ConfigDB(..))
+-- import qualified Data.ByteString.Lazy.Char8 as LC
+import qualified Data.Text.Encoding as E (encodeUtf8)
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
   User sql=users
@@ -36,34 +40,26 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     deriving Show Read
 |]
 
+sampleUser :: Entity User
+sampleUser = Entity (toSqlKey 1) $ User
+  { userName = "admin"
+  , userEmail = "admin@test.com"
+  , userAge = 23
+  , userOccupation = "System Administrator"
+  }
+  
 runAction :: ConnectionString -> SqlPersistT (LoggingT IO) a ->  IO a
 runAction connectionString action = runStdoutLoggingT $ withPostgresqlConn connectionString $ \backend ->
   runReaderT action backend
 --
-migrateDB :: IO ()
-migrateDB = runAction connString (runMigration migrateAll)
---
--- sampleUser :: Entity User
--- sampleUser = Entity (toSqlKey 1) $ User
---   { userName = "admin"
---   , userEmail = "admin@test.com"
---   , userAge = 23
---   , userOccupation = "System Administrator"
---   }
+migrateDB :: ConfigDB -> IO ()
+migrateDB cfg = runAction connectionCfg (runMigration migrateAll)
+  where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
+                                               ," port=", cPort $ cfg
+                                               , " user=", cUser $ cfg
+                                               , " dbname=", cDBname $ cfg
+                                               , " password=", cPassword $ cfg]
 
--- data User = User
---   { userName :: Text
---   , userEmail :: Text
---   , userAge :: Int
---   , userOccupation :: Text
---   }
-
--- create table users (
---    name varchar(100),
---    email varchar(100),
---    age bigint,
---    occupation varchar(100)
--- )
 
 -- selectYoungTeachers' :: (MonadIO m) => SqlPersistT m [Entity User]
 -- selectYoungTeachers' = selectList
@@ -71,10 +67,13 @@ migrateDB = runAction connString (runMigration migrateAll)
 
 main :: IO ()
 main = do
-  putStrLn "132"
-  migrateDB 
-  putStrLn "ddd"
-  let b = "Petro"
-  putStrLn b
+  Prelude.putStrLn "Main start"
+  config <- loadConfigDB
+  case config of 
+    Left decodeError -> print decodeError 
+    Right cfg -> do
+      print "Just cfg"
+      print cfg
+      migrateDB cfg
   pure ()
 

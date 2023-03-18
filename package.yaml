@@ -1,15 +1,18 @@
 name:                serverok
 version:             0.1.0.0
-github:              "githubuser/serverok"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2023 Author name here"
+github:              "gKrokod/webServer"
+license:             MIT
+author:              "gKrokod"
+maintainer:          "@ofspb"
+copyright:           "2023 gKrokod"
 
 extra-source-files:
 - README.md
 - CHANGELOG.md
 
+default-extensions:
+- OverloadedStrings
+  
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
 # category:            Web
@@ -34,7 +37,12 @@ ghc-options:
 - -Wredundant-constraints
 
 library:
-  source-dirs: src
+  source-dirs: src, config
+  dependencies:
+  - serverok
+  - aeson
+  - bytestring
+  - text
 
 executables:
   serverok-exe:
@@ -47,7 +55,7 @@ executables:
     dependencies:
     - serverok
     - aeson
-    # , bytestring
+    - bytestring
     # , esqueleto
     # , hedis
     - monad-logger
@@ -55,13 +63,13 @@ executables:
     - persistent
     - persistent-postgresql
     - persistent-template
-    - servant
-    - servant-client
-    - servant-server
+    # - servant
+    # - servant-client
+    # - servant-server
     - text
-    - time
-    - transformers
-    - warp
+    # - time
+    # - transformers
+    # - warp
 
 
 tests:

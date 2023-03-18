@@ -7,12 +7,12 @@ cabal-version: 1.12
 name:           serverok
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/serverok#readme>
-homepage:       https://github.com/githubuser/serverok#readme
-bug-reports:    https://github.com/githubuser/serverok/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2023 Author name here
-license:        BSD3
+homepage:       https://github.com/gKrokod/webServer#readme
+bug-reports:    https://github.com/gKrokod/webServer/issues
+author:         gKrokod
+maintainer:     @ofspb
+copyright:      2023 gKrokod
+license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -21,16 +21,22 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/serverok
+  location: https://github.com/gKrokod/webServer
 
 library
   other-modules:
       Paths_serverok
   hs-source-dirs:
-      src
+      src, config
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , serverok
+    , text
   default-language: Haskell2010
 
 executable serverok-exe
@@ -39,23 +45,20 @@ executable serverok-exe
       Paths_serverok
   hs-source-dirs:
       app
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
     , monad-logger
     , mtl
     , persistent
     , persistent-postgresql
     , persistent-template
-    , servant
-    , servant-client
-    , servant-server
     , serverok
     , text
-    , time
-    , transformers
-    , warp
   default-language: Haskell2010
 
 test-suite serverok-test
@@ -65,6 +68,8 @@ test-suite serverok-test
       Paths_serverok
   hs-source-dirs:
       test
+  default-extensions:
+      OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
