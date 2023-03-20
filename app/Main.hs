@@ -36,6 +36,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     email Text
     age Int
     occupation Text
+    -- test Text
     UniqueEmail email
     deriving Show Read
 |]
@@ -47,13 +48,56 @@ sampleUser = Entity (toSqlKey 1) $ User
   , userAge = 23
   , userOccupation = "System Administrator"
   }
+
+s:: User
+s=  User
+  { userName = "admin"
+  , userEmail = "admin@test.com"
+  , userAge = 23
+  , userOccupation = "System Administrator"
+  }
+
+news:: User
+news=  User
+  { userName = "mar"
+  , userEmail = "mar@test.com"
+  , userAge = 33
+  , userOccupation = "vodka"
+  }
   
 runAction :: ConnectionString -> SqlPersistT (LoggingT IO) a ->  IO a
 runAction connectionString action = runStdoutLoggingT $ withPostgresqlConn connectionString $ \backend ->
   runReaderT action backend
 --
+insertUser :: ConfigDB -> User -> IO ()
+insertUser cfg user = runAction connectionCfg $ do
+  insert user
+  liftIO $ do {print ( "insert\n"); print user}
+  where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
+                                               ," port=", cPort $ cfg
+                                               , " user=", cUser $ cfg
+                                               , " dbname=", cDBname $ cfg
+                                               , " password=", cPassword $ cfg]
+
+type Email = Text
+
+printUser :: ConfigDB -> Email -> IO ()
+printUser cfg email = runAction connectionCfg $ do
+  r <- getBy $ UniqueEmail email
+  liftIO $ print $ show r 
+  where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
+                                               ," port=", cPort $ cfg
+                                               , " user=", cUser $ cfg
+                                               , " dbname=", cDBname $ cfg
+                                               , " password=", cPassword $ cfg]
+
 migrateDB :: ConfigDB -> IO ()
-migrateDB cfg = runAction connectionCfg (runMigration migrateAll)
+migrateDB cfg = runAction connectionCfg $ do
+  (runMigration migrateAll)
+  -- insert s
+  -- r <- getBy $ UniqueEmail "admin@test.com"
+  -- liftIO $ print r 
+-- migrateDB cfg = runAction connectionCfg (runMigrationUnsafe migrateAll)
   where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
                                                ," port=", cPort $ cfg
                                                , " user=", cUser $ cfg
@@ -75,5 +119,10 @@ main = do
       print "Just cfg"
       print cfg
       migrateDB cfg
+      -- insertUser cfg s
+      -- insertUser cfg news
+      printUser cfg "wa@test.com"
+      printUser cfg "admin@test.com"
+      printUser cfg "mar@test.com"
   pure ()
 
