@@ -12,10 +12,12 @@
 -- {-# LANGUAGE RecordWildCards            #-}
 -- {-# LANGUAGE FlexibleInstances          #-}
 -- {-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Main (main) where
 
 import Data.Text
+import Language.Haskell.TH
 -- import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Control.Monad.Logger 
@@ -29,8 +31,28 @@ import qualified Data.ByteString.Lazy as L
 import Config (loadConfigDB, ConfigDB(..))
 -- import qualified Data.ByteString.Lazy.Char8 as LC
 import qualified Data.Text.Encoding as E (encodeUtf8)
+import LocalTimeTemplate
+
+-- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
+--   User sql=users
+--     name Text
+--     email Text
+--     age Int
+--     occupation Text
+--     -- test Text
+--     UniqueEmail email
+--     deriving Show Read
+-- |]
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
+  Person
+    name String
+  Store
+    name String
+  PersonStore
+    personId PersonId
+    storeId StoreId
+    UniquePersonStore personId storeId
   User sql=users
     name Text
     email Text
@@ -51,18 +73,41 @@ main = do
       print "Just cfg"
       print cfg
       migrateDB cfg
-      insertUser cfg s
-      print "Est"
-      printUser cfg "admin@test.com"
-      print "Net"
-      deleteUser cfg s
-      printUser cfg "admin@test.com"
+      let connect = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
+                                               ," port=", cPort $ cfg
+                                               , " user=", cUser $ cfg
+                                               , " dbname=", cDBname $ cfg
+                                               , " password=", cPassword $ cfg]
+      (\con -> runAction con $ do
+        -- bruce <- insert $ Person "Bruce Wayne"
+        -- michael <- insert $ Person "Michael"
+        --
+        -- target <- insert $ Store "Target"
+        -- gucci <- insert $ Store "Gucci"
+        -- sevenEleven <- insert $ Store "7-11"
+        --
+        -- insert $ PersonStore bruce gucci
+        -- insert $ PersonStore bruce sevenEleven
+        --
+        -- insert $ PersonStore michael target
+        -- insert $ PersonStore michael sevenEleven
+        pure ()
+        ) connect
+      -- insertUser cfg s
+      -- print "Est"
+      -- printUser cfg "admin@test.com"
+      -- print "Net"
+      -- deleteUser cfg s
+      -- printUser cfg "admin@test.com"
+      -- deleteUser cfg news
+      -- printUser cfg "mar@test.com"
       -- insertUser cfg news
       -- printUser cfg "wa@test.com"
       -- printUser cfg "admin@test.com"
       -- updateUser cfg s
       -- printUser cfg "admin@test.com"
       -- printUser cfg "mar@test.com"
+  putStrLn $ "LocalTime: " <> $(localtimeTemplate)
   pure ()
 
 

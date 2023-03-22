@@ -43,6 +43,9 @@ library:
   - aeson
   - bytestring
   - text
+# for template test
+  - time
+  - template-haskell
 
 executables:
   serverok-exe:
@@ -70,6 +73,7 @@ executables:
     # - time
     # - transformers
     # - warp
+    - template-haskell
 
 
 tests:
