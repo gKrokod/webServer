@@ -43,7 +43,9 @@ import LocalTimeTemplate
 --     UniqueEmail email
 --     deriving Show Read
 -- |]
-
+data Config = Config {
+  configConnect :: ConnectionString --BC.ByteString
+}
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
   Person
     name String
@@ -72,12 +74,13 @@ main = do
     Right cfg -> do
       print "Just cfg"
       print cfg
-      migrateDB cfg
-      let connect = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
-                                               ," port=", cPort $ cfg
-                                               , " user=", cUser $ cfg
-                                               , " dbname=", cDBname $ cfg
-                                               , " password=", cPassword $ cfg]
+      let configDB = Config { configConnect = E.encodeUtf8 $ 
+                              mconcat ["host=", cHost $ cfg
+                                      ," port=", cPort $ cfg
+                                      , " user=", cUser $ cfg
+                                      , " dbname=", cDBname $ cfg
+                                      , " password=", cPassword $ cfg]}
+      migrateDB configDB 
       (\con -> runAction con $ do
         -- bruce <- insert $ Person "Bruce Wayne"
         -- michael <- insert $ Person "Michael"
@@ -92,32 +95,33 @@ main = do
         -- insert $ PersonStore michael target
         -- insert $ PersonStore michael sevenEleven
         pure ()
-        ) connect
-      -- insertUser cfg s
-      -- print "Est"
-      -- printUser cfg "admin@test.com"
+        ) (configConnect configDB)
+      -- insertUser configDB s
+      print "YEEEEEEEEEEEEEESSSSSSSSSSS"
+      printUser configDB "admin@test.com"
       -- print "Net"
-      -- deleteUser cfg s
-      -- printUser cfg "admin@test.com"
-      -- deleteUser cfg news
-      -- printUser cfg "mar@test.com"
-      -- insertUser cfg news
-      -- printUser cfg "wa@test.com"
-      -- printUser cfg "admin@test.com"
-      -- updateUser cfg s
-      -- printUser cfg "admin@test.com"
-      -- printUser cfg "mar@test.com"
+      -- deleteUser configDB s
+      -- printUser configDB "admin@test.com"
+      -- deleteUser configDB news
+      printUser configDB "mar@test.com"
+      -- insertUser configDB news
+      print "NOOOOOOOOOOOOOOOOOOOOOOOOO"
+      printUser configDB "wa@test.com"
+      -- printUser configDB "admin@test.com"
+      -- updateUser configDB s
+      -- printUser configDB "admin@test.com"
+      -- printUser configDB "mar@test.com"
   putStrLn $ "LocalTime: " <> $(localtimeTemplate)
   pure ()
 
 
-sampleUser :: Entity User
-sampleUser = Entity (toSqlKey 1) $ User
-  { userName = "admin"
-  , userEmail = "admin@test.com"
-  , userAge = 23
-  , userOccupation = "System Administrator"
-  }
+-- sampleUser :: Entity User
+-- sampleUser = Entity (toSqlKey 1) $ User
+--   { userName = "admin"
+--   , userEmail = "admin@test.com"
+--   , userAge = 23
+--   , userOccupation = "System Administrator"
+--   }
 
 s:: User
 s=  User
@@ -139,25 +143,16 @@ runAction :: ConnectionString -> SqlPersistT (LoggingT IO) a ->  IO a
 runAction connectionString action = runStdoutLoggingT $ withPostgresqlConn connectionString $ \backend ->
   runReaderT action backend
 --
-insertUser :: ConfigDB -> User -> IO ()
-insertUser cfg user = runAction connectionCfg $ do
+insertUser :: Config -> User -> IO ()
+insertUser cfg user = runAction (configConnect cfg) $ do
   insert user
   liftIO $ do {print ( "insert\n"); print user}
-  where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
-                                               ," port=", cPort $ cfg
-                                               , " user=", cUser $ cfg
-                                               , " dbname=", cDBname $ cfg
-                                               , " password=", cPassword $ cfg]
 
-deleteUser :: ConfigDB -> User -> IO ()
-deleteUser cfg user = runAction connectionCfg $ do
+deleteUser :: Config -> User -> IO ()
+deleteUser cfg user = runAction (configConnect cfg) $ do
   deleteBy $ UniqueEmail (userEmail user)
   liftIO $ do {print ( "delete\n"); print user}
-  where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
-                                               ," port=", cPort $ cfg
-                                               , " user=", cUser $ cfg
-                                               , " dbname=", cDBname $ cfg
-                                               , " password=", cPassword $ cfg]
+
 -- updateUser :: ConfigDB -> User -> IO ()
 -- updateUser cfg user = runAction connectionCfg $ do
 --   -- pid <- insert user
@@ -165,36 +160,23 @@ deleteUser cfg user = runAction connectionCfg $ do
 --   pid <- selectKeys [UserAge <. 20] []
 --   -- update pid [UserAge =. 5]
 --   liftIO $ do {print ( "insert\n"); print user}
---   where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
---                                                ," port=", cPort $ cfg
---                                                , " user=", cUser $ cfg
---                                                , " dbname=", cDBname $ cfg
---                                                , " password=", cPassword $ cfg]
+
 type Email = Text
 
-printUser :: ConfigDB -> Email -> IO ()
-printUser cfg email = runAction connectionCfg $ do
+
+printUser :: Config -> Email -> IO ()
+printUser cfg email = runAction (configConnect cfg) $ do
   r <- getBy $ UniqueEmail email
   -- r <- selectList [UserAge <. 30] []
   liftIO $ print $ r 
-  where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
-                                               ," port=", cPort $ cfg
-                                               , " user=", cUser $ cfg
-                                               , " dbname=", cDBname $ cfg
-                                               , " password=", cPassword $ cfg]
 
-migrateDB :: ConfigDB -> IO ()
-migrateDB cfg = runAction connectionCfg $ do
+migrateDB :: Config -> IO ()
+migrateDB cfg = runAction (configConnect cfg) $ do
   (runMigration migrateAll)
   -- insert s
   -- r <- getBy $ UniqueEmail "admin@test.com"
   -- liftIO $ print r 
 -- migrateDB cfg = runAction connectionCfg (runMigrationUnsafe migrateAll)
-  where connectionCfg = E.encodeUtf8 $ mconcat ["host=", cHost $ cfg
-                                               ," port=", cPort $ cfg
-                                               , " user=", cUser $ cfg
-                                               , " dbname=", cDBname $ cfg
-                                               , " password=", cPassword $ cfg]
 
 
 -- selectYoungTeachers' :: (MonadIO m) => SqlPersistT m [Entity User]
