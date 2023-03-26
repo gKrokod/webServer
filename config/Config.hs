@@ -1,7 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Config (loadConfigDB, ConfigDB(..)) where
+module Config ( loadConfigDB, ConfigDB(..)) where
 
 import qualified Data.Text as T
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))

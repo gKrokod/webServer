@@ -2,11 +2,12 @@ module Handlers.Base where
 
 data Handle m = Handle
   { 
-  , updateUser :: User -> m ()
-  , createUser :: User -> m ()
+    updateUser :: User -> m ()
+  , createUser :: User -> m (Key User)
   , deleteUser :: User -> m ()
-  , readUser :: Key -> m (Maybe User)
+  , readUser :: Key User -> m (Maybe User)
   }
 
-data Key
+data Key a
+data User
    
