@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="1" id="Project-1f6a" database="LogicalDesign" >
+	<schema name="INSTANCE" catalogname="1" >
+		<table name="category" prior="Category" >
+			<column name="category_id" type="INT" jt="4" mandatory="y" >
+				<comment><![CDATA[Категории (могут быть вложенными, то есть одна категория является подкатегорией для другой).
+
+  Допустим, есть категория "Языки программирования", и у нее может быть подкатегория "Динамически Типизированные ЯП", и далее, соответственно, подкатегория подкатегории "Python" — и таких уровней вложенности может быть произвольное количество.]]></comment>
+			</column>
+			<column name="category_language" type="TEXT" jt="-1" mandatory="y" />
+			<column name="category_flowers" type="TEXT" jt="-1" />
+			<index name="pk_category" unique="NORMAL" >
+				<column name="category_id" />
+				<column name="category_language" />
+			</index>
+			<index name="pk_category_0" unique="PRIMARY_KEY" >
+				<column name="category_id" />
+			</index>
+			<fk name="fk_category_language" virtual="y" to_schema="1.INSTANCE" to_table="language" type="Identifying" mandatory="y" cardinality="ZeroMore" range_from="0" range_to="0" >
+				<fk_column name="category_language" pk="language_id" />
+			</fk>
+		</table>
+		<table name="language" prior="Entity" >
+			<comment><![CDATA[под категория языков программирования]]></comment>
+			<column name="language_id" type="INT" jt="4" mandatory="y" />
+			<column name="language_dynamic" type="TEXT" jt="-1" />
+			<column name="language_static" type="TEXT" jt="-1" />
+			<index name="pk_language" unique="PRIMARY_KEY" >
+				<column name="language_id" />
+			</index>
+		</table>
+		<table name="news" prior="News" >
+			<comment><![CDATA[1. Новости
+  * Краткое название
+  * Дата создания
+  * Один пользователь (создатель)
+  * Одна категория
+  * Текстовый контент
+  * Любое количество фотографий, от нуля
+  * Опубликована ли новость (булева переменная).]]></comment>
+			<column name="news_id" type="INT" jt="4" mandatory="y" />
+			<column name="news_short_title" type="TEXT" jt="-1" />
+			<column name="news_full_title" type="TEXT" jt="-1" />
+			<column name="user_id" type="INT" jt="4" mandatory="y" />
+			<column name="news_data_created" type="DATE" jt="91" />
+			<column name="category_id" type="INT" jt="4" mandatory="y" />
+			<column name="news_photos" type="TEXT" jt="-1" />
+			<column name="news_publish" type="BOOLEAN" jt="-7" />
+			<index name="pk_News" unique="PRIMARY_KEY" >
+				<column name="news_id" />
+				<column name="user_id" />
+				<column name="category_id" />
+			</index>
+			<fk name="fk_news_user" virtual="y" to_schema="1.INSTANCE" to_table="user" type="Identifying" mandatory="y" cardinality="OneMore" range_from="0" range_to="0" >
+				<fk_column name="user_id" pk="user_id" />
+			</fk>
+			<fk name="fk_news_category" virtual="y" to_schema="1.INSTANCE" to_table="category" type="Identifying" mandatory="y" cardinality="ZeroMore" range_from="0" range_to="0" >
+				<fk_column name="category_id" pk="category_id" />
+			</fk>
+		</table>
+		<table name="user" prior="User" >
+			<comment><![CDATA[* Имя
+  * Логин
+  * Пароль
+  * Дата создания
+  * Админ (булевая переменная)
+  * Может ли создавать новости (булева переменная)]]></comment>
+			<column name="user_id" type="INT" jt="4" mandatory="y" />
+			<column name="user_login" type="TEXT" jt="-1" mandatory="y" />
+			<column name="user_password" type="INT" jt="4" mandatory="y" />
+			<column name="user_date_created" type="DATE" jt="91" />
+			<column name="user_admin" type="BOOLEAN" jt="-7" />
+			<column name="user_news" type="BOOLEAN" jt="-7" />
+			<index name="pk_Entity" unique="PRIMARY_KEY" >
+				<column name="user_id" />
+			</index>
+		</table>
+	</schema>
+	<layout name="Default Layout" id="Layout-1d5e" show_relation="columns" >
+		<entity schema="1.INSTANCE" name="category" color="C1D8EE" x="480" y="688" />
+		<entity schema="1.INSTANCE" name="language" color="C1D8EE" x="480" y="912" />
+		<entity schema="1.INSTANCE" name="news" color="C1D8EE" x="352" y="320" />
+		<entity schema="1.INSTANCE" name="user" color="C1D8EE" x="80" y="656" />
+		<callout x="48" y="48" pointer="Round" >
+			<comment><![CDATA[This is a layout - a diagram with tools.
+- Create new entities by right-clicking the layout. 
+- Double-click entity headers to edit.
+- For a better understanding of the schema, create multiple layouts.
+- Deploy the model into the database by converting it first to the physical design.]]></comment>
+		</callout>
+	</layout>
+</project>
