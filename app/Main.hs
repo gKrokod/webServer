@@ -32,7 +32,7 @@ import qualified Data.Text.Encoding as E (encodeUtf8)
 import LocalTimeTemplate
 
 import Base.BasicSchema
-import Base.Base (Config(..), migrateDB, runAction, createUser, readUser, deleteUser)
+import Base.Base-- (Config(..), migrateDB, runAction, createUser, readUser, deleteUser)
 
 
 main :: IO ()
@@ -42,32 +42,35 @@ main = do
   case config of 
     Left decodeError -> print decodeError 
     Right cfg -> do
-      print "Just cfg"
-      print cfg
+      print "Config DataBase is loaded"
+      -- print cfg
       let configDB = Config { configConnect = E.encodeUtf8 $ 
                               mconcat ["host=", cHost $ cfg
                                       ," port=", cPort $ cfg
                                       , " user=", cUser $ cfg
                                       , " dbname=", cDBname $ cfg
                                       , " password=", cPassword $ cfg]}
-      let pGinfo = configConnect configDB
-      -- create tables
-      migrateDB pGinfo
-      -- insert users
-      u1 <- createUser pGinfo user1
-      u2 <- createUser pGinfo user2
-      print "YEEEEEEEEEEEEEESSSSSSSSSSS"
-      -- read user
-      r1 <- readUser pGinfo u1
-      print r1
-      print "NOOOOOOOOOOOOOOOOOOOOOOOOO"
-      deleteUser pGinfo u1
-      r1 <- readUser pGinfo u1
-      print r1
-  putStrLn $ "LocalTime: " <> $(localtimeTemplate)
+      -- do logic
+      logic (configConnect configDB)      
   pure ()
 
 
+
+logic :: ConnectionString -> IO ()
+logic pginfo = do
+  migrateDB pginfo
+  -- insert users
+  -- u1 <- createUser pginfo user1
+  -- u2 <- createUser pginfo user2
+  print "YEEEEEEEEEEEEEESSSSSSSSSSS"
+  -- read user
+  -- r1 <- readUser pginfo u1
+  -- print r1
+  print "NOOOOOOOOOOOOOOOOOOOOOOOOO"
+  -- deleteUser pginfo u1
+  -- r1 <- readUser pginfo u1
+  -- print r1
+  putStrLn $ "LocalTime: " <> $(localtimeTemplate)
 
 
 

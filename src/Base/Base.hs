@@ -22,7 +22,7 @@ runAction connectionString action =
 
 migrateDB :: ConnectionString -> IO ()
 migrateDB connString = runAction connString (runMigration migrateAll)
-
+{--
 createUser :: ConnectionString -> User -> IO Int64
 createUser connString user = fromSqlKey <$> runAction connString (insert user)
 
@@ -34,6 +34,7 @@ deleteUser connString uid = runAction connString (delete userKey)
   where
     userKey :: Key User
     userKey = toSqlKey uid
+    --}
 {--
 -- selectYoungTeachers' :: (MonadIO m) => SqlPersistT m [Entity User]
 -- selectYoungTeachers' = selectList

@@ -18,28 +18,42 @@
 {-# LANGUAGE DataKinds       #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
+--
+-- for ToJSON and FromJSON
+-- {-# LANGUAGE DerivingStrategies #-}
+-- {-# LANGUAGE DeriveAnyClass #-}
+--
+--
+-- for json with Persist
+{-# LANGUAGE FlexibleInstances #-}
 
 module Base.BasicSchema where
-
 import           Data.Aeson
 import           Data.Aeson.Types
 import           Database.Persist (Entity(..), Entity)
 import qualified Database.Persist.TH as PTH
 import           Data.Text (Text)
+-- import GHC.Generics (Generic)
 -- import           Database.Persist.Postgresql (
 
 -- import           Database.Persist.Sql
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
-  Person
+  Person json
     name String
-  Store
+    deriving Show Read 
+    -- deriving ToJSON FromJSON
+  Store json
     name String
-  PersonStore
+    deriving Show Read
+    -- deriving ToJSON FromJSON
+  PersonStore json
     personId PersonId
     storeId StoreId
     UniquePersonStore personId storeId
-  User sql=users
+    deriving Show Read
+    -- deriving ToJSON FromJSON
+  User json sql=users
     name Text
     email Text
     age Int
@@ -47,6 +61,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     -- test Text
     UniqueEmail email
     deriving Show Read
+    -- deriving ToJSON FromJSON
 |]
 
 -- sampleUser :: Entity User
