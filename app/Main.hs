@@ -55,21 +55,12 @@ main = do
   pure ()
 
 
-
 logic :: ConnectionString -> IO ()
 logic pginfo = do
   migrateDB pginfo
-  -- insert users
-  -- u1 <- createUser pginfo user1
-  -- u2 <- createUser pginfo user2
-  print "YEEEEEEEEEEEEEESSSSSSSSSSS"
-  -- read user
-  -- r1 <- readUser pginfo u1
-  -- print r1
-  print "NOOOOOOOOOOOOOOOOOOOOOOOOO"
-  -- deleteUser pginfo u1
-  -- r1 <- readUser pginfo u1
-  -- print r1
+  insertUsers pginfo
+  -- deleteUsers pginfo
+  --
   putStrLn $ "LocalTime: " <> $(localtimeTemplate)
 
 

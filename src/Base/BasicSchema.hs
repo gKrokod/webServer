@@ -26,6 +26,7 @@
 --
 -- for json with Persist
 {-# LANGUAGE FlexibleInstances #-}
+-- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Base.BasicSchema where
 import           Data.Aeson
@@ -39,26 +40,38 @@ import           Data.Text (Text)
 -- import           Database.Persist.Sql
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
-  Person json
-    name String
-    deriving Show Read 
-    -- deriving ToJSON FromJSON
-  Store json
-    name String
+  News json
+    short_title Text
+    full_title Text
+    data_created Text
+    photos [Text]
+    publish Bool
+    chelId ChelId
+    categoryId CategoryId
+    UniqueFTitle full_title
+    UniqueSTitle short_title
     deriving Show Read
-    -- deriving ToJSON FromJSON
-  PersonStore json
-    personId PersonId
-    storeId StoreId
-    UniquePersonStore personId storeId
+  Chel json
+    login Text
+    password Text
+    data_created Text
+    admin Bool
+    news Bool
+    UniqueLogin login
     deriving Show Read
-    -- deriving ToJSON FromJSON
+  Category json
+    language Text
+    flowers Text
+    deriving Show Read
+  -- Person json
+  --   name String
+  --   deriving Show Read 
+  --   -- deriving ToJSON FromJSON
   User json sql=users
     name Text
     email Text
     age Int
     occupation Text
-    -- test Text
     UniqueEmail email
     deriving Show Read
     -- deriving ToJSON FromJSON
@@ -72,28 +85,24 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
 --   , userOccupation = "System Administrator"
 --   }
 
-user1:: User
-user1 =  User
-  { userName = "User1"
-  , userEmail = "User1@test.com"
-  , userAge = 11
-  , userOccupation = "System Administrator"
-  }
 
-user2:: User
-user2=  User
-  { userName = "User2"
-  , userEmail = "User2@test.com"
-  , userAge = 22
-  , userOccupation = "Byhgalter"
-  }
-user3:: User
-user3=  User
-  { userName = "User3"
-  , userEmail = "User3@test.com"
-  , userAge = 33
-  , userOccupation = "Rabotyaga"
-  }
+data Item = N (News) | U (User) | C (Chel) | Ca (Category)
+
+-- news1 :: News
+-- news1 = News { newsShort_title = "shortN1", newsFull_title = "fullN1", newsData_created = "151515", newsPhotos = ["photo1", "photo2"], newsPublish = True }--P, newsChelId = undefined :: ChelId, newsCategoryId = undefined }
+
+cat1 :: Category
+cat1 = Category { categoryLanguage = "Haskell", categoryFlowers = "rose"}
+
+chel1 :: Chel
+chel1 = Chel {chelLogin = "chel1" , chelPassword = "pass1", chelData_created = "280323", chelAdmin = True, chelNews = True}
+chel2 = Chel {chelLogin = "chel2" , chelPassword = "pass2", chelData_created = "280323", chelAdmin = False, chelNews = False}
+chel3 = Chel {chelLogin = "chel3" , chelPassword = "pass3", chelData_created = "280323", chelAdmin = False, chelNews = False}
+
+user1:: User
+user1 =  User { userName = "User1", userEmail = "User1@test.com" , userAge = 11 , userOccupation = "System Administrator" }
+user2=  User { userName = "User2" , userEmail = "User2@test.com" , userAge = 22 , userOccupation = "Byhgalter" }
+user3=  User { userName = "User3" , userEmail = "User3@test.com" , userAge = 33 , userOccupation = "Rabotyaga"  }
   
 -- instance ToJSON User where
 --   toJSON user = object 

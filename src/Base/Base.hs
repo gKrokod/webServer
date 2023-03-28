@@ -14,6 +14,10 @@ data Config = Config {
   configConnect :: ConnectionString --BC.ByteString
 }
 
+-- data Tom = Tom Int
+-- data Pom
+-- data Ob = Tom | Pom
+
 runAction :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
 runAction connectionString action = 
   runStdoutLoggingT $ withPostgresqlConn connectionString $ \backend ->
@@ -22,19 +26,37 @@ runAction connectionString action =
 
 migrateDB :: ConnectionString -> IO ()
 migrateDB connString = runAction connString (runMigration migrateAll)
-{--
-createUser :: ConnectionString -> User -> IO Int64
-createUser connString user = fromSqlKey <$> runAction connString (insert user)
+
+createUser :: ConnectionString -> Item -> IO Int64
+createUser connString (U user) = fromSqlKey <$> runAction connString (insert user)
+createUser connString (C chel) = fromSqlKey <$> runAction connString (insert chel)
+createUser connString (Ca cat) = fromSqlKey <$> runAction connString (insert cat)
+createUser connString (N news) = fromSqlKey <$> runAction connString (insert news)
 
 readUser :: ConnectionString -> Int64 -> IO (Maybe User)
 readUser connString uid = runAction connString (get (toSqlKey uid))
 
-deleteUser :: ConnectionString -> Int64 -> IO ()
-deleteUser connString uid = runAction connString (delete userKey)
+deleteUserKey :: ConnectionString -> Int64 -> IO ()
+deleteUserKey connString uid = runAction connString (delete userKey)
   where
     userKey :: Key User
     userKey = toSqlKey uid
-    --}
+
+deleteUser :: ConnectionString -> User -> IO ()
+deleteUser connString user = runAction connString $ do
+  deleteBy $ UniqueEmail (userEmail user)
+
+insertUsers :: ConnectionString -> IO ()
+insertUsers pginfo = do
+  mapM_ (createUser pginfo) (map U [user1, user2, user3]  )
+  mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
+  mapM_ (createUser pginfo) (map Ca [cat1]  )
+  -- mapM_ (createUser pginfo) (map N [news1]  ) не понимаю, как заполнять форен ки
+
+deleteUsers :: ConnectionString -> IO ()
+deleteUsers pginfo = do
+  mapM_ (deleteUser pginfo) [user1, user2, user3]  
+  
 {--
 -- selectYoungTeachers' :: (MonadIO m) => SqlPersistT m [Entity User]
 -- selectYoungTeachers' = selectList
