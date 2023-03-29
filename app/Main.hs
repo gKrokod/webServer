@@ -58,7 +58,18 @@ main = do
 logic :: ConnectionString -> IO ()
 logic pginfo = do
   migrateDB pginfo
-  insertUsers pginfo
+  insertCatTr pginfo
+  -- insertCat pginfo
+  -- a <- fetchCat pginfo 
+  -- case a of
+  --   Nothing -> undefined
+  --   Just x -> do
+  --     print $ categoryName x !! 0
+  -- print a
+  -- a <- fetchUser pginfo
+  -- print a
+  -- printCat  pginfo (Ca cat1)
+  -- insertUsers pginfo
   -- deleteUsers pginfo
   --
   putStrLn $ "LocalTime: " <> $(localtimeTemplate)

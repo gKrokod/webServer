@@ -43,6 +43,7 @@ library:
   - aeson
   - bytestring
   - text
+  - containers
 # for template test
   - time
   - template-haskell

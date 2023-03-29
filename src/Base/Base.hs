@@ -3,6 +3,7 @@ module Base.Base where
 import qualified Handlers.Base
 import Base.BasicSchema
 import           Control.Monad.Logger --
+import Control.Monad.Reader
 import           Control.Monad.Reader (runReaderT)
 -- -- import           Control.Monad.IO.Class (MonadIO)
 import           Data.Int (Int64)
@@ -49,14 +50,33 @@ deleteUser connString user = runAction connString $ do
 insertUsers :: ConnectionString -> IO ()
 insertUsers pginfo = do
   mapM_ (createUser pginfo) (map U [user1, user2, user3]  )
-  mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
+  -- mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
   mapM_ (createUser pginfo) (map Ca [cat1]  )
   -- mapM_ (createUser pginfo) (map N [news1]  ) не понимаю, как заполнять форен ки
 
+insertCat :: ConnectionString -> IO ()
+insertCat pginfo = createUser pginfo (Ca cat1) >> pure ()
+
+insertCatTr :: ConnectionString -> IO ()
+insertCatTr pginfo = runAction pginfo $ do
+  insert catTr
+  pure ()
+-- insertUser cfg user = runAction (configConnect cfg) $ do
+--   insert user
+--   liftIO $ do {print ( "insert\n"); print user}
+--   kkk
 deleteUsers :: ConnectionString -> IO ()
 deleteUsers pginfo = do
   mapM_ (deleteUser pginfo) [user1, user2, user3]  
   
+fetchUser :: ConnectionString -> IO (Maybe User)
+fetchUser pginfo = runAction pginfo $ do
+  -- getBy $ UniqueName (categoryName ct)
+  get (toSqlKey 1) 
+
+fetchCat :: ConnectionString -> IO (Maybe Category)
+fetchCat pginfo = runAction pginfo $ do
+  get (toSqlKey 1) 
 {--
 -- selectYoungTeachers' :: (MonadIO m) => SqlPersistT m [Entity User]
 -- selectYoungTeachers' = selectList
