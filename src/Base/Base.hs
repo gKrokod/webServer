@@ -2,14 +2,16 @@ module Base.Base where
 
 import qualified Handlers.Base
 import Base.BasicSchema
-import           Control.Monad.Logger --
+import Base.TestEntity
+import Control.Monad.Logger --
 import Control.Monad.Reader
-import           Control.Monad.Reader (runReaderT)
+import Control.Monad.Reader (runReaderT)
 -- -- import           Control.Monad.IO.Class (MonadIO)
-import           Data.Int (Int64)
-import           Database.Persist
-import           Database.Persist.Postgresql
+import Data.Int (Int64)
+import Database.Persist
+import Database.Persist.Postgresql
 -- import           Database.Persist.Sql
+-- i
 
 data Config = Config {
   configConnect :: ConnectionString --BC.ByteString
@@ -59,7 +61,8 @@ insertCat pginfo = createUser pginfo (Ca cat1) >> pure ()
 
 insertCatTr :: ConnectionString -> IO ()
 insertCatTr pginfo = runAction pginfo $ do
-  insert catTr
+  a <- insert catTr1
+  -- a <- insert catTr -- for Rose
   pure ()
 -- insertUser cfg user = runAction (configConnect cfg) $ do
 --   insert user
@@ -76,6 +79,14 @@ fetchUser pginfo = runAction pginfo $ do
 
 fetchCat :: ConnectionString -> IO (Maybe Category)
 fetchCat pginfo = runAction pginfo $ do
+  get (toSqlKey 1) 
+
+fetchTree :: ConnectionString -> IO (Maybe CategoryDictionary)
+fetchTree pginfo = runAction pginfo $ do
+  get (toSqlKey 1) 
+
+fetchNews :: ConnectionString -> IO (Maybe News)
+fetchNews pginfo = runAction pginfo $ do
   get (toSqlKey 1) 
 {--
 -- selectYoungTeachers' :: (MonadIO m) => SqlPersistT m [Entity User]

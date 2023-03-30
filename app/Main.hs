@@ -16,7 +16,7 @@
 
 module Main (main) where
 
-import Data.Text
+import qualified Data.Text as T
 import Language.Haskell.TH
 import Control.Monad.Reader
 import Control.Monad.Logger 
@@ -33,6 +33,8 @@ import LocalTimeTemplate
 
 import Base.BasicSchema
 import Base.Base-- (Config(..), migrateDB, runAction, createUser, readUser, deleteUser)
+import Base.TestEntity
+import Data.Tree
 
 
 main :: IO ()
@@ -58,20 +60,24 @@ main = do
 logic :: ConnectionString -> IO ()
 logic pginfo = do
   migrateDB pginfo
-  insertCatTr pginfo
   -- insertCat pginfo
-  -- a <- fetchCat pginfo 
-  -- case a of
-  --   Nothing -> undefined
-  --   Just x -> do
-  --     print $ categoryName x !! 0
-  -- print a
-  -- a <- fetchUser pginfo
-  -- print a
-  -- printCat  pginfo (Ca cat1)
-  -- insertUsers pginfo
-  -- deleteUsers pginfo
-  --
+  insertCatTr pginfo
+  n1 <- news1
+  n <- createUser pginfo (N n1)
+  n2 <- fetchNews pginfo
+  a <- fetchTree pginfo 
+  case a of
+    Nothing -> print a--liftIO $ undefined 
+    Just x -> do
+      print "Just"
+      putStr $ drawTree $ fmap (show . T.unpack) $ categoryDictionaryTree x
+      -- print x 
+  case n2 of
+    Nothing -> print n2
+    Just x -> do
+      print "just News"
+      print x
+  pure ()
   putStrLn $ "LocalTime: " <> $(localtimeTemplate)
 
 

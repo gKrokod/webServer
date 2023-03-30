@@ -28,6 +28,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+-- {-# LANGUAGE StandaloneDeriving #-}
+
 module Base.BasicSchema where
 import           Data.Aeson
 import           Data.Aeson.Types
@@ -49,8 +51,6 @@ import qualified Data.ByteString.Char8 as BC
 import Data.Tree
 import qualified Data.Text.Encoding as E 
 import GHC.Generics (Generic)
--- newtype Rose a = Tree a deriving (ToJSON, FromJSON)
--- type Rose = Tree T.Text
 
 -- a :: Rose
 -- a = Node ("hi":: T.Text) []
@@ -58,57 +58,36 @@ import GHC.Generics (Generic)
 --         rootLabel :: a,         -- ^ label value
 --         subForest :: [Tree a]   -- ^ zero or more child trees
 --     }
-a :: Tree T.Text
-a = Node "hi" [Node "a" [], Node "b" []]
-
-newtype Rose = Rose { unRose :: Tree T.Text }
+-- for Categore Dictionary
+type Rose = Tree T.Text
+instance PersistField Rose where
+  toPersistValue = PersistByteString . BC.toStrict . encode
+  fromPersistValue (PersistByteString t) = maybe (Left "Can't Decode PersistByteString to Tree") Right $ decode $ BC.fromStrict t
+  fromPersistValue x = Left $ "\n" <> T.pack (show x)
+instance PS.PersistFieldSql Rose where
+  sqlType _ = SqlBlob
+-- for COntent-TYpe + Image
+data Image a = Image { imageHeader :: a, imageContent :: a } 
   deriving stock (Eq, Show, Generic, Read)
   deriving anyclass (ToJSON, FromJSON)
+type Photo = Image T.Text 
 
-instance PersistField Rose where
-  toPersistValue (Rose x) = (PersistByteString . BC.toStrict . encode) x  -- храним json дерева
-  fromPersistValue (PersistByteString t) = maybe (Left "error") (Right . Rose ) $ decode $ BC.fromStrict t
-
--- instance PersistField Rose where
---   toPersistValue (Rose x) = (PersistText . E.decodeUtf8 . BC.toStrict . encode) x  -- храним json дерева
---   fromPersistValue (PersistText t) =maybe (Left "errorParsePersist") (\x -> Right $ Rose x) $ decode $ BC.fromStrict $ E.encodeUtf8 t
---
-instance PS.PersistFieldSql Rose where
-  sqlType _ = SqlString
-  
--- instance PersistField (Tree T.Text) where
---   toPersistValue = PersistText . E.decodeUtf8 . BC.toStrict . encode  -- храним json дерева
---   fromPersistValue (PersistText t) = helper $ eitherDecode $ BC.fromStrict $ E.encodeUtf8 t  -- :: Either String (Tree T.Text) 
---     where helper :: Either String a -> Either T.Text a
---           helper (Left xs) = Left $ T.pack xs 
---           helper (Right xs) = Right xs
---   fromPersistValue _ = Left "privet"
-
--- instance PS.PersistFieldSql (Tree T.Text) where
---   sqlType _ = SqlOther " " 
-
--- printE :: Either T.Text Rose -> IO ()
--- printE (Left x) = print x 
--- printE (Right (Rose x)) = print x
---
-dRose :: Either T.Text Rose -> Tree T.Text
-dRose (Left x) = Node x []
-dRose (Right x) = unRose x
-
-a1 = Rose a
-b = toPersistValue a1
-c = fromPersistValue b :: Either T.Text Rose
+instance PersistField Photo where
+  toPersistValue = PersistByteString . BC.toStrict . encode
+  fromPersistValue (PersistByteString t) = maybe (Left "Can't Decode PersistByteString to Photo") Right $ decode $ BC.fromStrict t
+  fromPersistValue x = Left $ "\n" <> T.pack (show x)
+instance PS.PersistFieldSql Photo where
+  sqlType _ = SqlBlob
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
   News json
     title T.Text
-    content T.Text
+    text_content T.Text
     data_created Day
--- today <- localDay <$> zonedTimeToLocalTime <$> getZonedTime   :: IO Day
-    photos [T.Text]
+    photo_content [Photo]
     publish Bool
-    chelId ChelId
-    categoryId CategoryId
+    -- chelId ChelId
+    -- categoryId CategoryId
     UniqueTitle title
     deriving Show Read
   Chel json
@@ -123,8 +102,8 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     name [T.Text]
     UniqueName name
     deriving Show Read
-  CategoryTree json
-    tree Rose --T.Text --Rose --T.Text --Rose 
+  CategoryDictionary json
+    tree Rose
     deriving Show Read
   User json sql=users
     name T.Text
@@ -136,36 +115,4 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     -- deriving ToJSON FromJSON
 |]
 
--- aa :: Rose 
--- aa = Node "hi" [] 
-
--- sampleUser :: Entity User
--- sampleUser = Entity (toSqlKey 1) $ User
---   { userName = "admin"
---   , userEmail = "admin@test.com"
---   , userAge = 23
---   , userOccupation = "System Administrator"
---   }
-
-
-data Item = N (News) | U (User) | C (Chel) | Ca (Category)
-
--- news1 :: News
--- news1 = News { newsShort_title = "shortN1", newsFull_title = "fullN1", newsData_created = "151515", newsPhotos = ["photo1", "photo2"], newsPublish = True }--P, newsChelId = undefined :: ChelId, newsCategoryId = undefined }
-catTr :: CategoryTree
-catTr = CategoryTree { categoryTreeTree = a1 }
-
-cat1 :: Category
-cat1 = Category { categoryName = ["c1","c2","c3"] }
-cat2 = Category { categoryName = ["c22","c22","c23"] }
-
-chel1 :: Chel
-chel1 = Chel {chelLogin = "chel1" , chelPassword = "pass1", chelData_created = "280323", chelAdmin = True, chelNews = True}
-chel2 = Chel {chelLogin = "chel2" , chelPassword = "pass2", chelData_created = "280323", chelAdmin = False, chelNews = False}
-chel3 = Chel {chelLogin = "chel3" , chelPassword = "pass3", chelData_created = "280323", chelAdmin = False, chelNews = False}
-
-user1:: User
-user1 =  User { userName = "User1", userEmail = "User1@test.com" , userAge = 11 , userOccupation = "System Administrator" }
-user2=  User { userName = "User2" , userEmail = "User2@test.com" , userAge = 22 , userOccupation = "Byhgalter" }
-user3=  User { userName = "User3" , userEmail = "User3@test.com" , userAge = 33 , userOccupation = "Rabotyaga"  }
   
