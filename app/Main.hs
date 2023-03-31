@@ -36,6 +36,7 @@ import Base.Base-- (Config(..), migrateDB, runAction, createUser, readUser, dele
 import Base.TestEntity
 import Data.Tree
 import Data.Time.Calendar
+import Base.Category
 
 
 main :: IO ()
