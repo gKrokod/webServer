@@ -1,16 +1,3 @@
--- {-# LANGUAGE TemplateHaskell            #-}
--- {-# LANGUAGE QuasiQuotes                #-}
--- {-# LANGUAGE TypeFamilies               #-}
--- {-# LANGUAGE MultiParamTypeClasses      #-}
--- {-# LANGUAGE GADTs                      #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
--- {-# LANGUAGE RecordWildCards            #-}
--- {-# LANGUAGE FlexibleInstances          #-}
--- {-# LANGUAGE OverloadedStrings          #-}
--- {-# LANGUAGE DerivingStrategies         #-}
--- {-# LANGUAGE StandaloneDeriving         #-}
--- {-# LANGUAGE UndecidableInstances       #-}
---
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -18,22 +5,18 @@
 {-# LANGUAGE DataKinds       #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
---
 -- for ToJSON and FromJSON
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveAnyClass #-}
---
---
 -- for json with Persist
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 -- {-# LANGUAGE StandaloneDeriving #-}
 
 module Base.BasicSchema where
-import           Data.Aeson
-import           Data.Aeson.Types
-import           Database.Persist 
+import Data.Aeson
+import Data.Aeson.Types
+import Database.Persist 
 
 import qualified Database.Persist.TH as PTH
 import qualified Database.Persist.Sql as PS
@@ -41,23 +24,18 @@ import qualified Data.Text as T
 import Data.Time.Calendar
 -- import qualified Data.ByteString.Lazy.Char8 as BC
 -- import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString as B
+-- import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
--- import GHC.Generics (Generic)
--- import           Database.Persist.Postgresql (
-
--- import           Database.Persist.Sql
 
 import Data.Tree
-import qualified Data.Text.Encoding as E 
+-- import qualified Data.Text.Encoding as E 
 import GHC.Generics (Generic)
 
--- a :: Rose
--- a = Node ("hi":: T.Text) []
 -- data Tree a = Node {
 --         rootLabel :: a,         -- ^ label value
 --         subForest :: [Tree a]   -- ^ zero or more child trees
 --     }
+
 -- for Categore Dictionary
 type Rose = Tree T.Text
 instance PersistField Rose where
@@ -79,10 +57,16 @@ instance PersistField Photo where
 instance PS.PersistFieldSql Photo where
   sqlType _ = SqlBlob
 
+type Login  = T.Text
+type Password = T.Text
+type Title = T.Text
+type TextContent = T.Text
+type Name = T.Text
+
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
   News json
-    title T.Text
-    text_content T.Text
+    title Title 
+    text_content TextContent
     data_created Day
     photo_content [Photo]
     publish Bool
@@ -91,22 +75,23 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     UniqueTitle title
     deriving Show Read
   Chel json
-    login T.Text
-    password T.Text
-    data_created T.Text
-    admin Bool
-    news Bool
+    login Login 
+    password Password
+    data_created Day 
+    isAdmin Bool
+    isPublisher Bool
     UniqueLogin login
     deriving Show Read
   Category json
-    name [T.Text]
+    name Name 
+    -- categoryDictionaryId CategoryDictionaryId
     UniqueName name
     deriving Show Read
   CategoryDictionary json
     tree Rose
     deriving Show Read
   User json sql=users
-    name T.Text
+    name Name 
     email T.Text
     age Int
     occupation T.Text

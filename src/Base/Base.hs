@@ -49,12 +49,15 @@ deleteUser :: ConnectionString -> User -> IO ()
 deleteUser connString user = runAction connString $ do
   deleteBy $ UniqueEmail (userEmail user)
 
-insertUsers :: ConnectionString -> IO ()
-insertUsers pginfo = do
+insertAll :: ConnectionString -> IO ()
+insertAll pginfo = do
   mapM_ (createUser pginfo) (map U [user1, user2, user3]  )
-  -- mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
-  mapM_ (createUser pginfo) (map Ca [cat1]  )
-  -- mapM_ (createUser pginfo) (map N [news1]  ) не понимаю, как заполнять форен ки
+  mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
+  mapM_ (createUser pginfo) (map Ca [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]  )
+  mapM_ (createUser pginfo) (map N [news1, news2]  )
+  runAction pginfo $ do
+    a <- insert catTr1
+    pure ()
 
 insertCat :: ConnectionString -> IO ()
 insertCat pginfo = createUser pginfo (Ca cat1) >> pure ()
@@ -62,12 +65,8 @@ insertCat pginfo = createUser pginfo (Ca cat1) >> pure ()
 insertCatTr :: ConnectionString -> IO ()
 insertCatTr pginfo = runAction pginfo $ do
   a <- insert catTr1
-  -- a <- insert catTr -- for Rose
   pure ()
--- insertUser cfg user = runAction (configConnect cfg) $ do
---   insert user
---   liftIO $ do {print ( "insert\n"); print user}
---   kkk
+
 deleteUsers :: ConnectionString -> IO ()
 deleteUsers pginfo = do
   mapM_ (deleteUser pginfo) [user1, user2, user3]  

@@ -35,6 +35,7 @@ import Base.BasicSchema
 import Base.Base-- (Config(..), migrateDB, runAction, createUser, readUser, deleteUser)
 import Base.TestEntity
 import Data.Tree
+import Data.Time.Calendar
 
 
 main :: IO ()
@@ -60,10 +61,8 @@ main = do
 logic :: ConnectionString -> IO ()
 logic pginfo = do
   migrateDB pginfo
-  -- insertCat pginfo
-  insertCatTr pginfo
-  n1 <- news1
-  n <- createUser pginfo (N n1)
+  insertAll pginfo
+
   n2 <- fetchNews pginfo
   a <- fetchTree pginfo 
   case a of
@@ -76,7 +75,8 @@ logic pginfo = do
     Nothing -> print n2
     Just x -> do
       print "just News"
-      print x
+      -- print $ addDays 1230 (newsData_created x)
+      -- print x
   pure ()
   putStrLn $ "LocalTime: " <> $(localtimeTemplate)
 
