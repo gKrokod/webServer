@@ -61,8 +61,8 @@ main = do
 logic :: ConnectionString -> IO ()
 logic pginfo = do
   migrateDB pginfo
-  insertAll pginfo
-
+  -- insertAll pginfo
+  deleteAll pginfo
   n2 <- fetchNews pginfo
   a <- fetchTree pginfo 
   case a of

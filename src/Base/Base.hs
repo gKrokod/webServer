@@ -59,6 +59,14 @@ insertAll pginfo = do
     a <- insert catTr1
     pure ()
 
+deleteAll :: ConnectionString -> IO ()
+deleteAll pginfo = runAction pginfo $ do 
+  deleteWhere ([] :: [Filter Chel])
+  deleteWhere ([] :: [Filter News])
+  deleteWhere ([] :: [Filter User])
+  deleteWhere ([] :: [Filter Category])
+  deleteWhere ([] :: [Filter CategoryDictionary])
+
 insertCat :: ConnectionString -> IO ()
 insertCat pginfo = createUser pginfo (Ca cat1) >> pure ()
 
