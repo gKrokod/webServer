@@ -24,19 +24,32 @@ source-repository head
   location: https://github.com/gKrokod/webServer
 
 library
+  exposed-modules:
+      Base.Base
+      Base.BasicSchema
+      Base.Category
+      Base.TestEntity
+      Config
+      Handlers.Base
+      LocalTimeTemplate
   other-modules:
       Paths_serverok
   hs-source-dirs:
-      src, config
+      src
   default-extensions:
       OverloadedStrings
+      DeriveGeneric
+      LambdaCase
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
     , base >=4.7 && <5
     , bytestring
     , containers
-    , serverok
+    , monad-logger
+    , mtl
+    , persistent
+    , persistent-postgresql
     , template-haskell
     , text
     , time
@@ -50,19 +63,22 @@ executable serverok-exe
       app
   default-extensions:
       OverloadedStrings
+      DeriveGeneric
+      LambdaCase
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
     , monad-logger
     , mtl
     , persistent
     , persistent-postgresql
     , persistent-template
     , serverok
-    , template-haskell
     , text
+    , time
   default-language: Haskell2010
 
 test-suite serverok-test
@@ -74,6 +90,8 @@ test-suite serverok-test
       test
   default-extensions:
       OverloadedStrings
+      DeriveGeneric
+      LambdaCase
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

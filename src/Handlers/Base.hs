@@ -6,6 +6,8 @@ data Handle m = Handle
   , createUser :: User -> m (Key User)
   , deleteUser :: User -> m ()
   , readUser :: Key User -> m (Maybe User)
+  , insertAll :: m () -> m ()
+  , deleteAll :: m () -> m ()
   }
 
 data Key a

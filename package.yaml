@@ -12,6 +12,8 @@ extra-source-files:
 
 default-extensions:
 - OverloadedStrings
+- DeriveGeneric
+- LambdaCase
   
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -37,16 +39,19 @@ ghc-options:
 - -Wredundant-constraints
 
 library:
-  source-dirs: src, config
+  # source-dirs: config
+  source-dirs: src
   dependencies:
-  - serverok
-  - aeson
-  - bytestring
   - text
   - containers
-# for template test
+  - bytestring
   - time
+  - aeson
+  - persistent
   - template-haskell
+  - persistent-postgresql
+  - mtl
+  - monad-logger
 
 executables:
   serverok-exe:
@@ -60,6 +65,8 @@ executables:
     - serverok
     - aeson
     - bytestring
+    - time
+    - containers
     # , esqueleto
     # , hedis
     - monad-logger

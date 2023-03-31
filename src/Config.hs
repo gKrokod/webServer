@@ -9,7 +9,6 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy.Char8 as BC
 import qualified Data.ByteString.Lazy as L 
 
-
 data ConfigDB = ConfigDB {
     cHost :: T.Text
   , cPort :: T.Text
