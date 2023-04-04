@@ -36,9 +36,21 @@ createUser connString (C chel) = fromSqlKey <$> runAction connString (insert che
 createUser connString (Ca cat) = fromSqlKey <$> runAction connString (insert cat)
 createUser connString (N news) = fromSqlKey <$> runAction connString (insert news)
 
+insertDictionary :: ConnectionString -> CategoryDictionary -> IO Int64
+insertDictionary pginfo dictionary = fromSqlKey <$> runAction pginfo (insert dictionary)
+
+fetchDictionary :: ConnectionString -> IO (Maybe CategoryDictionary)
+-- после удаление содержимого таблицы, данные добавляются с другим ключом
+-- и функция ничего не найдет по pK = 1
+fetchDictionary pginfo = runAction pginfo $ do
+  get (toSqlKey 1) 
+
+insertCategories :: ConnectionString -> [Category] -> IO ()
+insertCategories pginfo = runAction pginfo . mapM_ insert 
+
 readUser :: ConnectionString -> Int64 -> IO (Maybe User)
 readUser connString uid = runAction connString (get (toSqlKey uid))
-
+--
 deleteUserKey :: ConnectionString -> Int64 -> IO ()
 deleteUserKey connString uid = runAction connString (delete userKey)
   where
@@ -70,11 +82,6 @@ deleteAll pginfo = runAction pginfo $ do
 insertCat :: ConnectionString -> IO ()
 insertCat pginfo = createUser pginfo (Ca cat1) >> pure ()
 
-insertCatTr :: ConnectionString -> IO ()
-insertCatTr pginfo = runAction pginfo $ do
-  a <- insert catTr1
-  pure ()
-
 deleteUsers :: ConnectionString -> IO ()
 deleteUsers pginfo = do
   mapM_ (deleteUser pginfo) [user1, user2, user3]  
@@ -88,9 +95,9 @@ fetchCat :: ConnectionString -> IO (Maybe Category)
 fetchCat pginfo = runAction pginfo $ do
   get (toSqlKey 1) 
 
-fetchTree :: ConnectionString -> IO (Maybe CategoryDictionary)
-fetchTree pginfo = runAction pginfo $ do
-  get (toSqlKey 1) 
+-- fetchTree :: ConnectionString -> IO (Maybe CategoryDictionary)
+-- fetchTree pginfo = runAction pginfo $ do
+--   get (toSqlKey 1) 
 
 fetchNews :: ConnectionString -> IO (Maybe News)
 fetchNews pginfo = runAction pginfo $ do

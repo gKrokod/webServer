@@ -63,21 +63,38 @@ logic :: ConnectionString -> IO ()
 logic pginfo = do
   migrateDB pginfo
   -- insertAll pginfo
-  deleteAll pginfo
-  n2 <- fetchNews pginfo
-  a <- fetchTree pginfo 
-  case a of
-    Nothing -> print a--liftIO $ undefined 
-    Just x -> do
-      print "Just"
-      putStr $ drawTree $ fmap (show . T.unpack) $ categoryDictionaryTree x
-      -- print x 
-  case n2 of
-    Nothing -> print n2
-    Just x -> do
-      print "just News"
-      -- print $ addDays 1230 (newsData_created x)
-      -- print x
+  -- deleteAll pginfo
+  -- insertAll pginfo
+  a <- insertDictionary pginfo catTr1 
+  dict <- fetchDictionary pginfo
+  -- dict <- fetchTree pginfo
+  case dict of
+    Nothing -> do
+      print "ne nashli"
+      print dict
+    Just cdict -> do
+      print "Nashli"
+      print cdict
+      let spisok =  treeToList (categoryDictionaryTree cdict)
+      print spisok
+      insertCategories pginfo spisok 
+      pure ()
+
+  
+  -- n2 <- fetchNews pginfo
+  -- a <- fetchTree pginfo 
+  -- case a of
+  --   Nothing -> print a--liftIO $ undefined 
+  --   Just x -> do
+  --     print "Just"
+  --     putStr $ drawTree $ fmap (show . T.unpack) $ categoryDictionaryTree x
+  --     print x 
+  -- case n2 of
+  --   Nothing -> print n2
+  --   Just x -> do
+  --     print "just News"
+  --     -- print $ addDays 1230 (newsData_created x)
+  --     -- print x
   pure ()
   putStrLn $ "LocalTime: " <> $(localtimeTemplate)
 

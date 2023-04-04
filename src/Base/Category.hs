@@ -15,14 +15,14 @@ module Base.Category where
 --
 --   Tree a =  Node a [Tree a]
 --   impor
-import Base.BasicSchema (Rose(..))
+import Base.BasicSchema (Rose(..), Category(..))
 import Data.Bool (bool)
 import Base.TestEntity (catTr1)
-import Data.Tree
+import Data.Tree (Tree(..), drawTree, flatten)
 import qualified Data.Text as T
-import Data.Foldable
-import Data.List
+import qualified Data.List (sort)
 import Data.Maybe (listToMaybe)
+
 type OldName = T.Text
 type NewName = T.Text
 type Parent = T.Text
@@ -63,18 +63,10 @@ changeRose name parent rose = case newRose of
         newRose = insertRose <$> ruleName <*> selectTree <*> roseWithOutSelectTree
         ruleName = if name == parent then Nothing
                    else bool Nothing (Just parent) (parent `elem` rose)
-                  
+-- сделать из дерева список и отсортировать
+treeToList :: Rose -> [Category] -- [T.Text]
+treeToList = map Category . Data.List.sort . flatten 
+-- вывести структуру категорий (дерева)
+showCategory :: Rose -> IO ()
+showCategory = putStrLn . drawTree . fmap show
 
-testTree :: Rose
-testTree =  Node "Abstract" [Node "Man" [Node "Warrior" [Node "Evil" [], Node "Good" [], Node "Neutral" []], Node "Archer" []], Node "Woman" [Node "Witch" []]] 
-
-showcat :: Rose -> IO ()
-showcat t = putStr $ drawTree $ fmap show $ t
-
--- -- tt :: Tree String
--- tt =  Node (Just "Abstract") [Node (Just "Man") [Node (Just "Warrior") [Node (Just "Evil") [], Node (Just "Good") [], Node (Just "Neutral") []], Node (Just "Archer") []], Node (Just "Woman") [Node (Just "Witch") []]] 
--- t2, t3 :: Tree (Maybe T.Text)
--- t2 =  Node (Just "Abstract") [Node (Just "Man") [Node (Just "Warrior") [Node (Just "Evil") [], Node (Just "Good") [], Node (Just "Neutral") []], Node (Just "Archer") []], Node (Nothing) [Node (Just "Witch") []]] 
--- t3 =  Node (Just "Abstract") [Node (Nothing ) [Node (Just "Warrior") [Node (Just "Evil") [], Node (Just "Good") [], Node (Just "Neutral") []], Node (Just "Archer") []], Node (Just "woman") [Node (Just "Witch") []]] 
--- -- type Rose = Tree T.Text
---

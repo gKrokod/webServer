@@ -41,3 +41,14 @@ user1:: User
 user1 =  User { userName = "User1", userEmail = "User1@test.com" , userAge = 11 , userOccupation = "System Administrator" }
 user2=  User { userName = "User2" , userEmail = "User2@test.com" , userAge = 22 , userOccupation = "Byhgalter" }
 user3=  User { userName = "User3" , userEmail = "User3@test.com" , userAge = 33 , userOccupation = "Rabotyaga"  }
+
+testTree :: Rose
+testTree =  Node "Abstract" [Node "Man" [Node "Warrior" [Node "Evil" [], Node "Good" [], Node "Neutral" []], Node "Archer" []], Node "Woman" [Node "Witch" []]] 
+
+-- -- tt :: Tree String
+-- tt =  Node (Just "Abstract") [Node (Just "Man") [Node (Just "Warrior") [Node (Just "Evil") [], Node (Just "Good") [], Node (Just "Neutral") []], Node (Just "Archer") []], Node (Just "Woman") [Node (Just "Witch") []]] 
+-- t2, t3 :: Tree (Maybe T.Text)
+-- t2 =  Node (Just "Abstract") [Node (Just "Man") [Node (Just "Warrior") [Node (Just "Evil") [], Node (Just "Good") [], Node (Just "Neutral") []], Node (Just "Archer") []], Node (Nothing) [Node (Just "Witch") []]] 
+-- t3 =  Node (Just "Abstract") [Node (Nothing ) [Node (Just "Warrior") [Node (Just "Evil") [], Node (Just "Good") [], Node (Just "Neutral") []], Node (Just "Archer") []], Node (Just "woman") [Node (Just "Witch") []]] 
+-- -- type Rose = Tree T.Text
+--
