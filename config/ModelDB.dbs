@@ -13,7 +13,7 @@
 
   Допустим, есть категория "Языки программирования", и у нее может быть подкатегория "Динамически Типизированные ЯП", и далее, соответственно, подкатегория подкатегории "Python" — и таких уровней вложенности может быть произвольное количество.]]></comment>
 			</column>
-			<column name="category_link_to_tree" prior="category_link_to_dictionary" type="TEXT" jt="-1" mandatory="y" >
+			<column name="category_dictionary_id" prior="category_link_to_tree" type="TEXT" jt="-1" mandatory="y" >
 				<comment><![CDATA[Ссылка на словарь, по которому делалось]]></comment>
 			</column>
 			<column name="category_name" prior="name" type="VARCHAR" length="100" jt="12" />
@@ -22,16 +22,16 @@
 			</index>
 			<index name="pk_category_0" unique="PRIMARY_KEY" >
 				<column name="id" />
-				<column name="category_link_to_tree" />
+				<column name="category_dictionary_id" />
 			</index>
 			<fk name="fk_category" virtual="y" to_schema="1.INSTANCE" to_table="category_dictionary" type="Identifying" mandatory="y" cardinality="ZeroMore" range_from="0" range_to="0" >
-				<fk_column name="category_link_to_tree" pk="id" />
+				<fk_column name="category_dictionary_id" pk="id" />
 			</fk>
 		</table>
 		<table name="category_dictionary" prior="language" >
 			<comment><![CDATA[под категория языков программирования]]></comment>
 			<column name="id" prior="language_id" type="INT" jt="4" mandatory="y" />
-			<column name="category_dictionary_tree" type="TEXT" jt="-1" >
+			<column name="categoryDictionary_tree" prior="category_dictionary_tree" type="TEXT" jt="-1" >
 				<comment><![CDATA[Rise = Tree Text]]></comment>
 			</column>
 			<index name="pk_language" unique="PRIMARY_KEY" >
@@ -78,8 +78,8 @@
 			<column name="user_login" type="TEXT" jt="-1" mandatory="y" />
 			<column name="user_password" type="INT" jt="4" mandatory="y" />
 			<column name="user_date_created" type="DATE" jt="91" />
-			<column name="user_isadmin" prior="user_admin" type="BOOLEAN" jt="-7" />
-			<column name="user_ispublisher" prior="user_isnews" type="BOOLEAN" jt="-7" />
+			<column name="user_isAdmin" prior="user_isadmin" type="BOOLEAN" jt="-7" />
+			<column name="user_isPublisher" prior="user_ispublisher" type="BOOLEAN" jt="-7" />
 			<index name="pk_Entity" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
