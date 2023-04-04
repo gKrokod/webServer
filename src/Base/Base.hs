@@ -30,6 +30,9 @@ runAction connectionString action =
 migrateDB :: ConnectionString -> IO ()
 migrateDB connString = runAction connString (runMigration migrateAll)
 
+deletemigrateDB :: ConnectionString -> IO ()
+deletemigrateDB connString = runAction connString (runMigration deleteMigrate)
+
 createUser :: ConnectionString -> Item -> IO Int64
 createUser connString (U user) = fromSqlKey <$> runAction connString (insert user)
 createUser connString (C chel) = fromSqlKey <$> runAction connString (insert chel)

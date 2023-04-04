@@ -34,8 +34,8 @@ import LocalTimeTemplate
 import Base.BasicSchema
 import Base.Base-- (Config(..), migrateDB, runAction, createUser, readUser, deleteUser)
 import Base.TestEntity
-import Data.Tree
-import Data.Time.Calendar
+-- import Data.Tree
+-- import Data.Time.Calendar
 import Base.Category
 
 
@@ -62,24 +62,27 @@ main = do
 logic :: ConnectionString -> IO ()
 logic pginfo = do
   migrateDB pginfo
+  print "delete"
+  deletemigrateDB pginfo
+  pure ()
   -- insertAll pginfo
   -- deleteAll pginfo
   -- insertAll pginfo
-  a <- insertDictionary pginfo catTr1 
-  dict <- fetchDictionary pginfo
-  -- dict <- fetchTree pginfo
-  case dict of
-    Nothing -> do
-      print "ne nashli"
-      print dict
-    Just cdict -> do
-      print "Nashli"
-      print cdict
-      let spisok =  treeToList (categoryDictionaryTree cdict)
-      print spisok
-      insertCategories pginfo spisok 
-      pure ()
-
+  -- a <- insertDictionary pginfo catTr1 
+  -- dict <- fetchDictionary pginfo
+  -- -- dict <- fetchTree pginfo
+  -- case dict of
+  --   Nothing -> do
+  --     print "ne nashli"
+  --     print dict
+  --   Just cdict -> do
+  --     print "Nashli"
+  --     print cdict
+  --     let spisok =  treeToList (categoryDictionaryTree cdict)
+  --     print spisok
+  --     insertCategories pginfo spisok 
+  --     pure ()
+  --
   
   -- n2 <- fetchNews pginfo
   -- a <- fetchTree pginfo 
