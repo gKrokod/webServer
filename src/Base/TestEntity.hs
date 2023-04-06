@@ -7,7 +7,7 @@ import Database.Persist
 -- import Data.Time.Calendar
 import Data.Time
 
-data Item = N (News) | U (User) | C (Chel) | Ca (Category)
+data Item = N (News) | U (User) | C (User) | Ca (Category)
 
 -- today <- localDay <$> zonedTimeToLocalTime <$> getZonedTime   :: IO Day
 -- news1 :: IO (News)
@@ -32,16 +32,16 @@ cat7 = Category { categoryName = "Evil" }
 cat8 = Category { categoryName = "Good" }
 cat9 = Category { categoryName = "Neutral" }
 
-chel1,chel2,chel3 :: Chel
-chel1 = Chel {chelLogin = "chel1" , chelPassword = "pass1", chelData_created = fromGregorian 2000 5 7, chelIsAdmin = True,  chelIsPublisher = True}
-chel2 = Chel {chelLogin = "chel2" , chelPassword = "pass2", chelData_created = fromGregorian 1995 7 12, chelIsAdmin = False, chelIsPublisher = False}
-chel3 = Chel {chelLogin = "chel3" , chelPassword = "pass3", chelData_created = fromGregorian 1987 1 1, chelIsAdmin = False, chelIsPublisher = False}
+user1,user2,user3 :: User
+user1 = User {userLogin = "user1" , userPassword = "pass1", userData_created = fromGregorian 2000 5 7, userIsAdmin = True,  userIsPublisher = True}
+user2 = User {userLogin = "user2" , userPassword = "pass2", userData_created = fromGregorian 1995 7 12, userIsAdmin = False, userIsPublisher = False}
+user3 = User {userLogin = "user3" , userPassword = "pass3", userData_created = fromGregorian 1987 1 1, userIsAdmin = False, userIsPublisher = False}
 
-user1:: User
-user1 =  User { userName = "User1", userEmail = "User1@test.com" , userAge = 11 , userOccupation = "System Administrator" }
-user2=  User { userName = "User2" , userEmail = "User2@test.com" , userAge = 22 , userOccupation = "Byhgalter" }
-user3=  User { userName = "User3" , userEmail = "User3@test.com" , userAge = 33 , userOccupation = "Rabotyaga"  }
-
+-- user1:: User
+-- user1 =  User { userName = "User1", userEmail = "User1@test.com" , userAge = 11 , userOccupation = "System Administrator" }
+-- user2=  User { userName = "User2" , userEmail = "User2@test.com" , userAge = 22 , userOccupation = "Byhgalter" }
+-- user3=  User { userName = "User3" , userEmail = "User3@test.com" , userAge = 33 , userOccupation = "Rabotyaga"  }
+--
 testTree :: Rose
 testTree =  Node "Abstract" [Node "Man" [Node "Warrior" [Node "Evil" [], Node "Good" [], Node "Neutral" []], Node "Archer" []], Node "Woman" [Node "Witch" []]] 
 

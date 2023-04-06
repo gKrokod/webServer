@@ -77,7 +77,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     -- categoryId CategoryId
     UniqueTitle title
     deriving Show Read
-  Chel json
+  User json sql=users
     login Login 
     password Password
     data_created Day 
@@ -85,21 +85,21 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     isPublisher Bool
     UniqueLogin login
     deriving Show Read
-  Category json
+  Category json sql=categories
     name Name 
     -- categoryDictionaryId CategoryDictionaryId
     UniqueName name
     deriving Show Read
-  CategoryDictionary json
+  CategoryDictionary json sql=cat_dictionary
     tree Rose
     deriving Show Read
-  User json sql=users
-    name Name 
-    email T.Text
-    age Int
-    occupation T.Text
-    UniqueEmail email
-    deriving Show Read
+  -- User json sql=users
+  --   name Name 
+  --   email T.Text
+  --   age Int
+  --   occupation T.Text
+  --   UniqueEmail email
+  --   deriving Show Read
     -- deriving ToJSON FromJSON
 |]
 

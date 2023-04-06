@@ -61,27 +61,20 @@ main = do
 
 logic :: ConnectionString -> IO ()
 logic pginfo = do
+-- make tables
   migrateDB pginfo
-  print "delete"
-  deletemigrateDB pginfo
-  pure ()
-  -- insertAll pginfo
-  -- deleteAll pginfo
-  -- insertAll pginfo
-  -- a <- insertDictionary pginfo catTr1 
-  -- dict <- fetchDictionary pginfo
-  -- -- dict <- fetchTree pginfo
-  -- case dict of
-  --   Nothing -> do
-  --     print "ne nashli"
-  --     print dict
-  --   Just cdict -> do
-  --     print "Nashli"
-  --     print cdict
-  --     let spisok =  treeToList (categoryDictionaryTree cdict)
-  --     print spisok
-  --     insertCategories pginfo spisok 
-  --     pure ()
+-- insert Dictionary in DB
+  _ <- insertDictionary pginfo catTr1 
+  dictionary <- fetchDictionary pginfo
+-- fetch dictionary from DB and insert Categories in DB
+  case dictionary of
+    Nothing -> print "ne nashli dictionary"
+    Just cdict -> do 
+      let spisok = treeToList (categoryDictionaryTree cdict); 
+      insertCategories pginfo spisok
+-- insert News and Users in DB
+  insertNews pginfo
+  insertUsers pginfo
   --
   
   -- n2 <- fetchNews pginfo

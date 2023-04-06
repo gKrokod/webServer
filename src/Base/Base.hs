@@ -30,12 +30,12 @@ runAction connectionString action =
 migrateDB :: ConnectionString -> IO ()
 migrateDB connString = runAction connString (runMigration migrateAll)
 
-deletemigrateDB :: ConnectionString -> IO ()
-deletemigrateDB connString = runAction connString (runMigration deleteMigrate)
+-- deletemigrateDB :: ConnectionString -> IO ()
+-- deletemigrateDB connString = runAction connString (runMigration deleteMigrate)
 
 createUser :: ConnectionString -> Item -> IO Int64
 createUser connString (U user) = fromSqlKey <$> runAction connString (insert user)
-createUser connString (C chel) = fromSqlKey <$> runAction connString (insert chel)
+-- createUser connString (C chel) = fromSqlKey <$> runAction connString (insert chel)
 createUser connString (Ca cat) = fromSqlKey <$> runAction connString (insert cat)
 createUser connString (N news) = fromSqlKey <$> runAction connString (insert news)
 
@@ -62,21 +62,29 @@ deleteUserKey connString uid = runAction connString (delete userKey)
 
 deleteUser :: ConnectionString -> User -> IO ()
 deleteUser connString user = runAction connString $ do
-  deleteBy $ UniqueEmail (userEmail user)
+  deleteBy $ UniqueLogin (userLogin user)
+
+insertUsers :: ConnectionString -> IO ()
+insertUsers pginfo = do
+  mapM_ (createUser pginfo) (map U [user1, user2, user3]  )
+
+insertNews :: ConnectionString -> IO ()
+insertNews pginfo = do
+  mapM_ (createUser pginfo) (map N [news1, news2]  )
 
 insertAll :: ConnectionString -> IO ()
 insertAll pginfo = do
   mapM_ (createUser pginfo) (map U [user1, user2, user3]  )
-  mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
-  mapM_ (createUser pginfo) (map Ca [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]  )
+  -- mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
+  -- mapM_ (createUser pginfo) (map Ca [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]  )
   mapM_ (createUser pginfo) (map N [news1, news2]  )
-  runAction pginfo $ do
-    a <- insert catTr1
-    pure ()
+  -- runAction pginfo $ do
+  --   a <- insert catTr1
+  --   pure ()
 
 deleteAll :: ConnectionString -> IO ()
 deleteAll pginfo = runAction pginfo $ do 
-  deleteWhere ([] :: [Filter Chel])
+  -- deleteWhere ([] :: [Filter Chel])
   deleteWhere ([] :: [Filter News])
   deleteWhere ([] :: [Filter User])
   deleteWhere ([] :: [Filter Category])
