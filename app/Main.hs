@@ -37,6 +37,7 @@ import Base.TestEntity
 -- import Data.Tree
 -- import Data.Time.Calendar
 import Base.Category
+import Data.Time
 
 
 main :: IO ()
@@ -62,37 +63,43 @@ main = do
 logic :: ConnectionString -> IO ()
 logic pginfo = do
 -- make tables
-  migrateDB pginfo
--- insert Dictionary in DB
-  _ <- insertDictionary pginfo catTr1 
-  dictionary <- fetchDictionary pginfo
--- fetch dictionary from DB and insert Categories in DB
-  case dictionary of
-    Nothing -> print "ne nashli dictionary"
-    Just cdict -> do 
-      let spisok = treeToList (categoryDictionaryTree cdict); 
-      insertCategories pginfo spisok
--- insert News and Users in DB
-  insertNews pginfo
-  insertUsers pginfo
-  --
-  
-  -- n2 <- fetchNews pginfo
-  -- a <- fetchTree pginfo 
-  -- case a of
-  --   Nothing -> print a--liftIO $ undefined 
-  --   Just x -> do
-  --     print "Just"
-  --     putStr $ drawTree $ fmap (show . T.unpack) $ categoryDictionaryTree x
-  --     print x 
-  -- case n2 of
-  --   Nothing -> print n2
-  --   Just x -> do
-  --     print "just News"
-  --     -- print $ addDays 1230 (newsData_created x)
-  --     -- print x
+--   migrateDB pginfo
+-- -- insert Dictionary in DB
+--   _ <- insertDictionary pginfo catTr1 
+--   dictionary <- fetchDictionary pginfo
+-- -- fetch dictionary from DB and insert Categories in DB
+--   case dictionary of
+--     Nothing -> print "ne nashli dictionary"
+--     Just cdict -> do 
+--       let spisok = treeToList (categoryDictionaryTree cdict); 
+--       insertCategories pginfo spisok
+-- -- insert News and Users in DB
+--   insertNews pginfo
+--   insertUsers pginfo
+--
+  filterUser pginfo
+  -- runAction pginfo $ do
+  --   -- people <- selectList [UserData_created ==. fromGregorian 1987 01 01 ] []
+  --   people <- selectList [UserData_created >=. fromGregorian 1200 01 01 ] [Desc UserLogin, LimitTo 6]
+  --   liftIO $ print people
+    -- maybePerson <- getBy $ UniqueLogin "user4"
+    -- case maybePerson of
+    --     Nothing -> liftIO $ putStrLn "Ничего нет"
+    --     Just person -> liftIO $ print person 
   pure ()
   putStrLn $ "LocalTime: " <> $(localtimeTemplate)
 
 
+filterUser pginfo = 
+  runAction pginfo $ do
+    -- people <- selectList [UserData_created ==. fromGregorian 1987 01 01 ] []
+    people <- selectList [UserData_created >=. fromGregorian 1200 01 01 ] [Desc UserLogin, LimitTo 6]
+    liftIO $ print people
 
+
+fetchUserhelp pginfo =
+  runAction pginfo $ do
+    maybePerson <- getBy $ UniqueLogin "user4"
+    case maybePerson of
+        Nothing -> liftIO $ putStrLn "Ничего нет"
+        Just person -> liftIO $ print person 

@@ -81,8 +81,8 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
     login Login 
     password Password
     data_created Day 
-    isAdmin Bool
-    isPublisher Bool
+    is_admin Bool
+    is_publisher Bool
     UniqueLogin login
     deriving Show Read
   Category json sql=categories
@@ -104,13 +104,13 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
 |]
 
   
-PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "deleteMigrate"] [PTH.persistLowerCase|
-    -- deriving ToJSON FromJSON
-  User1 json sql=users1
-    name1 Name 
-    email1 T.Text
-    age1 Int
-    occupation1 T.Text
-    deriving Show Read
-|]
+-- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "deleteMigrate"] [PTH.persistLowerCase|
+--     -- deriving ToJSON FromJSON
+--   User1 json sql=users1
+--     name1 Name 
+--     email1 T.Text
+--     age1 Int
+--     occupation1 T.Text
+--     deriving Show Read
+-- |]
 

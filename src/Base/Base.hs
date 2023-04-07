@@ -66,7 +66,7 @@ deleteUser connString user = runAction connString $ do
 
 insertUsers :: ConnectionString -> IO ()
 insertUsers pginfo = do
-  mapM_ (createUser pginfo) (map U [user1, user2, user3]  )
+  mapM_ (createUser pginfo) (map U [user1, user2, user3, user4, user5, user6]  )
 
 insertNews :: ConnectionString -> IO ()
 insertNews pginfo = do
@@ -74,7 +74,7 @@ insertNews pginfo = do
 
 insertAll :: ConnectionString -> IO ()
 insertAll pginfo = do
-  mapM_ (createUser pginfo) (map U [user1, user2, user3]  )
+  mapM_ (createUser pginfo) (map U [user1, user2, user3, user4, user5, user6]  )
   -- mapM_ (createUser pginfo) (map C [chel1, chel2, chel3]  )
   -- mapM_ (createUser pginfo) (map Ca [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]  )
   mapM_ (createUser pginfo) (map N [news1, news2]  )

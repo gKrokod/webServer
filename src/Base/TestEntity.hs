@@ -32,11 +32,14 @@ cat7 = Category { categoryName = "Evil" }
 cat8 = Category { categoryName = "Good" }
 cat9 = Category { categoryName = "Neutral" }
 
-user1,user2,user3 :: User
-user1 = User {userLogin = "user1" , userPassword = "pass1", userData_created = fromGregorian 2000 5 7, userIsAdmin = True,  userIsPublisher = True}
-user2 = User {userLogin = "user2" , userPassword = "pass2", userData_created = fromGregorian 1995 7 12, userIsAdmin = False, userIsPublisher = False}
-user3 = User {userLogin = "user3" , userPassword = "pass3", userData_created = fromGregorian 1987 1 1, userIsAdmin = False, userIsPublisher = False}
+user1,user2,user3,user4,user5,user6 :: User
+user1 = User {userLogin = "user1" , userPassword = "pass1", userData_created = fromGregorian 2000 5 7, userIs_admin = True,  userIs_publisher = True}
+user2 = User {userLogin = "user2" , userPassword = "pass2", userData_created = fromGregorian 1995 7 12, userIs_admin = False, userIs_publisher = False}
+user3 = User {userLogin = "user3" , userPassword = "pass3", userData_created = fromGregorian 1987 1 1, userIs_admin = False, userIs_publisher = False}
 
+user4 = User {userLogin = "user4" , userPassword = "pass1", userData_created = fromGregorian 1500 2 15, userIs_admin = True,  userIs_publisher = True}
+user5 = User {userLogin = "user5" , userPassword = "pass2", userData_created = fromGregorian 1600 3 19, userIs_admin = False, userIs_publisher = False}
+user6 = User {userLogin = "user6" , userPassword = "pass3", userData_created = fromGregorian 1800 11 11, userIs_admin = False, userIs_publisher = False}
 -- user1:: User
 -- user1 =  User { userName = "User1", userEmail = "User1@test.com" , userAge = 11 , userOccupation = "System Administrator" }
 -- user2=  User { userName = "User2" , userEmail = "User2@test.com" , userAge = 22 , userOccupation = "Byhgalter" }
