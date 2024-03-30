@@ -68,6 +68,7 @@ executables:
     - http-types
     # - aeson
     - bytestring
+    - binary
     - text
     # - time
     # - containers
