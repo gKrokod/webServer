@@ -8,4 +8,6 @@
 # exec stack run --silent -- "$@"
 curl -i 127.0.0.1:4221/ # if path = / then 200ok
 curl -i 127.0.0.1:4221/index200.html # 404 error
-curl -v 127.0.0.1:4221/echo/MSGtoYOU # 200ok+ MSGtoYOU in Body+ content headers
+curl -i 127.0.0.1:4221/echo/MSGtoYOU # 200ok+ MSGtoYOU in Body+ content headers
+curl -v --user-agent "Warp browser" 127.0.0.1:4221/user-agent # 200ok + user-agent header in body
+# curl -i 127.0.0.1:4221/
