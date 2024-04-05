@@ -1,0 +1,176 @@
+/home/w/projects/warp/app/Main.hs:18:60: warning: [-Wunused-imports]
+    The import of ‘responseBuilder’
+    from module ‘Network.Wai’ is redundant
+/home/w/projects/warp/app/Main.hs:23:1: warning: [-Wunused-imports]
+    The import of ‘Data.Binary.Builder’ is redundant
+/home/w/projects/warp/app/Main.hs:30:1: warning: [-Wunused-imports]
+    The import of ‘System.Directory’ is redundant
+/home/w/projects/warp/app/Main.hs:33:1: warning: [-Wincomplete-patterns]
+    Pattern match(es) are non-exhaustive
+    In an equation for ‘isDirectory’:
+        Patterns of type ‘[String]’ not matched:
+            ([]:_:_)
+            ([p]:_:_) where p is not one of {'-'}
+            ((p:_:_):_:_) where p is not one of {'-'}
+            (['-']:_:_)
+            ...
+/home/w/projects/warp/app/Main.hs:33:37: warning: [-Wunused-matches]
+    Defined but not used: ‘args’
+/home/w/projects/warp/app/Main.hs:53:15: warning: [-Wtype-defaults]
+    • Defaulting the following constraints to type ‘String’
+        (Show a0)
+          arising from a use of ‘show’
+          at /home/w/projects/warp/app/Main.hs:53:15-18
+        (Data.String.IsString a0)
+          arising from the literal ‘"Open200"’
+          at /home/w/projects/warp/app/Main.hs:53:20-28
+    • In the second argument of ‘($)’, namely ‘show "Open200"’
+      In the first argument of ‘bracket_’, namely
+        ‘(putStrLn $ show "Open200")’
+      In the expression:
+        bracket_
+          (putStrLn $ show "Open200") (putStrLn $ "Close200 \n" ++ show _req)
+          (f $ responseLBS
+                 status200 [(hContentType, "text/plain")] "status200\n")
+/home/w/projects/warp/app/Main.hs:59:15: warning: [-Wtype-defaults]
+    • Defaulting the following constraints to type ‘String’
+        (Show a0)
+          arising from a use of ‘show’
+          at /home/w/projects/warp/app/Main.hs:59:15-18
+        (Data.String.IsString a0)
+          arising from the literal ‘"Open CheckPath"’
+          at /home/w/projects/warp/app/Main.hs:59:20-35
+    • In the second argument of ‘($)’, namely ‘show "Open CheckPath"’
+      In the first argument of ‘bracket_’, namely
+        ‘(putStrLn $ show "Open CheckPath")’
+      In the expression:
+        bracket_
+          (putStrLn $ show "Open CheckPath")
+          (putStrLn $ show "Close CheckPath")
+          (do case rawPathInfo req of
+                "/" -> nextApp req f
+                path | B.take 6 path == "/echo/" -> appBody req f
+                path | B.take 11 path == "/user-agent" -> appUserAgent req f
+                path | B.take 7 path == "/files/" -> appFile req f
+                _ -> app404 req f)
+/home/w/projects/warp/app/Main.hs:60:15: warning: [-Wtype-defaults]
+    • Defaulting the following constraints to type ‘String’
+        (Show a0)
+          arising from a use of ‘show’
+          at /home/w/projects/warp/app/Main.hs:60:15-18
+        (Data.String.IsString a0)
+          arising from the literal ‘"Close CheckPath"’
+          at /home/w/projects/warp/app/Main.hs:60:20-36
+    • In the second argument of ‘($)’, namely ‘show "Close CheckPath"’
+      In the second argument of ‘bracket_’, namely
+        ‘(putStrLn $ show "Close CheckPath")’
+      In the expression:
+        bracket_
+          (putStrLn $ show "Open CheckPath")
+          (putStrLn $ show "Close CheckPath")
+          (do case rawPathInfo req of
+                "/" -> nextApp req f
+                path | B.take 6 path == "/echo/" -> appBody req f
+                path | B.take 11 path == "/user-agent" -> appUserAgent req f
+                path | B.take 7 path == "/files/" -> appFile req f
+                _ -> app404 req f)
+/home/w/projects/warp/app/Main.hs:71:15: warning: [-Wtype-defaults]
+    • Defaulting the following constraints to type ‘String’
+        (Show a0)
+          arising from a use of ‘show’
+          at /home/w/projects/warp/app/Main.hs:71:15-18
+        (Data.String.IsString a0)
+          arising from the literal ‘"Open404"’
+          at /home/w/projects/warp/app/Main.hs:71:20-28
+    • In the second argument of ‘($)’, namely ‘show "Open404"’
+      In the first argument of ‘bracket_’, namely
+        ‘(putStrLn $ show "Open404")’
+      In the expression:
+        bracket_
+          (putStrLn $ show "Open404") (putStrLn $ "Close404 \n" ++ show _req)
+          (f $ responseLBS notFound404 [] "status404\n")
+/home/w/projects/warp/app/Main.hs:77:15: warning: [-Wtype-defaults]
+    • Defaulting the following constraints to type ‘String’
+        (Show a0)
+          arising from a use of ‘show’
+          at /home/w/projects/warp/app/Main.hs:77:15-18
+        (Data.String.IsString a0)
+          arising from the literal ‘"OpenFile"’
+          at /home/w/projects/warp/app/Main.hs:77:20-29
+    • In the second argument of ‘($)’, namely ‘show "OpenFile"’
+      In the first argument of ‘bracket_’, namely
+        ‘(putStrLn $ show "OpenFile")’
+      In the expression:
+        bracket_
+          (putStrLn $ show "OpenFile")
+          (putStrLn $ "CloseFile \n" ++ show req)
+          (do fileDirectory <- isDirectory <$> getArgs
+              putStrLn "Directory:"
+              print fileDirectory
+              f undefined)
+/home/w/projects/warp/app/Main.hs:88:11: warning: [-Wunused-local-binds]
+    Defined but not used: ‘body’
+/home/w/projects/warp/app/Main.hs:88:20: warning: [-Wtype-defaults]
+    • Defaulting the following constraint to type ‘Integer’
+        Num a0 arising from a use of ‘+’
+    • In the first argument of ‘seq’, namely ‘(1 + 2)’
+      In the expression:
+        (1 + 2)
+          `seq` (B.fromStrict $ B.drop 6 $ (<> "\n") $ rawPathInfo req)
+      In an equation for ‘body’:
+          body
+            = (1 + 2)
+                `seq` (B.fromStrict $ B.drop 6 $ (<> "\n") $ rawPathInfo req)
+/home/w/projects/warp/app/Main.hs:90:11: warning: [-Wunused-local-binds]
+    Defined but not used: ‘bodyLen’
+/home/w/projects/warp/app/Main.hs:94:15: warning: [-Wtype-defaults]
+    • Defaulting the following constraints to type ‘String’
+        (Show a0)
+          arising from a use of ‘show’
+          at /home/w/projects/warp/app/Main.hs:94:15-18
+        (Data.String.IsString a0)
+          arising from the literal ‘"OpenBody"’
+          at /home/w/projects/warp/app/Main.hs:94:20-29
+    • In the second argument of ‘($)’, namely ‘show "OpenBody"’
+      In the first argument of ‘bracket_’, namely
+        ‘(putStrLn $ show "OpenBody")’
+      In the expression:
+        bracket_
+          (putStrLn $ show "OpenBody")
+          (putStrLn $ "CloseBody \n" ++ show req)
+          (f $ responseLBS
+                 status200
+                 [(hContentType, "text/plain"),
+                  (hContentLength, (BC.pack $ show bodyLen))]
+                 (body))
+/home/w/projects/warp/app/Main.hs:99:20: warning: [-Wtype-defaults]
+    • Defaulting the following constraint to type ‘Integer’
+        Num a0 arising from a use of ‘+’
+    • In the first argument of ‘seq’, namely ‘(1 + 2)’
+      In the expression:
+        (1 + 2)
+          `seq` (B.fromStrict $ B.drop 6 $ (<> "\n") $ rawPathInfo req)
+      In an equation for ‘body’:
+          body
+            = (1 + 2)
+                `seq` (B.fromStrict $ B.drop 6 $ (<> "\n") $ rawPathInfo req)
+/home/w/projects/warp/app/Main.hs:105:15: warning: [-Wtype-defaults]
+    • Defaulting the following constraints to type ‘String’
+        (Show a0)
+          arising from a use of ‘show’
+          at /home/w/projects/warp/app/Main.hs:105:15-18
+        (Data.String.IsString a0)
+          arising from the literal ‘"OpenUserAgent"’
+          at /home/w/projects/warp/app/Main.hs:105:20-34
+    • In the second argument of ‘($)’, namely ‘show "OpenUserAgent"’
+      In the first argument of ‘bracket_’, namely
+        ‘(putStrLn $ show "OpenUserAgent")’
+      In the expression:
+        bracket_
+          (putStrLn $ show "OpenUserAgent")
+          (putStrLn $ "CloseUserAgent \n" ++ show req)
+          (f $ responseLBS
+                 status200
+                 [(hContentType, "text/plain"),
+                  (hContentLength, (BC.pack $ show bodyLen))]
+                 (body))

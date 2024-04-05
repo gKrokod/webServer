@@ -63,6 +63,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - serverok
+    - directory
     - warp
     - wai
     - http-types
