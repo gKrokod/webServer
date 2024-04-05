@@ -1,1 +1,1 @@
-# serverok
+server 

@@ -3,6 +3,7 @@
 -- {-# LANGUAGE UndecidableInstances       #-}
 -- {-# LANGUAGE DataKinds       #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE LambdaCase #-}
 --
 --
 -- {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -79,15 +80,16 @@ appFile req f = bracket_
   -- (f $ responseLBS status200 [(hContentType, "text/plain"), (hContentLength, (BC.pack $ show bodyLen))] (body <> "\r\n") )
   (do
      fileDirectory <- isDirectory <$> getArgs
-     putStrLn "Directory:"
-     print fileDirectory
-     f undefined
+     let fileName = (maybe "" id fileDirectory) <>  drop (length ("/files/" :: String)) (BC.unpack (rawPathInfo req))
+     -- let fileName2 = "/home/w/projects/warp/sh/README.me"
+     exist <- doesFileExist fileName
+     case exist of
+       False -> app404 req f
+       True -> do
+         body <- LBC.pack <$> readFile fileName 
+         let bodyLen = (+2) $  LBC.length body -- for "\r\n" in the end
+         (f $ responseLBS status200 [(hContentType, "application/octet-stream"), (hContentLength, (BC.pack $ show bodyLen))] (body <> "\r\n") )
     )
-  -- (f $ responseLBS status200 [(hContentType, "text/plain"), (hContentLength, (BC.pack $ show bodyLen))] (body) )
-    where 
-          body = (1+2) `seq` (B.fromStrict $ BC.drop 6 $ (<> "\n")$rawPathInfo req) -- <> "\r\n"
-          -- bodyLen = (+2) $ LBC.length body
-          bodyLen =  LBC.length body 
 
 appBody :: Application
 appBody req f = bracket_
@@ -109,26 +111,3 @@ appUserAgent req f = bracket_
           -- body = (1+2) `seq` (B.fromStrict $ BC.drop 6 $ (<> "\n")$rawPathInfo req) -- <> "\r\n"
           body = (B.fromStrict $ maybe "" (<> "\n") $ requestHeaderUserAgent req)
           bodyLen =  LBC.length body 
-                                               -- fileDirectory <- isDirectory <$> getArgs
-                                               -- putStrLn "Directory:"
-                                               -- case fileDirectory of
-                                               --   Nothing -> sendAll clientSocket http404 
-                                               --   Just dir -> do 
-                                               --     let fileName = dir <>  drop (length ("/files" :: String)) (BC.unpack path)
-                                               --     exist <- doesFileExist fileName
-                                               --     case exist of
-                                               --       False -> do
-                                               --         if POST `elem` setLine then do
-                                               --           print "POST EST"
-                                               --           case  isBody setLine of
-                                               --             Nothing -> sendAll clientSocket http404
-                                               --             Just bodyFile -> do 
-                                               --               BC.writeFile fileName bodyFile
-                                               --               let body' = mconcat[ http201 
-                                               --                                  , "Location: " <> BC.pack fileName
-                                               --                                  , endResponse
-                                               --                                  , "Content-Type: application/octet-stream"
-                                               --                                  , endResponse
-                                               --                                  , endResponse]
-                                               --               sendAll clientSocket body'
-                                               --         else sendAll clientSocket http404
