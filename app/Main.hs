@@ -1,22 +1,21 @@
 module Main (main) where
 
-import Lib
+import qualified Handlers.Logger
+import qualified Logger
 
--- $> print "hello!"
+
+greeting :: (Monad m) => Handlers.Logger.Handle m -> m ()
+greeting h = do
+  Handlers.Logger.logMessage h Handlers.Logger.Debug "Hello my friend"  
+  
 --
 main :: IO ()
 main = do
-  putStrLn "132"
-  putStrLn "ddd"
-  let b = "Petro"
--- $> print "vovo" 
-  putStrLn b
+  let logHandle =
+        Handlers.Logger.Handle
+          { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+            Handlers.Logger.writeLog = Logger.writeLog
+          }
+  greeting logHandle
   pure ()
-
-
-succ' :: Int -> Int
-succ' = (+2) 
-
--- $> succ' 4
--- $> succ 4
 

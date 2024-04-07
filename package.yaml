@@ -2,14 +2,18 @@ name:                serverok
 version:             0.1.0.0
 github:              "githubuser/serverok"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2023 Author name here"
+author:              "gKrokod"
+maintainer:          "@ofspb"
+copyright:           "2024 gKrokod"
 
 extra-source-files:
 - README.md
 - CHANGELOG.md
 
+default-extensions:
+- OverloadedStrings
+- DeriveGeneric
+- LambdaCase
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
 # category:            Web
@@ -35,6 +39,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+  - text
 
 executables:
   serverok-exe:

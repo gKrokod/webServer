@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -9,9 +9,9 @@ version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/serverok#readme>
 homepage:       https://github.com/githubuser/serverok#readme
 bug-reports:    https://github.com/githubuser/serverok/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2023 Author name here
+author:         gKrokod
+maintainer:     @ofspb
+copyright:      2024 gKrokod
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -25,14 +25,22 @@ source-repository head
 
 library
   exposed-modules:
+      Handlers.Logger
+      Handlers.WebLogic
       Lib
+      Logger
   other-modules:
       Paths_serverok
   hs-source-dirs:
       src
+  default-extensions:
+      OverloadedStrings
+      DeriveGeneric
+      LambdaCase
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , text
   default-language: Haskell2010
 
 executable serverok-exe
@@ -41,6 +49,10 @@ executable serverok-exe
       Paths_serverok
   hs-source-dirs:
       app
+  default-extensions:
+      OverloadedStrings
+      DeriveGeneric
+      LambdaCase
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -54,6 +66,10 @@ test-suite serverok-test
       Paths_serverok
   hs-source-dirs:
       test
+  default-extensions:
+      OverloadedStrings
+      DeriveGeneric
+      LambdaCase
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
