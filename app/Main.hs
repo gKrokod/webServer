@@ -28,8 +28,9 @@ app h _req f =
      let handler = Handlers.WebLogic.Handle { Handlers.WebLogic.logger = h, Handlers.WebLogic.buildResponse = responseBuilder }
      -- response <- Handlers.WebLogic.doWork handler (Handlers.WebLogic.MkRequest (rawPathInfo _req))
      -- f $ responseBuilder status200 [(hContentType, "text/plain")] (BR.fromByteString $ Handlers.WebLogic.outBody response)
-     a <- (Handlers.WebLogic.doLogic handler (Handlers.WebLogic.MkRequest (rawPathInfo _req)))
-     f a
+     -- a <- (Handlers.WebLogic.doLogic handler (Handlers.WebLogic.MkRequest (rawPathInfo _req)))
+     (Handlers.WebLogic.doLogic handler (Handlers.WebLogic.MkRequest (rawPathInfo _req))) >>= f
+     -- f a
      -- response <- f <$> Handlers.WebLogic.doLogic handler (... req)
      -- f $ response
      
