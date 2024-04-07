@@ -41,6 +41,7 @@ library:
   source-dirs: src
   dependencies:
   - text
+  - bytestring
 
 executables:
   serverok-exe:
@@ -52,6 +53,10 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - serverok
+    - warp
+    - wai
+    - http-types
+    - binary
 
 tests:
   serverok-test:
