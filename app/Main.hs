@@ -13,6 +13,9 @@ import Network.Wai (Application, responseBuilder)
 -- type Application :: Request -> Respond -> IO ResponseReceived
 -- type Respond = Response -> IO ResponseReceived
 
+
+-- check user will do in another application later
+--
 app :: Handlers.WebLogic.Handle IO -> Application
 app h req f =
   bracket_
@@ -22,7 +25,7 @@ app h req f =
 
 main :: IO ()
 main = do
-  putStrLn "Welcome"
+  putStrLn "Welcome to WebServer"
 
   let logHandle =
         Handlers.Logger.Handle
@@ -31,7 +34,9 @@ main = do
           }
   let handle = Handlers.WebLogic.Handle { 
                  Handlers.WebLogic.logger = logHandle, 
-                 Handlers.WebLogic.buildResponse = responseBuilder }
+                 Handlers.WebLogic.buildResponse = responseBuilder,
+                 Handlers.WebLogic.paginate = 10 }
+           
               -- Handlers.WebLogic.buildResponse = \_ _ _ -> ResponseBuilder (error "sdf") (error "sdf") "sdf"}
 -- run :: Port -> Application -> IO () --
 

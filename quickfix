@@ -1,7 +1,1 @@
-/home/w/projects/warp/src/Handlers/WebLogic.hs:1:1: warning: [-Wmissing-export-lists]
-    The export item ‘module Handlers.WebLogic’ is missing an export list
-/home/w/projects/warp/src/Handlers/WebLogic.hs:3:1: warning: [-Wunused-imports]
-    The qualified import of ‘Data.ByteString’ is redundant
-/home/w/projects/warp/src/Handlers/WebLogic.hs:7:1: warning: [-Wunused-imports]
-    The import of ‘notFound404, status201’
-    from module ‘Network.HTTP.Types’ is redundant
+Ghcid has stopped.
