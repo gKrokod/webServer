@@ -6,6 +6,7 @@ import qualified Handlers.WebLogic
 import qualified Logger
 import Network.Wai.Handler.Warp (run)
 import Network.Wai (Application, responseBuilder)
+import Users
 
 -- old  type Application = Request -> ResourceT IO Response
 --

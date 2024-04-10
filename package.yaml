@@ -42,6 +42,10 @@ library:
   dependencies:
   - text
   - bytestring
+  - aeson
+  - wai
+  - http-types
+  - binary
 
 executables:
   serverok-exe:
@@ -53,10 +57,10 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - serverok
-    - warp
     - wai
-    - http-types
-    - binary
+    - warp
+    # - http-types
+    # - aeson
 
 tests:
   serverok-test:
