@@ -3,6 +3,7 @@ module Main (main) where
 import Control.Exception (bracket_)
 import qualified Handlers.Logger
 import qualified Handlers.WebLogic
+import qualified Handlers.Base
 import qualified Logger
 import Network.Wai.Handler.Warp (run)
 import Network.Wai (Application, responseBuilder)
@@ -34,10 +35,17 @@ main = do
           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
             Handlers.Logger.writeLog = Logger.writeLog
           }
+  let logBase =
+        Handlers.Base.Handle
+          { Handlers.Base.updateUser = \_ -> pure (),
+            Handlers.Base.takeUsers = pure [user1,user2,user3,user4], 
+            Handlers.Base.logger = logHandle 
+          }
   let handle = Handlers.WebLogic.Handle { 
                  Handlers.WebLogic.logger = logHandle, 
                  Handlers.WebLogic.buildResponse = responseBuilder,
                  Handlers.WebLogic.getBody = getRequestBodyChunk,
+                 Handlers.WebLogic.base = logBase,
                  Handlers.WebLogic.paginate = 10 }
            
               -- Handlers.WebLogic.buildResponse = \_ _ _ -> ResponseBuilder (error "sdf") (error "sdf") "sdf"}

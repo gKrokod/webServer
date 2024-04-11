@@ -11,6 +11,14 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as L 
 -- import qualified Data.ByteString as B 
 
+type Users = [User] 
+
+user1 = MkUser "Masha" "m" "1" False False
+user2 = MkUser "Sasha" "s" "2" False True
+user3 = MkUser "Pasha" "p" "3" True False
+user4 = MkUser "Dasha" "d" "4" True True
+
+
 data User = MkUser
   { name :: T.Text
   , login :: T.Text
@@ -46,8 +54,8 @@ data User = MkUser
 --   let configToJSON = encode testConfig :: BC.ByteString
 --   L.writeFile "config/db.cfg" (configToJSON)
 --kk<F5>
-createUser :: IO ()
-createUser = do
+createUser1 :: IO ()
+createUser1 = do
   let testUser = MkUser {
       name = "Петр"
     , login = "Дагер"
