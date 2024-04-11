@@ -6,6 +6,7 @@ import qualified Handlers.WebLogic
 import qualified Logger
 import Network.Wai.Handler.Warp (run)
 import Network.Wai (Application, responseBuilder)
+import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
 import Users
 
 -- old  type Application = Request -> ResourceT IO Response
@@ -36,6 +37,7 @@ main = do
   let handle = Handlers.WebLogic.Handle { 
                  Handlers.WebLogic.logger = logHandle, 
                  Handlers.WebLogic.buildResponse = responseBuilder,
+                 Handlers.WebLogic.getBody = getRequestBodyChunk,
                  Handlers.WebLogic.paginate = 10 }
            
               -- Handlers.WebLogic.buildResponse = \_ _ _ -> ResponseBuilder (error "sdf") (error "sdf") "sdf"}

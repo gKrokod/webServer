@@ -4,11 +4,12 @@
 module Users where 
 
 import qualified Data.Text as T
-import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..), eitherDecodeStrict)
+import qualified Data.Text.Encoding as E
+import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
 import GHC.Generics (Generic)
-import qualified Data.ByteString.Lazy.Char8 as BC
+-- import qualified Data.ByteString.Lazy.Char8 as BC
 import qualified Data.ByteString.Lazy as L 
-import qualified Data.ByteString as B 
+-- import qualified Data.ByteString as B 
 
 data User = MkUser
   { name :: T.Text
@@ -44,23 +45,23 @@ data User = MkUser
 --   } 
 --   let configToJSON = encode testConfig :: BC.ByteString
 --   L.writeFile "config/db.cfg" (configToJSON)
---
+--kk<F5>
 createUser :: IO ()
 createUser = do
   let testUser = MkUser {
-      name = "Piteraaaaaa"
-    , login = "Dager"
+      name = "Петр"
+    , login = "Дагер"
     , password = "qwerty"
     , isAdmin = True
     , isPublisher = True
   } 
-  let userToJSON = encode testUser :: BC.ByteString
+  let userToJSON = encode testUser :: L.ByteString
   L.writeFile "sh/user1.cfg" (userToJSON)
 --
 -- --for work 
 loadUser1 :: IO (Either String User)
 -- loadUser1 =  eitherDecode <$> L.readFile "sh/user1.cfg"
-loadUser1 =  eitherDecodeStrict <$> B.readFile "sh/user1.cfg"
+loadUser1 =  eitherDecode <$> L.readFile "sh/user1.cfg"
 
 loadUser2 :: IO (Either String User)
 loadUser2 =  eitherDecode <$> L.readFile "sh/user2.cfg"
@@ -74,5 +75,6 @@ createUser2 = do
     , isAdmin = True
     , isPublisher = True
   } 
-  let userToJSON = encode testUser :: BC.ByteString
+  let userToJSON = encode testUser :: L.ByteString
   L.writeFile "sh/user2.cfg" (userToJSON)
+
