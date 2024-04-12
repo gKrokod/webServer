@@ -4,6 +4,6 @@ import qualified Handlers.Logger
 
 data Handle m = Handle {
   updateUser :: User -> m (),
-  takeUsers :: m ([User]),
+  takeUsers :: m Users,
   logger :: Handlers.Logger.Handle m
                        }

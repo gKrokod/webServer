@@ -9,6 +9,7 @@ import Network.Wai.Handler.Warp (run)
 import Network.Wai (Application, responseBuilder)
 import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
 import Users
+import qualified Base.MVar
 
 -- old  type Application = Request -> ResourceT IO Response
 --
@@ -29,7 +30,7 @@ app h req f =
 main :: IO ()
 main = do
   putStrLn "Welcome to WebServer"
-
+  base <- Base.MVar.newBaseUser 
   let logHandle =
         Handlers.Logger.Handle
           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
@@ -37,8 +38,8 @@ main = do
           }
   let logBase =
         Handlers.Base.Handle
-          { Handlers.Base.updateUser = \_ -> pure (),
-            Handlers.Base.takeUsers = pure [user1,user2,user3,user4], 
+          { Handlers.Base.updateUser = Base.MVar.updateUser base,
+            Handlers.Base.takeUsers = Base.MVar.takeUsers base, 
             Handlers.Base.logger = logHandle 
           }
   let handle = Handlers.WebLogic.Handle { 

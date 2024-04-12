@@ -15,7 +15,6 @@ import Users
 import Data.Aeson (eitherDecode, eitherDecodeStrict, encode)
 
 
-
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
     base :: Handlers.Base.Handle m,
@@ -63,10 +62,11 @@ endPointUsers h req = do
 existingUsers :: (Monad m) => Handle m -> Request -> m (Response)
 existingUsers h req = do
   let logHandle = logger h 
-  let logBase = base h 
+  let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give users"
-  users <- Handlers.Base.takeUsers logBase
+  users <- Handlers.Base.takeUsers baseHandle
   let body = mkJSON users
+  -- let body = mkJSON (Handlers.Base.bank baseHandle)
   pure $ buildResponse h status200 [] ("All ok. User list:\n" <> B.fromLazyByteString body)
 
 mkJSON :: Users -> L.ByteString
@@ -75,7 +75,7 @@ mkJSON users = mconcat ["{\"users\":[",L.intercalate "," (Prelude.map encode use
 createUser :: (Monad m) => Handle m -> Request -> m (Response)
 createUser h req = do
   let logHandle = logger h 
-  let logBase = base h 
+  let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "create User"
   body <- eitherDecodeStrict <$> getBody h req -- :: (Either String User)
   case body of
@@ -84,7 +84,7 @@ createUser h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure $  buildResponse h notFound404 [] "Not ok. User cannot be created. Status 404\n"
     Right user -> do
-      Handlers.Base.updateUser logBase user
+      Handlers.Base.updateUser baseHandle user
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Succesfully create user"
       pure $ buildResponse h status200 [] "All ok. User created. Status 200\n" 
 

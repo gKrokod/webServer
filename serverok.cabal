@@ -25,6 +25,8 @@ source-repository head
 
 library
   exposed-modules:
+      Base.MVar
+      Handlers.Base
       Handlers.Logger
       Handlers.WebLogic
       Logger
