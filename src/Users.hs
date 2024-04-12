@@ -28,6 +28,11 @@ data User = MkUser
   } deriving stock (Show, Generic)
     deriving anyclass (ToJSON, FromJSON)
 
+data WebConfig = MkWebConfig
+  { limit :: Int
+  } deriving stock (Show, Generic)
+    deriving anyclass (ToJSON, FromJSON)
+
 -- data ConfigDB = ConfigDB {
 --     cHost :: T.Text
 --   , cPort :: T.Text
@@ -54,6 +59,14 @@ data User = MkUser
 --   let configToJSON = encode testConfig :: BC.ByteString
 --   L.writeFile "config/db.cfg" (configToJSON)
 --kk<F5>
+createConfig :: IO ()
+createConfig = do
+  let testConfig = MkWebConfig {
+      limit = 3 -- paginate
+  } 
+  let webToJSON = encode testConfig :: L.ByteString
+  L.writeFile "config/web.cfg" (webToJSON)
+
 createUser1 :: IO ()
 createUser1 = do
   let testUser = MkUser {
@@ -66,6 +79,9 @@ createUser1 = do
   let userToJSON = encode testUser :: L.ByteString
   L.writeFile "sh/user1.cfg" (userToJSON)
 --
+loadWeb :: IO (Either String WebConfig)
+loadWeb =  eitherDecode <$> L.readFile "config/web.cfg"
+
 -- --for work 
 loadUser1 :: IO (Either String User)
 -- loadUser1 =  eitherDecode <$> L.readFile "sh/user1.cfg"

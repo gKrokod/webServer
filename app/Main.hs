@@ -31,27 +31,31 @@ main :: IO ()
 main = do
   putStrLn "Welcome to WebServer"
   base <- Base.MVar.newBaseUser 
-  let logHandle =
-        Handlers.Logger.Handle
-          { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
-            Handlers.Logger.writeLog = Logger.writeLog
-          }
-  let logBase =
-        Handlers.Base.Handle
-          { Handlers.Base.updateUser = Base.MVar.updateUser base,
-            Handlers.Base.takeUsers = Base.MVar.takeUsers base, 
-            Handlers.Base.logger = logHandle 
-          }
-  let handle = Handlers.WebLogic.Handle { 
-                 Handlers.WebLogic.logger = logHandle, 
-                 Handlers.WebLogic.buildResponse = responseBuilder,
-                 Handlers.WebLogic.getBody = getRequestBodyChunk,
-                 Handlers.WebLogic.base = logBase,
-                 Handlers.WebLogic.paginate = 10 }
-           
-              -- Handlers.WebLogic.buildResponse = \_ _ _ -> ResponseBuilder (error "sdf") (error "sdf") "sdf"}
--- run :: Port -> Application -> IO () --
+  limMessage <- loadWeb
+  case limMessage of
+   Left e -> putStrLn $ "fail decode config\n" <> e
+   Right cfg -> do
+    let logHandle =
+          Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = Logger.writeLog
+            }
+    let logBase =
+          Handlers.Base.Handle
+            { Handlers.Base.updateUser = Base.MVar.updateUser base,
+              Handlers.Base.takeUsers = Base.MVar.takeUsers base, 
+              Handlers.Base.logger = logHandle 
+            }
+    let handle = Handlers.WebLogic.Handle { 
+                   Handlers.WebLogic.logger = logHandle, 
+                   Handlers.WebLogic.buildResponse = responseBuilder,
+                   Handlers.WebLogic.getBody = getRequestBodyChunk,
+                   Handlers.WebLogic.base = logBase,
+                   Handlers.WebLogic.paginate = limit cfg }
+             
+                -- Handlers.WebLogic.buildResponse = \_ _ _ -> ResponseBuilder (error "sdf") (error "sdf") "sdf"}
+  -- run :: Port -> Application -> IO () --
 
-  run 4221 (app handle)
-  pure ()
+    run 4221 (app handle)
+    -- pure ()
 
