@@ -7,12 +7,15 @@ import qualified Handlers.Logger
 import qualified Handlers.Base
 import Network.HTTP.Types.Header (hContentType)
 import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
-import Data.Binary.Builder as B (fromByteString, Builder, fromLazyByteString)
+import Data.Binary.Builder as B (fromByteString, Builder, fromLazyByteString, putStringUtf8)
 import Data.ByteString as B 
+import Data.ByteString.Char8 as BC (readInt)
 import qualified Data.ByteString.Lazy as L 
-import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
+import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk, queryString, rawQueryString)
 import Users
+import Images
 import Data.Aeson (eitherDecode, eitherDecodeStrict, encode)
+import Data.ByteString.Base64 as B64
 
 
 data Handle m = Handle
@@ -125,11 +128,38 @@ endPointImages h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Images"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    path | B.isPrefixOf "/images" path  -> undefined -- получение одной картинки 
+    path | B.isPrefixOf "/images" path  -> existingImages h req -- получение одной картинки 
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
             pure $ buildResponse h notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= /images"
+
+-- decode and encode sdelaj methodami. Kak perevodit' nomer id is ByteString v Int prosto?
+-- Pochemu querystring tolko 1 znachenie?
+existingImages :: (Monad m) => Handle m -> Request -> m (Response)
+existingImages h req = do
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give image"
+  let queryImage = queryString req
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show queryImage)
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $  rawQueryString req) 
+  case queryImage of
+    [("id", Just n)] -> do
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Good request image"  
+      mbImage <- Handlers.Base.findImage baseHandle (maybe 0 fst (BC.readInt n)) -- tyt vukinyt oshibky, chto ne good nomer
+      case mbImage of
+        Nothing -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Image not found in base"  
+          failResponse h
+        Just img -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Image found in base"  
+          let contentType = E.encodeUtf8 $ iHeader img 
+          let content = B64.decodeBase64Lenient $ E.encodeUtf8 $ iBase64 img 
+          pure $ buildResponse h status200 [(hContentType, contentType)] (B.fromByteString content)
+    _ -> do
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Bad request image"  
+      failResponse h
 
 okResponse :: (Monad m) => Handle m -> m (Response)
 okResponse h = pure $ buildResponse h status200 [] "All ok. status 200\n" 

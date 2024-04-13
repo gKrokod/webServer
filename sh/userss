@@ -1,1 +1,0 @@
-{"users":[{"isAdmin":false,"isPublisher":false,"login":"m","name":"Masha","password":"1"},{"isAdmin":false,"isPublisher":true,"login":"s","name":"Sasha","password":"2"},{"isAdmin":true,"isPublisher":false,"login":"p","name":"Pasha","password":"3"},{"isAdmin":true,"isPublisher":true,"login":"d","name":"Dasha","password":"4"}]}

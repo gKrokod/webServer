@@ -1,15 +1,18 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveAnyClass #-}
+-- {-# LANGUAGE StandaloneDeriving #-}
 
 module Users where 
 
 import qualified Data.Text as T
+-- import qualified Data.Text.IO as TIO
 import qualified Data.Text.Encoding as E
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
 import GHC.Generics (Generic)
 -- import qualified Data.ByteString.Lazy.Char8 as BC
 import qualified Data.ByteString.Lazy as L 
--- import qualified Data.ByteString as B 
+import qualified Data.ByteString as B 
+-- import Data.ByteString.Base64
 
 type Users = [User] 
 
@@ -32,6 +35,7 @@ data WebConfig = MkWebConfig
   { limit :: Int
   } deriving stock (Show, Generic)
     deriving anyclass (ToJSON, FromJSON)
+
 
 -- data ConfigDB = ConfigDB {
 --     cHost :: T.Text

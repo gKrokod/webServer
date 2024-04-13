@@ -1,7 +1,9 @@
 module Base.MVar where
 --simple database for debug, base on MVar
 import Users
+import Images
 import Control.Concurrent (MVar, newMVar, putMVar, takeMVar)
+import qualified Data.Map.Strict as Map
 
 newtype UserDataBase = UserDataBase (MVar Users)
 
@@ -22,3 +24,17 @@ takeUsers (UserDataBase m) = do
   base <- takeMVar m
   putMVar m base
   return base
+
+type ImageDB = Map.Map Int Image
+newtype ImageDataBase = ImageDataBase (MVar ImageDB)
+
+newBaseImage :: IO ImageDataBase
+newBaseImage = do
+  m <- newMVar (Map.singleton 1 testImage)
+  return $ ImageDataBase m
+            
+findImage :: ImageDataBase -> Int -> IO (Maybe Image)
+findImage (ImageDataBase m) k = do
+  base <- takeMVar m
+  putMVar m base
+  return $ (Map.lookup k base)

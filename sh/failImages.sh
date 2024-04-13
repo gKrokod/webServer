@@ -6,4 +6,4 @@
 #
 # DON'T EDIT THIS!
 # exec stack run --silent -- "$@"
-curl -v 127.0.0.1:4221/users
+curl -v "127.0.0.1:4221/images?id=1&key=100"

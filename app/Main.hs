@@ -9,6 +9,7 @@ import Network.Wai.Handler.Warp (run)
 import Network.Wai (Application, responseBuilder)
 import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
 import Users
+import Images
 import qualified Base.MVar
 
 -- old  type Application = Request -> ResourceT IO Response
@@ -31,6 +32,7 @@ main :: IO ()
 main = do
   putStrLn "Welcome to WebServer"
   base <- Base.MVar.newBaseUser 
+  baseImage <- Base.MVar.newBaseImage
   limMessage <- loadWeb
   case limMessage of
    Left e -> putStrLn $ "fail decode config\n" <> e
@@ -44,6 +46,7 @@ main = do
           Handlers.Base.Handle
             { Handlers.Base.updateUser = Base.MVar.updateUser base,
               Handlers.Base.takeUsers = Base.MVar.takeUsers base, 
+              Handlers.Base.findImage = Base.MVar.findImage baseImage, 
               Handlers.Base.logger = logHandle 
             }
     let handle = Handlers.WebLogic.Handle { 

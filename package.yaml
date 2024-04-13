@@ -46,6 +46,8 @@ library:
   - wai
   - http-types
   - binary
+  - base64
+  - containers
 
 executables:
   serverok-exe:
