@@ -10,6 +10,7 @@ import Network.Wai (Application, responseBuilder)
 import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
 import Users
 import Images
+import Category
 import qualified Base.MVar
 
 -- old  type Application = Request -> ResourceT IO Response

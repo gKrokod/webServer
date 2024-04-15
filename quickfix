@@ -2,55 +2,99 @@
     The export item ‘module Handlers.WebLogic’ is missing an export list
 /home/w/projects/warp/src/Handlers/WebLogic.hs:3:1: warning: [-Wunused-imports]
     The qualified import of ‘Data.ByteString’ is redundant
-/home/w/projects/warp/src/Handlers/WebLogic.hs:8:1: warning: [-Wunused-imports]
-    The import of ‘Network.HTTP.Types.Header’ is redundant
 /home/w/projects/warp/src/Handlers/WebLogic.hs:9:52: warning: [-Wunused-imports]
     The import of ‘status201’
     from module ‘Network.HTTP.Types’ is redundant
-/home/w/projects/warp/src/Handlers/WebLogic.hs:10:34: warning: [-Wunused-imports]
-    The import of ‘fromByteString’
+/home/w/projects/warp/src/Handlers/WebLogic.hs:10:79: warning: [-Wunused-imports]
+    The import of ‘putStringUtf8’
     from module ‘Data.Binary.Builder’ is redundant
-/home/w/projects/warp/src/Handlers/WebLogic.hs:12:53: warning: [-Wunused-imports]
-    The import of ‘getRequestBodyChunk’
+/home/w/projects/warp/src/Handlers/WebLogic.hs:14:1: warning: [-Wunused-imports]
+    The import of ‘getRequestBodyChunk, Request(rawQueryString)’
     from module ‘Network.Wai’ is redundant
-/home/w/projects/warp/src/Handlers/WebLogic.hs:13:1: warning: [-Wunused-imports]
-    The import of ‘Users’ is redundant
-/home/w/projects/warp/src/Handlers/WebLogic.hs:14:20: warning: [-Wunused-imports]
+/home/w/projects/warp/src/Handlers/WebLogic.hs:17:20: warning: [-Wunused-imports]
     The import of ‘eitherDecode’ from module ‘Data.Aeson’ is redundant
-/home/w/projects/warp/src/Handlers/WebLogic.hs:47:5: warning: [-Woverlapping-patterns]
+/home/w/projects/warp/src/Handlers/WebLogic.hs:49:5: warning: [-Woverlapping-patterns]
     Pattern match is redundant
     In a case alternative: _ -> ...
 /home/w/projects/warp/src/Handlers/WebLogic.hs:62:5: warning: [-Woverlapping-patterns]
     Pattern match is redundant
     In a case alternative: _ -> ...
-/home/w/projects/warp/src/Handlers/WebLogic.hs:67:7: warning: [-Wname-shadowing]
-    This binding for ‘logBase’ shadows the existing binding
-      imported from ‘Prelude’ at /home/w/projects/warp/src/Handlers/WebLogic.hs:1:8-24
-      (and originally defined in ‘GHC.Float’)
-/home/w/projects/warp/src/Handlers/WebLogic.hs:94:5: warning: [-Woverlapping-patterns]
+/home/w/projects/warp/src/Handlers/WebLogic.hs:65:17: warning: [-Wunused-matches]
+    Defined but not used: ‘req’
+/home/w/projects/warp/src/Handlers/WebLogic.hs:105:5: warning: [-Woverlapping-patterns]
     Pattern match is redundant
     In a case alternative: _ -> ...
-/home/w/projects/warp/src/Handlers/WebLogic.hs:111:5: warning: [-Woverlapping-patterns]
+/home/w/projects/warp/src/Handlers/WebLogic.hs:122:5: warning: [-Woverlapping-patterns]
     Pattern match is redundant
     In a case alternative: _ -> ...
-/home/w/projects/warp/src/Handlers/WebLogic.hs:123:5: warning: [-Woverlapping-patterns]
+/home/w/projects/warp/src/Handlers/WebLogic.hs:134:5: warning: [-Woverlapping-patterns]
     Pattern match is redundant
     In a case alternative: _ -> ...
-/home/w/projects/warp/src/Handlers/WebLogic.hs:130:1: warning: [-Wmissing-signatures]
+/home/w/projects/warp/src/Handlers/WebLogic.hs:167:1: warning: [-Wmissing-signatures]
     Top-level binding with no type signature:
       defaultResponse :: Handle m -> Response
 /home/w/projects/warp/app/Main.hs:10:1: warning: [-Wunused-imports]
     The import of ‘Request, Response, Request(rawPathInfo)’
     from module ‘Network.Wai’ is redundant
-/home/w/projects/warp/app/Main.hs:11:1: warning: [-Wunused-imports]
-    The import of ‘Users’ is redundant
-/home/w/projects/warp/app/Main.hs:38:7: warning: [-Wname-shadowing]
+/home/w/projects/warp/app/Main.hs:12:1: warning: [-Wunused-imports]
+    The import of ‘Images’ is redundant
+/home/w/projects/warp/app/Main.hs:45:9: warning: [-Wname-shadowing]
     This binding for ‘logBase’ shadows the existing binding
       imported from ‘Prelude’ at /home/w/projects/warp/app/Main.hs:1:8-11
       (and originally defined in ‘GHC.Float’)
+/home/w/projects/warp/src/Images.hs:1:1: warning: [-Wmissing-export-lists]
+    The export item ‘module Images’ is missing an export list
+  |
+1 | {-# LANGUAGE DerivingStrategies #-}
+  | ^
+/home/w/projects/warp/src/Images.hs:9:1: warning: [-Wunused-imports]
+    The import of ‘eitherDecode, encode’
+    from module ‘Data.Aeson’ is redundant
+  |
+9 | import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /home/w/projects/warp/src/Users.hs:1:1: warning: [-Wmissing-export-lists]
     The export item ‘module Users’ is missing an export list
-/home/w/projects/warp/src/Users.hs:7:1: warning: [-Wunused-imports]
+  |
+1 | {-# LANGUAGE DerivingStrategies #-}
+  | ^
+/home/w/projects/warp/src/Users.hs:9:1: warning: [-Wunused-imports]
     The qualified import of ‘Data.Text.Encoding’ is redundant
+  |
+9 | import qualified Data.Text.Encoding as E
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/w/projects/warp/src/Users.hs:14:1: warning: [-Wunused-imports]
+    The qualified import of ‘Data.ByteString’ is redundant
+   |
+14 | import qualified Data.ByteString as B 
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/w/projects/warp/src/Users.hs:19:1: warning: [-Wmissing-signatures]
+    Top-level binding with no type signature: user1 :: User
+   |
+19 | user1 = MkUser "Masha" "m" "1" False False
+   | ^^^^^
+/home/w/projects/warp/src/Users.hs:20:1: warning: [-Wmissing-signatures]
+    Top-level binding with no type signature: user2 :: User
+   |
+20 | user2 = MkUser "Sasha" "s" "2" False True
+   | ^^^^^
+/home/w/projects/warp/src/Users.hs:21:1: warning: [-Wmissing-signatures]
+    Top-level binding with no type signature: user3 :: User
+   |
+21 | user3 = MkUser "Pasha" "p" "3" True False
+   | ^^^^^
+/home/w/projects/warp/src/Users.hs:22:1: warning: [-Wmissing-signatures]
+    Top-level binding with no type signature: user4 :: User
+   |
+22 | user4 = MkUser "Dasha" "d" "4" True True
+   | ^^^^^
 /home/w/projects/warp/src/Handlers/Base.hs:1:1: warning: [-Wmissing-export-lists]
     The export item ‘module Handlers.Base’ is missing an export list
+  |
+1 | module Handlers.Base where
+  | ^
+/home/w/projects/warp/src/Base/MVar.hs:1:1: warning: [-Wmissing-export-lists]
+    The export item ‘module Base.MVar’ is missing an export list
+  |
+1 | module Base.MVar where
+  | ^

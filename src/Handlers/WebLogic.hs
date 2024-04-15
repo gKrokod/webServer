@@ -17,7 +17,6 @@ import Images
 import Data.Aeson (eitherDecode, eitherDecodeStrict, encode)
 import Data.ByteString.Base64 as B64
 
-
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
     base :: Handlers.Base.Handle m,
@@ -41,9 +40,9 @@ doLogic h req = do
   -- Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "send response"  
   case rawPathInfo req of
     path | B.isPrefixOf "/news" path  -> endPointNews h req
-         | B.isPrefixOf "/users" path  ->  endPointUsers h req
+         | B.isPrefixOf "/users" path  ->  endPointUsers h req   -- +
          | B.isPrefixOf "/categories" path  -> endPointCategories h req
-         | B.isPrefixOf "/images" path  ->  endPointImages h req
+         | B.isPrefixOf "/images" path  ->  endPointImages h req -- +
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
             pure $ buildResponse h notFound404 [] "notFound bro\n"
@@ -121,6 +120,17 @@ endPointCategories h req = do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
             pure $ buildResponse h notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= /categories"
+--
+-- to do
+--
+existingCategories :: (Monad m) => Handle m -> Request -> m (Response)
+existingCategories h req = undefined 
+
+createCategory :: (Monad m) => Handle m -> Request -> m (Response)
+createCategory h req = undefined 
+
+editCategory :: (Monad m) => Handle m -> Request -> m (Response)
+editCategory h req = undefined 
 
 
 endPointImages :: (Monad m) => Handle m -> Request -> m (Response) 
@@ -134,31 +144,30 @@ endPointImages h req = do
             pure $ buildResponse h notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= /images"
 
--- decode and encode sdelaj methodami. Kak perevodit' nomer id is ByteString v Int prosto?
--- Pochemu querystring tolko 1 znachenie?
 existingImages :: (Monad m) => Handle m -> Request -> m (Response)
 existingImages h req = do
   let logHandle = logger h 
   let baseHandle = base h 
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give image"
   let queryImage = queryString req
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show queryImage)
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $  rawQueryString req) 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give image with query string"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryImage)
+  -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawQueryString req) 
   case queryImage of
     [("id", Just n)] -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Good request image"  
-      mbImage <- Handlers.Base.findImage baseHandle (maybe 0 fst (BC.readInt n)) -- tyt vukinyt oshibky, chto ne good nomer
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Good request image"  
+      let idImage = maybe (-1) fst (BC.readInt n) 
+      mbImage <- Handlers.Base.findImage baseHandle idImage 
       case mbImage of
         Nothing -> do
-          Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Image not found in base"  
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning ("Image with id = \"" <> (E.decodeUtf8 n) <> "\" not found in base")
           failResponse h
         Just img -> do
-          Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Image found in base"  
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Image found in base"  
           let contentType = E.encodeUtf8 $ iHeader img 
           let content = B64.decodeBase64Lenient $ E.encodeUtf8 $ iBase64 img 
           pure $ buildResponse h status200 [(hContentType, contentType)] (B.fromByteString content)
     _ -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Bad request image"  
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request image"  
       failResponse h
 
 okResponse :: (Monad m) => Handle m -> m (Response)
