@@ -34,6 +34,7 @@ main = do
   putStrLn "Welcome to WebServer"
   base <- Base.MVar.newBaseUser 
   baseImage <- Base.MVar.newBaseImage
+  baseCategory <- Base.MVar.newBaseCategory
   limMessage <- loadWeb
   case limMessage of
    Left e -> putStrLn $ "fail decode config\n" <> e
@@ -48,6 +49,7 @@ main = do
             { Handlers.Base.updateUser = Base.MVar.updateUser base,
               Handlers.Base.takeUsers = Base.MVar.takeUsers base, 
               Handlers.Base.findImage = Base.MVar.findImage baseImage, 
+              Handlers.Base.takeCategories = Base.MVar.takeCategories baseCategory, 
               Handlers.Base.logger = logHandle 
             }
     let handle = Handlers.WebLogic.Handle { 

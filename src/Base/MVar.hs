@@ -2,6 +2,7 @@ module Base.MVar where
 --simple database for debug, base on MVar
 import Users
 import Images
+import Category
 import Control.Concurrent (MVar, newMVar, putMVar, takeMVar)
 import qualified Data.Map.Strict as Map
 
@@ -38,3 +39,16 @@ findImage (ImageDataBase m) k = do
   base <- takeMVar m
   putMVar m base
   return $ (Map.lookup k base)
+
+newtype CategoryDataBase = CategoryDataBase (MVar CategoryDictionary)
+
+newBaseCategory :: IO CategoryDataBase
+newBaseCategory = do
+  m <- newMVar (CategoryDictionary testTree)
+  return $ CategoryDataBase m
+
+takeCategories :: CategoryDataBase -> IO CategoryDictionary
+takeCategories (CategoryDataBase m) = do
+  base <- takeMVar m
+  putMVar m base
+  return base

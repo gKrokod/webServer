@@ -20,6 +20,9 @@ import Data.Bool
 --
 -- for Categore Dictionary
 
+data Category = Category { categoryName :: T.Text } deriving Show
+data CategoryDictionary = CategoryDictionary { categoryDictionaryTree :: Rose} deriving Show
+
 type Rose = Tree T.Text
 -- instance PersistField Rose where
 --   toPersistValue = PersistByteString . BC.toStrict . encode
@@ -37,8 +40,6 @@ type OldRose = Rose
 type NewRose = Rose
 type AddRose = Rose
 
-data Category = Category { categoryName :: T.Text }
-data CategoryDictionary = CategoryDictionary { categoryDictionaryTree :: Rose} deriving Show
 --
 --переименовать категорию
 renameRose :: OldName -> NewName -> Rose -> NewRose 

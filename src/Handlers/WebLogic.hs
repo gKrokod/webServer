@@ -1,5 +1,5 @@
 module Handlers.WebLogic where
-
+-- import Data.Aeson
 import qualified Data.ByteString as B
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
@@ -14,7 +14,9 @@ import qualified Data.ByteString.Lazy as L
 import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk, queryString, rawQueryString)
 import Users
 import Images
-import Data.Aeson (eitherDecode, eitherDecodeStrict, encode)
+import Category
+import Data.Tree
+import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON)
 import Data.ByteString.Base64 as B64
 
 data Handle m = Handle
@@ -31,6 +33,8 @@ data Handle m = Handle
 -- type Application :: Request -> Respond -> IO ResponseReceived
 -- type Respond = Response -> IO ResponseReceived
 
+mkJSON :: (ToJSON a) =>  [a] -> L.ByteString
+mkJSON xs = mconcat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]
 
 doLogic :: (Monad m) => Handle m -> Request -> m (Response) 
 doLogic h req = do
@@ -71,8 +75,8 @@ existingUsers h req = do
   -- let body = mkJSON (Handlers.Base.bank baseHandle)
   pure $ buildResponse h status200 [] ("All ok. User list:\n" <> B.fromLazyByteString body)
 
-mkJSON :: Users -> L.ByteString
-mkJSON users = mconcat ["{\"users\":[",L.intercalate "," (Prelude.map encode users),"]}"]
+-- mkJSON :: Users -> L.ByteString
+-- mkJSON users = mconcat ["{\"users\":[",L.intercalate "," (Prelude.map encode users),"]}"]
 
 createUser :: (Monad m) => Handle m -> Request -> m (Response)
 createUser h req = do
@@ -115,7 +119,7 @@ endPointCategories h req = do
   case rawPathInfo req of
     path | B.isPrefixOf "/categories/create" path  -> undefined -- создание категории 
          | B.isPrefixOf "/categories/edit" path  -> undefined -- редактирование категории (названия и смена родительской)
-         | B.isPrefixOf "/categories" path  -> undefined -- получение списка всех 
+         | B.isPrefixOf "/categories" path  -> existingCategories h req -- получение списка всех 
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
             pure $ buildResponse h notFound404 [] "notFound bro\n"
@@ -124,14 +128,20 @@ endPointCategories h req = do
 -- to do
 --
 existingCategories :: (Monad m) => Handle m -> Request -> m (Response)
-existingCategories h req = undefined 
+existingCategories h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give categories"
+  categories <- Handlers.Base.takeCategories baseHandle
+  let body = mkJSON (mconcat $ levels $ categoryDictionaryTree categories)
+  pure $ buildResponse h status200 [] ("All ok. Categories list:\n" <> B.fromLazyByteString body)
 
+--
 createCategory :: (Monad m) => Handle m -> Request -> m (Response)
 createCategory h req = undefined 
 
 editCategory :: (Monad m) => Handle m -> Request -> m (Response)
 editCategory h req = undefined 
-
 
 endPointImages :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointImages h req = do
