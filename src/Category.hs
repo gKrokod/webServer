@@ -20,7 +20,7 @@ import Data.Bool
 --
 -- for Categore Dictionary
 
-data Category = Category { categoryName :: T.Text } deriving Show
+-- data Category = Category { categoryName :: T.Text } deriving Show
 data CategoryDictionary = CategoryDictionary { categoryDictionaryTree :: Rose} deriving Show
 
 type Rose = Tree T.Text
@@ -78,23 +78,23 @@ changeRose name parent rose = case newRose of
                    else bool Nothing (Just parent) (parent `elem` rose)
 -- сделать из дерева список и отсортировать
 
-treeToList :: Rose -> [Category] -- [T.Text]
-treeToList = map Category . Data.List.sort . flatten 
+-- treeToList :: Rose -> [Category] -- [T.Text]
+-- treeToList = map Category . Data.List.sort . flatten 
 -- вывести структуру категорий (дерева)
 
 showCategory :: Rose -> IO ()
 showCategory = putStrLn . drawTree . fmap show
 
-cat1, cat2 :: Category
-cat1 = Category { categoryName = "Man" }
-cat2 = Category { categoryName = "Woman" }
-cat3 = Category { categoryName = "Abstract" }
-cat4 = Category { categoryName = "Warrior" }
-cat5 = Category { categoryName = "Archer" }
-cat6 = Category { categoryName = "Witch" }
-cat7 = Category { categoryName = "Evil" }
-cat8 = Category { categoryName = "Good" }
-cat9 = Category { categoryName = "Neutral" }
+-- cat1, cat2 :: Category
+-- cat1 = Category { categoryName = "Man" }
+-- cat2 = Category { categoryName = "Woman" }
+-- cat3 = Category { categoryName = "Abstract" }
+-- cat4 = Category { categoryName = "Warrior" }
+-- cat5 = Category { categoryName = "Archer" }
+-- cat6 = Category { categoryName = "Witch" }
+-- cat7 = Category { categoryName = "Evil" }
+-- cat8 = Category { categoryName = "Good" }
+-- cat9 = Category { categoryName = "Neutral" }
 
 catTr1 :: CategoryDictionary
 catTr1 = CategoryDictionary { categoryDictionaryTree = Node "Abstract" [Node "Man" [Node "Warrior" [Node "Evil" [], Node "Good" [], Node "Neutral" []], Node "Archer" []], Node "Woman" [Node "Witch" []]] }
