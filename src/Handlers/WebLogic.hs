@@ -33,7 +33,9 @@ data Handle m = Handle
 -- last type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived -- passing style?
 -- type Application :: Request -> Respond -> IO ResponseReceived
 -- type Respond = Response -> IO ResponseReceived
-
+--
+-- mkJSON :: (ToJSON a) =>  [a] -> PANIGATE LIMIT -> L.ByteString
+-- mkJSON xs limit = take limit $ concat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]
 mkJSON :: (ToJSON a) =>  [a] -> L.ByteString
 mkJSON xs = mconcat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]
 
@@ -46,7 +48,7 @@ doLogic h req = do
   case rawPathInfo req of
     path | B.isPrefixOf "/news" path  -> endPointNews h req
          | B.isPrefixOf "/users" path  ->  endPointUsers h req   -- +
-         | B.isPrefixOf "/categories" path  -> endPointCategories h req
+         | B.isPrefixOf "/categories" path  -> endPointCategories h req -- +
          | B.isPrefixOf "/images" path  ->  endPointImages h req -- +
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
@@ -118,7 +120,7 @@ endPointCategories h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Categories"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    path | B.isPrefixOf "/categories/create" path  -> undefined -- создание категории 
+    path | B.isPrefixOf "/categories/create" path  -> createCategory h req -- создание категории 
          | B.isPrefixOf "/categories/edit" path  -> editCategory h req -- редактирование категории (названия и смена родительской)
          | B.isPrefixOf "/categories" path  -> existingCategories h req -- получение списка всех 
          | otherwise -> do
@@ -138,9 +140,29 @@ existingCategories h req = do
   let body = mkJSON (sort $ flatten $ categoryDictionaryTree categories)
   pure $ buildResponse h status200 [] ("All ok. Categories list:\n" <> B.fromLazyByteString body)
 
---
+ -- редактирование названия и смена родительской категории
+-- curl "127.0.0.1:4221/categories/edit?name=Angel&parent=Abstract"
+-- curl -v -X POST 127.0.0.1:4221/categories/create?parent=Abstract -H "Content-Type: application/json" -d '{"categoryDictionaryTree":"Node {rootLabel :: a, subForest :: [Tree a]}"'
+-- подумать надо дораоткой, чтобы создавать категорию, присывая дерево в теле запроса. надо ли это?
 createCategory :: (Monad m) => Handle m -> Request -> m (Response)
-createCategory h req = undefined 
+createCategory h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  let queryCreateCategory = queryString req
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryCreateCategory)
+  case queryCreateCategory of
+    [("name", Just name), ("parent", Just parent)] -> do
+      let [name',parent'] = map E.decodeUtf8 [name, parent]
+      categories <- Handlers.Base.takeCategories baseHandle
+      let categories' = CategoryDictionary 
+                        $ insertRose parent' (Node name' []) 
+                        $ categoryDictionaryTree categories
+      Handlers.Base.updateCategories baseHandle categories'
+      existingCategories h req
+    _ -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request create category"  
+      failResponse h
 
  -- редактирование названия и смена родительской категории
 -- curl "127.0.0.1:4221/categories/edit?name=Witch&newname=Pitch&parent=Woman"
