@@ -8,7 +8,7 @@ import qualified Handlers.Base
 import Network.HTTP.Types.Header (hContentType)
 import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
 import Data.Binary.Builder as B (fromByteString, Builder, fromLazyByteString, putStringUtf8)
-import Data.ByteString as B 
+import qualified Data.ByteString as B 
 import Data.ByteString.Char8 as BC (readInt)
 import qualified Data.ByteString.Lazy as L 
 import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk, queryString, rawQueryString)
@@ -18,12 +18,13 @@ import Category
 import Data.Tree
 import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON)
 import Data.ByteString.Base64 as B64
+import Data.List (sort)
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
     base :: Handlers.Base.Handle m,
     buildResponse :: Status -> ResponseHeaders -> Builder -> Response,
-    getBody :: Request -> m (ByteString),
+    getBody :: Request -> m (B.ByteString),
     paginate :: Int  -- limit from config file
   }
 
@@ -118,7 +119,7 @@ endPointCategories h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
     path | B.isPrefixOf "/categories/create" path  -> undefined -- создание категории 
-         | B.isPrefixOf "/categories/edit" path  -> undefined -- редактирование категории (названия и смена родительской)
+         | B.isPrefixOf "/categories/edit" path  -> editCategory h req -- редактирование категории (названия и смена родительской)
          | B.isPrefixOf "/categories" path  -> existingCategories h req -- получение списка всех 
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
@@ -133,15 +134,37 @@ existingCategories h req = do
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give categories"
   categories <- Handlers.Base.takeCategories baseHandle
-  let body = mkJSON (mconcat $ levels $ categoryDictionaryTree categories)
+  -- let body = mkJSON (mconcat $ levels $ categoryDictionaryTree categories)
+  let body = mkJSON (sort $ flatten $ categoryDictionaryTree categories)
   pure $ buildResponse h status200 [] ("All ok. Categories list:\n" <> B.fromLazyByteString body)
 
 --
 createCategory :: (Monad m) => Handle m -> Request -> m (Response)
 createCategory h req = undefined 
 
+ -- редактирование названия и смена родительской категории
+-- curl "127.0.0.1:4221/categories/edit?name=Witch&newname=Pitch&parent=Woman"
 editCategory :: (Monad m) => Handle m -> Request -> m (Response)
-editCategory h req = undefined 
+editCategory h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  let queryEditCategory = queryString req
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category with query string"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryEditCategory)
+  -- failResponse h
+  case queryEditCategory of
+    [("name", Just name), ("newname", Just newname), ("parent", Just parent)] -> do
+      let [name',newname',parent'] = map E.decodeUtf8 [name, newname, parent]
+      categories <- Handlers.Base.takeCategories baseHandle
+      let categories' = CategoryDictionary 
+                        $ renameRose name' newname' 
+                        $ changeRose name' parent' 
+                        $ categoryDictionaryTree categories
+      Handlers.Base.updateCategories baseHandle categories'
+      existingCategories h req
+    _ -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request edit category"  
+      failResponse h
 
 endPointImages :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointImages h req = do

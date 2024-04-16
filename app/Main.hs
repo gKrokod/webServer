@@ -50,6 +50,7 @@ main = do
               Handlers.Base.takeUsers = Base.MVar.takeUsers base, 
               Handlers.Base.findImage = Base.MVar.findImage baseImage, 
               Handlers.Base.takeCategories = Base.MVar.takeCategories baseCategory, 
+              Handlers.Base.updateCategories = Base.MVar.updateCategories baseCategory, 
               Handlers.Base.logger = logHandle 
             }
     let handle = Handlers.WebLogic.Handle { 

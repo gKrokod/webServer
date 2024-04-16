@@ -82,7 +82,6 @@ treeToList :: Rose -> [Category] -- [T.Text]
 treeToList = map Category . Data.List.sort . flatten 
 -- вывести структуру категорий (дерева)
 
-
 showCategory :: Rose -> IO ()
 showCategory = putStrLn . drawTree . fmap show
 

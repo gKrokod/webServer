@@ -52,3 +52,10 @@ takeCategories (CategoryDataBase m) = do
   base <- takeMVar m
   putMVar m base
   return base
+
+
+-- возьми новый куст роз и положи взамен старого
+updateCategories :: CategoryDataBase -> CategoryDictionary -> IO ()
+updateCategories (CategoryDataBase m) newbase = do
+  _ <- takeMVar m
+  putMVar m newbase
