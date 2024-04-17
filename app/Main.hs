@@ -11,6 +11,7 @@ import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
 import Users
 import Images
 import Category
+import News
 import qualified Base.MVar
 
 -- old  type Application = Request -> ResourceT IO Response
@@ -33,6 +34,7 @@ main :: IO ()
 main = do
   putStrLn "Welcome to WebServer"
   base <- Base.MVar.newBaseUser 
+  baseNews <- Base.MVar.newBaseNews 
   baseImage <- Base.MVar.newBaseImage
   baseCategory <- Base.MVar.newBaseCategory
   limMessage <- loadWeb
@@ -48,6 +50,8 @@ main = do
           Handlers.Base.Handle
             { Handlers.Base.updateUser = Base.MVar.updateUser base,
               Handlers.Base.takeUsers = Base.MVar.takeUsers base, 
+              Handlers.Base.updateNews = Base.MVar.updateNews baseNews,
+              Handlers.Base.takeNews = Base.MVar.takeNews baseNews, 
               Handlers.Base.findImage = Base.MVar.findImage baseImage, 
               Handlers.Base.takeCategories = Base.MVar.takeCategories baseCategory, 
               Handlers.Base.updateCategories = Base.MVar.updateCategories baseCategory, 

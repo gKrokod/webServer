@@ -12,7 +12,7 @@ module Category where
 --     subForest :: [Tree a] }
 --
 --   Tree a =  Node a [Tree a]
-import Data.Tree (Tree(..), drawTree, flatten)
+import Data.Tree (Tree(..), drawTree )
 import qualified Data.Text as T
 import qualified Data.List (sort)
 import Data.Maybe (listToMaybe)

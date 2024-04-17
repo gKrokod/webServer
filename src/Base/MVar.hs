@@ -3,6 +3,7 @@ module Base.MVar where
 import Users
 import Images
 import Category
+import News
 import Control.Concurrent (MVar, newMVar, putMVar, takeMVar)
 import qualified Data.Map.Strict as Map
 
@@ -59,3 +60,24 @@ updateCategories :: CategoryDataBase -> CategoryDictionary -> IO ()
 updateCategories (CategoryDataBase m) newbase = do
   _ <- takeMVar m
   putMVar m newbase
+
+newtype NewsDataBase = NewsDataBase (MVar [News])
+
+newBaseNews :: IO NewsDataBase
+newBaseNews = do
+  m <- newMVar ([])
+  return $ NewsDataBase m
+            
+updateNews :: NewsDataBase -> News -> IO ()
+updateNews (NewsDataBase m) news = do
+  base <- takeMVar m
+  let base' = (news : base)
+  putMVar m base'
+  seq base' (return ())
+
+takeNews :: NewsDataBase -> IO ([News])
+takeNews (NewsDataBase m) = do
+  base <- takeMVar m
+  putMVar m base
+  return base
+

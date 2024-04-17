@@ -14,6 +14,7 @@ import qualified Data.ByteString.Lazy as L
 import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk, queryString, rawQueryString)
 import Users
 import Images
+import News
 import Category
 import Data.Tree
 import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON)
@@ -34,8 +35,6 @@ data Handle m = Handle
 -- type Application :: Request -> Respond -> IO ResponseReceived
 -- type Respond = Response -> IO ResponseReceived
 --
--- mkJSON :: (ToJSON a) =>  [a] -> PANIGATE LIMIT -> L.ByteString
--- mkJSON xs limit = take limit $ concat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]
 mkJSON :: (ToJSON a) =>  [a] -> L.ByteString
 mkJSON xs = mconcat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]
 
@@ -56,6 +55,51 @@ doLogic h req = do
     _ -> error "rawPathInfo req /= path"
     -- otherwise -> pure $ buildResponse h status200 [(hContentType, "text/plain")] (BR.fromByteString $ (rawPathInfo req))
 
+endPointNews :: (Monad m) => Handle m -> Request -> m (Response) 
+endPointNews h req = do
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point News"
+  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ B.unpack $ rawPathInfo req)
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
+  case rawPathInfo req of
+    path | B.isPrefixOf "/news/create" path  -> createNews h req -- создание новости
+         | B.isPrefixOf "/news/edit" path  -> undefined -- редактирование новости
+         | B.isPrefixOf "/news" path  -> existingNews h req -- получение новости
+         | otherwise -> do
+            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+            pure $ buildResponse h notFound404 [] "notFound bro\n"
+    _ -> error "rawPathInfo req /= /news"
+
+createNews :: (Monad m) => Handle m -> Request -> m (Response)
+createNews h req = do
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "create News"
+  body <- eitherDecodeStrict <$> getBody h req  -- :: m (Either String News)
+  case (body :: Either String News) of
+    Left e -> do 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode News"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
+      pure $  buildResponse h notFound404 [] "Not ok. News cannot be created. Status 404\n"
+    Right news -> do
+      Handlers.Base.updateNews baseHandle news
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Succesfully create news"
+      pure $ buildResponse h status200 [] "All ok. News created. Status 200\n" 
+
+existingNews :: (Monad m) => Handle m -> Request -> m (Response)
+existingNews h req = do
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give news"
+  news <- Handlers.Base.takeNews baseHandle
+  let body = mkJSON news
+  -- let body = mkJSON (Handlers.Base.bank baseHandle)
+  pure $ buildResponse h status200 [] ("All ok. News list:\n" <> B.fromLazyByteString body)
+-- /news?sort_by=category
+--     * /news?created_at=2018-05-21
+--     * /news?created_until=2018-05-21
+--     * /news?created_since=2018-05-2
+-- loadNews =  eitherDecode <$> L.readFile "config/news1.cfg"
+--
 endPointUsers :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointUsers h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Users"
@@ -97,24 +141,6 @@ createUser h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Succesfully create user"
       pure $ buildResponse h status200 [] "All ok. User created. Status 200\n" 
 
-endPointNews :: (Monad m) => Handle m -> Request -> m (Response) 
-endPointNews h req = do
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point News"
-  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ B.unpack $ rawPathInfo req)
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
-  case rawPathInfo req of
-    path | B.isPrefixOf "/news/create" path  -> undefined -- создание новости
-         | B.isPrefixOf "/news/edit" path  -> undefined -- редактирование новости
-         | B.isPrefixOf "/news" path  -> undefined -- получение новости
-         | otherwise -> do
-            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure $ buildResponse h notFound404 [] "notFound bro\n"
-    _ -> error "rawPathInfo req /= /news"
-
--- /news?sort_by=category
---     * /news?created_at=2018-05-21
---     * /news?created_until=2018-05-21
---     * /news?created_since=2018-05-2
 endPointCategories :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointCategories h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Categories"
