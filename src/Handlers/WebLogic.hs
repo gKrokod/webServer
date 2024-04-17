@@ -62,7 +62,7 @@ endPointNews h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
     path | B.isPrefixOf "/news/create" path  -> createNews h req -- создание новости
-         | B.isPrefixOf "/news/edit" path  -> undefined -- редактирование новости
+         | B.isPrefixOf "/news/edit" path  -> editNews h req -- редактирование новости
          | B.isPrefixOf "/news" path  -> existingNews h req -- получение новости
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
@@ -86,6 +86,7 @@ createNews h req = do
       pure $ buildResponse h status200 [] "All ok. News created. Status 200\n" 
 
 existingNews :: (Monad m) => Handle m -> Request -> m (Response)
+-- add some sort in queryString
 existingNews h req = do
   let logHandle = logger h 
   let baseHandle = base h 
@@ -100,6 +101,42 @@ existingNews h req = do
 --     * /news?created_since=2018-05-2
 -- loadNews =  eitherDecode <$> L.readFile "config/news1.cfg"
 --
+-- title указывает какую новость редактируем содержимым json который лежит в body
+editNews :: (Monad m) => Handle m -> Request -> m (Response)
+editNews h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  let queryEditNews = queryString req
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News with query string"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryEditNews)
+  -- failResponse h
+  case queryEditNews of
+    [("title", Just title)]-> do
+      let title' = E.decodeUtf8 title 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (title')
+      -- to do
+      -- найти картинку в базе по title
+      -- если картинка есть, то распарсить поля, которые есть и заменить в новости
+      -- после сохранить картинку
+      
+      body <- eitherDecodeStrict <$> getBody h req  -- :: m (Either String News)
+      case (body :: Either String News) of
+        Left e -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack e)
+          failResponse h
+        _ -> undefined
+      failResponse h
+      -- categories <- Handlers.Base.takeCategories baseHandle
+      -- let categories' = CategoryDictionary 
+      --                   $ renameRose name' newname' 
+      --                   $ changeRose name' parent' 
+      --                   $ categoryDictionaryTree categories
+      -- Handlers.Base.updateCategories baseHandle categories'
+      -- existingNews h req
+    _ -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request edit news"  
+      failResponse h
+
 endPointUsers :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointUsers h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Users"
