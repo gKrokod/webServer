@@ -67,7 +67,7 @@ newBaseNews :: IO NewsDataBase
 newBaseNews = do
   m <- newMVar ([])
   return $ NewsDataBase m
-            
+-- eto skoree addNews, a ne updateNews! potom todo            
 updateNews :: NewsDataBase -> News -> IO ()
 updateNews (NewsDataBase m) news = do
   base <- takeMVar m

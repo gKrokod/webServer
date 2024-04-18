@@ -94,6 +94,7 @@ existingNews h req = do
   news <- Handlers.Base.takeNews baseHandle
   let body = mkJSON news
   -- let body = mkJSON (Handlers.Base.bank baseHandle)
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show body)
   pure $ buildResponse h status200 [] ("All ok. News list:\n" <> B.fromLazyByteString body)
 -- /news?sort_by=category
 --     * /news?created_at=2018-05-21
@@ -114,28 +115,38 @@ editNews h req = do
     [("title", Just title)]-> do
       let title' = E.decodeUtf8 title 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (title')
+      mbNews <- Handlers.Base.findNews baseHandle title'
+      case mbNews of
+        Nothing -> do
+            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "News for editing not found"  
+            failResponse h
+        Just oldNews -> do
+            Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "News for editing found"  
       -- to do
       -- найти картинку в базе по title
       -- если картинка есть, то распарсить поля, которые есть и заменить в новости
       -- после сохранить картинку
-      
-      body <- eitherDecodeStrict <$> getBody h req  -- :: m (Either String News)
-      case (body :: Either String News) of
-        Left e -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack e)
-          failResponse h
-        _ -> undefined
-      failResponse h
-      -- categories <- Handlers.Base.takeCategories baseHandle
-      -- let categories' = CategoryDictionary 
-      --                   $ renameRose name' newname' 
-      --                   $ changeRose name' parent' 
-      --                   $ categoryDictionaryTree categories
-      -- Handlers.Base.updateCategories baseHandle categories'
-      -- existingNews h req
+            body <- eitherDecodeStrict <$> getBody h req  -- :: m (Either String News)
+            -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show body)
+            case (fmap unBoxNews body :: Either String News) of
+              Left e -> do
+                Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
+                failResponse h
+              Right newNews -> do
+                Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Correct data for edit news")
+                Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show newNews)
+                Handlers.Base.updateNews baseHandle (mergeNews oldNews newNews)
+                existingNews h req
+            -- categories <- Handlers.Base.takeCategories baseHandle
+            -- let categories' = CategoryDictionary 
+            --                   $ renameRose name' newname' 
+            --                   $ changeRose name' parent' 
+            --                   $ categoryDictionaryTree categories
+            -- Handlers.Base.updateCategories baseHandle categories'
+            -- existingNews h req
     _ -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request edit news"  
-      failResponse h
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request edit news"  
+          failResponse h
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointUsers h req = do
