@@ -59,7 +59,7 @@ main = do
             }
     let handle = Handlers.WebLogic.Handle { 
                    Handlers.WebLogic.logger = logHandle, 
-                   Handlers.WebLogic.buildResponse = responseBuilder,
+                   -- Handlers.WebLogic.buildResponse = responseBuilder,
                    Handlers.WebLogic.getBody = getRequestBodyChunk,
                    Handlers.WebLogic.base = logBase,
                    Handlers.WebLogic.paginate = limit cfg }

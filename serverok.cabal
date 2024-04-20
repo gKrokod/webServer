@@ -32,6 +32,7 @@ library
       Handlers.WebLogic
       Images
       Logger
+      News
       Users
   other-modules:
       Paths_serverok
@@ -41,7 +42,7 @@ library
       OverloadedStrings
       DeriveGeneric
       LambdaCase
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  ghc-options: -Werror
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -64,7 +65,7 @@ executable serverok-exe
       OverloadedStrings
       DeriveGeneric
       LambdaCase
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , serverok
@@ -83,7 +84,7 @@ test-suite serverok-test
       OverloadedStrings
       DeriveGeneric
       LambdaCase
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , serverok

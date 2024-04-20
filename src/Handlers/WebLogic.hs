@@ -11,7 +11,7 @@ import Data.Binary.Builder as B (fromByteString, Builder, fromLazyByteString, pu
 import qualified Data.ByteString as B 
 import Data.ByteString.Char8 as BC (readInt)
 import qualified Data.ByteString.Lazy as L 
-import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk, queryString, rawQueryString)
+import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
 import Users
 import Images
 import News
@@ -24,7 +24,7 @@ import Data.List (sort)
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
     base :: Handlers.Base.Handle m,
-    buildResponse :: Status -> ResponseHeaders -> Builder -> Response,
+    -- buildResponse :: Status -> ResponseHeaders -> Builder -> Response,
     getBody :: Request -> m (B.ByteString),
     paginate :: Int  -- limit from config file
   }
@@ -51,9 +51,9 @@ doLogic h req = do
          | B.isPrefixOf "/images" path  ->  endPointImages h req -- +
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure $ buildResponse h notFound404 [] "notFound bro\n"
+            pure $ responseBuilder notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= path"
-    -- otherwise -> pure $ buildResponse h status200 [(hContentType, "text/plain")] (BR.fromByteString $ (rawPathInfo req))
+    -- otherwise -> pure $ responseBuilder h status200 [(hContentType, "text/plain")] (BR.fromByteString $ (rawPathInfo req))
 
 endPointNews :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointNews h req = do
@@ -66,7 +66,7 @@ endPointNews h req = do
          | B.isPrefixOf "/news" path  -> existingNews h req -- получение новости
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure $ buildResponse h notFound404 [] "notFound bro\n"
+            pure $ responseBuilder notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= /news"
 
 createNews :: (Monad m) => Handle m -> Request -> m (Response)
@@ -79,11 +79,11 @@ createNews h req = do
     Left e -> do 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode News"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
-      pure $  buildResponse h notFound404 [] "Not ok. News cannot be created. Status 404\n"
+      pure $  responseBuilder notFound404 [] "Not ok. News cannot be created. Status 404\n"
     Right news -> do
       Handlers.Base.updateNews baseHandle news
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Succesfully create news"
-      pure $ buildResponse h status200 [] "All ok. News created. Status 200\n" 
+      pure $ responseBuilder status200 [] "All ok. News created. Status 200\n" 
 
 existingNews :: (Monad m) => Handle m -> Request -> m (Response)
 -- add some sort in queryString
@@ -95,7 +95,7 @@ existingNews h req = do
   let body = mkJSON news
   -- let body = mkJSON (Handlers.Base.bank baseHandle)
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show body)
-  pure $ buildResponse h status200 [] ("All ok. News list:\n" <> B.fromLazyByteString body)
+  pure $ responseBuilder status200 [] ("All ok. News list:\n" <> B.fromLazyByteString body)
 -- /news?sort_by=category
 --     * /news?created_at=2018-05-21
 --     * /news?created_until=2018-05-21
@@ -157,7 +157,7 @@ endPointUsers h req = do
          | B.isPrefixOf "/users" path  -> existingUsers h req  -- получение списка всех 
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure $ buildResponse h notFound404 [] "notFound bro\n"
+            pure $ responseBuilder notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= /users"
 
 existingUsers :: (Monad m) => Handle m -> Request -> m (Response)
@@ -168,7 +168,7 @@ existingUsers h req = do
   users <- Handlers.Base.takeUsers baseHandle
   let body = mkJSON users
   -- let body = mkJSON (Handlers.Base.bank baseHandle)
-  pure $ buildResponse h status200 [] ("All ok. User list:\n" <> B.fromLazyByteString body)
+  pure $ responseBuilder status200 [] ("All ok. User list:\n" <> B.fromLazyByteString body)
 
 -- mkJSON :: Users -> L.ByteString
 -- mkJSON users = mconcat ["{\"users\":[",L.intercalate "," (Prelude.map encode users),"]}"]
@@ -183,11 +183,11 @@ createUser h req = do
     Left e -> do 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
-      pure $  buildResponse h notFound404 [] "Not ok. User cannot be created. Status 404\n"
+      pure $  responseBuilder notFound404 [] "Not ok. User cannot be created. Status 404\n"
     Right user -> do
       Handlers.Base.updateUser baseHandle user
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Succesfully create user"
-      pure $ buildResponse h status200 [] "All ok. User created. Status 200\n" 
+      pure $ responseBuilder status200 [] "All ok. User created. Status 200\n" 
 
 endPointCategories :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointCategories h req = do
@@ -199,7 +199,7 @@ endPointCategories h req = do
          | B.isPrefixOf "/categories" path  -> existingCategories h req -- получение списка всех 
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure $ buildResponse h notFound404 [] "notFound bro\n"
+            pure $ responseBuilder notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= /categories"
 --
 -- to do
@@ -212,7 +212,7 @@ existingCategories h req = do
   categories <- Handlers.Base.takeCategories baseHandle
   -- let body = mkJSON (mconcat $ levels $ categoryDictionaryTree categories)
   let body = mkJSON (sort $ flatten $ categoryDictionaryTree categories)
-  pure $ buildResponse h status200 [] ("All ok. Categories list:\n" <> B.fromLazyByteString body)
+  pure $ responseBuilder status200 [] ("All ok. Categories list:\n" <> B.fromLazyByteString body)
 
  -- редактирование названия и смена родительской категории
 -- curl "127.0.0.1:4221/categories/edit?name=Angel&parent=Abstract"
@@ -270,7 +270,7 @@ endPointImages h req = do
     path | B.isPrefixOf "/images" path  -> existingImages h req -- получение одной картинки 
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure $ buildResponse h notFound404 [] "notFound bro\n"
+            pure $ responseBuilder notFound404 [] "notFound bro\n"
     _ -> error "rawPathInfo req /= /images"
 
 existingImages :: (Monad m) => Handle m -> Request -> m (Response)
@@ -294,14 +294,14 @@ existingImages h req = do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Image found in base"  
           let contentType = E.encodeUtf8 $ iHeader img 
           let content = B64.decodeBase64Lenient $ E.encodeUtf8 $ iBase64 img 
-          pure $ buildResponse h status200 [(hContentType, contentType)] (B.fromByteString content)
+          pure $ responseBuilder status200 [(hContentType, contentType)] (B.fromByteString content)
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request image"  
       failResponse h
 
 okResponse :: (Monad m) => Handle m -> m (Response)
-okResponse h = pure $ buildResponse h status200 [] "All ok. status 200\n" 
+okResponse h = pure $ responseBuilder status200 [] "All ok. status 200\n" 
 
 failResponse :: (Monad m) => Handle m -> m (Response)
-failResponse h = pure $ buildResponse h notFound404 [] "Not ok. status 404\n" 
-defaultResponse = \h ->  buildResponse h status200 [] "default Response\n"
+failResponse h = pure $ responseBuilder notFound404 [] "Not ok. status 404\n" 
+defaultResponse = \h ->  responseBuilder status200 [] "default Response\n"
