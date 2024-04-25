@@ -1,7 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Config ( loadConfigDB, ConfigDB(..)) where
+module Config where --( loadConfigDB, ConfigDB(..)) where
 
 import qualified Data.Text as T
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
@@ -26,11 +26,11 @@ loadConfigDB =  eitherDecode <$> L.readFile "config/db.cfg"
 createConfigFile :: IO ()
 createConfigFile = do
   let testConfig = ConfigDB {
-      cHost = ""
-    , cPort = ""
-    , cUser = ""
-    , cDBname = ""
-    , cPassword = ""
+      cHost = "127.0.0.1"
+    , cPort = "5432"
+    , cUser = "bob"
+    , cDBname = "bobdb"
+    , cPassword = "1"
   } 
   let configToJSON = encode testConfig :: BC.ByteString
   L.writeFile "config/db.cfg" (configToJSON)

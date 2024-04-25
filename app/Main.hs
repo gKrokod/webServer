@@ -63,7 +63,7 @@ main = do
 logic :: ConnectionString -> IO ()
 logic pginfo = do
 -- make tables
---   migrateDB pginfo
+  migrateDB pginfo
 -- -- insert Dictionary in DB
 --   _ <- insertDictionary pginfo catTr1 
 --   dictionary <- fetchDictionary pginfo
@@ -77,7 +77,7 @@ logic pginfo = do
 --   insertNews pginfo
 --   insertUsers pginfo
 --
-  filterUser pginfo
+  -- filterUser pginfo
   -- runAction pginfo $ do
   --   -- people <- selectList [UserData_created ==. fromGregorian 1987 01 01 ] []
   --   people <- selectList [UserData_created >=. fromGregorian 1200 01 01 ] [Desc UserLogin, LimitTo 6]
