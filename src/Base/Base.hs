@@ -1,6 +1,7 @@
 module Base.Base where
 
-import Base.BasicSchema (migrateAll)
+-- import Base.BasicSchema (migrateAll)
+import Base.BasicSchema
 import Control.Monad.Logger  (LoggingT (..), runStdoutLoggingT)
 import Control.Monad.Reader (runReaderT)
 -- import Data.Int (Int64)
@@ -15,7 +16,7 @@ runAction :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
 runAction connectionString action = 
   runStdoutLoggingT $ withPostgresqlConn connectionString $ \backend ->
     runReaderT action backend
---
+
 migrateDB :: ConnectionString -> IO ()
 migrateDB connString = runAction connString (runMigration migrateAll)
 --

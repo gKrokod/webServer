@@ -28,59 +28,29 @@ import GHC.Generics (Generic)
 
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
-  UuserType json sql=newTable
-    naame T.Text
-    UniqueNaame naame
-    deriving Show Read
-    -- deriving ToJSON FromJSON
+  User sql = users
+    login T.Text
+    name T.Text
+    password T.Text
+    isAdmin Bool
+    isPublisher Bool
+    categoryId CategoryId
+    UniqueLabel name
+    Primary login
+    deriving Eq Show
+  Category sql = categories
+    label T.Text
+    UniqueCategory label
+    deriving Eq Show
+  -- ProductCategory
+  --   productId ProductId
+  --   categoryId CategoryId
+  --   Primary productId categoryId
+  --   deriving Eq Show
+  -- Warehouse
+  --   productId ProductId
+  --   quantity Int
+  --   -- created UTCTime default=CURRENT_TIME
+  --   -- modified UTCTime default=CURRENT_TIME
+  --   deriving Eq Show
 |]
-
--- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
--- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
---   News json
---     title Title 
---     text_content TextContent
---     data_created Day
---     photo_content [Photo]
---     publish Bool
---     -- chelId ChelId
---     -- categoryId CategoryId
---     UniqueTitle title
---     deriving Show Read
---   User json sql=users
---     login Login 
---     password Password
---     data_created Day 
---     is_admin Bool
---     is_publisher Bool
---     UniqueLogin login
---     deriving Show Read
---   Category json sql=categories
---     name Name 
---     -- categoryDictionaryId CategoryDictionaryId
---     UniqueName name
---     deriving Show Read
---   CategoryDictionary json sql=cat_dictionary
---     tree Rose
---     deriving Show Read
-  -- User json sql=users
-  --   name Name 
-  --   email T.Text
-  --   age Int
-  --   occupation T.Text
-  --   UniqueEmail email
-  --   deriving Show Read
-    -- deriving ToJSON FromJSON
--- |]
-
-  
--- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "deleteMigrate"] [PTH.persistLowerCase|
---     -- deriving ToJSON FromJSON
---   User1 json sql=users1
---     name1 Name 
---     email1 T.Text
---     age1 Int
---     occupation1 T.Text
---     deriving Show Read
--- |]
-

@@ -24,6 +24,7 @@ import qualified Data.Text.Encoding as E (encodeUtf8)
 
 import LocalTimeTemplate (localtimeTemplate)
 import Base.Base (Config(..), migrateDB)
+-- import Base.Base (Config(..))
 
 main :: IO ()
 main = do
