@@ -24,75 +24,45 @@ import Database.Persist
 import qualified Database.Persist.TH as PTH
 import qualified Database.Persist.Sql as PS
 import qualified Data.Text as T
-import Data.Time.Calendar
--- import qualified Data.ByteString.Lazy.Char8 as BC
--- import qualified Data.ByteString.Lazy as L
--- import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as BC
-
-import Data.Tree
--- import qualified Data.Text.Encoding as E 
 import GHC.Generics (Generic)
 
--- data Tree a = Node {
---         rootLabel :: a,         -- ^ label value
---         subForest :: [Tree a]   -- ^ zero or more child trees
---     }
-
--- for Categore Dictionary
-type Rose = Tree T.Text
-instance PersistField Rose where
-  toPersistValue = PersistByteString . BC.toStrict . encode
-  fromPersistValue (PersistByteString t) = maybe (Left "Can't Decode PersistByteString to Tree") Right $ decode $ BC.fromStrict t
-  fromPersistValue x = Left $ "\n" <> T.pack (show x)
-instance PS.PersistFieldSql Rose where
-  sqlType _ = SqlBlob
--- for COntent-TYpe + Image
-data Image a = Image { imageHeader :: a, imageContent :: a } 
-  deriving stock (Eq, Show, Generic, Read)
-  deriving anyclass (ToJSON, FromJSON)
-type Photo = Image T.Text 
-
-instance PersistField Photo where
-  toPersistValue = PersistByteString . BC.toStrict . encode
-  fromPersistValue (PersistByteString t) = maybe (Left "Can't Decode PersistByteString to Photo") Right $ decode $ BC.fromStrict t
-  fromPersistValue x = Left $ "\n" <> T.pack (show x)
-instance PS.PersistFieldSql Photo where
-  sqlType _ = SqlBlob
-
-type Login  = T.Text
-type Password = T.Text
-type Title = T.Text
-type TextContent = T.Text
-type Name = T.Text
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
-  News json
-    title Title 
-    text_content TextContent
-    data_created Day
-    photo_content [Photo]
-    publish Bool
-    -- chelId ChelId
-    -- categoryId CategoryId
-    UniqueTitle title
+  UuserType json sql=newTable
+    naame T.Text
+    UniqueNaame naame
     deriving Show Read
-  User json sql=users
-    login Login 
-    password Password
-    data_created Day 
-    is_admin Bool
-    is_publisher Bool
-    UniqueLogin login
-    deriving Show Read
-  Category json sql=categories
-    name Name 
-    -- categoryDictionaryId CategoryDictionaryId
-    UniqueName name
-    deriving Show Read
-  CategoryDictionary json sql=cat_dictionary
-    tree Rose
-    deriving Show Read
+    -- deriving ToJSON FromJSON
+|]
+
+-- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
+-- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
+--   News json
+--     title Title 
+--     text_content TextContent
+--     data_created Day
+--     photo_content [Photo]
+--     publish Bool
+--     -- chelId ChelId
+--     -- categoryId CategoryId
+--     UniqueTitle title
+--     deriving Show Read
+--   User json sql=users
+--     login Login 
+--     password Password
+--     data_created Day 
+--     is_admin Bool
+--     is_publisher Bool
+--     UniqueLogin login
+--     deriving Show Read
+--   Category json sql=categories
+--     name Name 
+--     -- categoryDictionaryId CategoryDictionaryId
+--     UniqueName name
+--     deriving Show Read
+--   CategoryDictionary json sql=cat_dictionary
+--     tree Rose
+--     deriving Show Read
   -- User json sql=users
   --   name Name 
   --   email T.Text
@@ -101,7 +71,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   --   UniqueEmail email
   --   deriving Show Read
     -- deriving ToJSON FromJSON
-|]
+-- |]
 
   
 -- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "deleteMigrate"] [PTH.persistLowerCase|

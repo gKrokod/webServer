@@ -1,12 +1,12 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Config where --( loadConfigDB, ConfigDB(..)) where
+module Config where
 
 import qualified Data.Text as T
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
 import GHC.Generics (Generic)
-import qualified Data.ByteString.Lazy.Char8 as BC
+-- import qualified Data.ByteString.Lazy.Char8 as BC
 import qualified Data.ByteString.Lazy as L 
 
 data ConfigDB = ConfigDB {
@@ -32,6 +32,6 @@ createConfigFile = do
     , cDBname = "bobdb"
     , cPassword = "1"
   } 
-  let configToJSON = encode testConfig :: BC.ByteString
+  let configToJSON = encode testConfig :: L.ByteString
   L.writeFile "config/db.cfg" (configToJSON)
 

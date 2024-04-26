@@ -27,8 +27,6 @@ library
   exposed-modules:
       Base.Base
       Base.BasicSchema
-      Base.Category
-      Base.TestEntity
       Config
       Handlers.Base
       LocalTimeTemplate
