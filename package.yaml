@@ -37,6 +37,7 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -ddump-splices
 
 library:
   # source-dirs: config

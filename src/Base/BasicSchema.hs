@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -ddump-splices #-}
+{-# OPTIONS_GHC -ddump-to-file #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -28,20 +30,29 @@ import GHC.Generics (Generic)
 
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
-  User sql = users
-    login T.Text
-    name T.Text
-    password T.Text
-    isAdmin Bool
-    isPublisher Bool
-    categoryId CategoryId
-    UniqueLabel name
-    Primary login
-    deriving Eq Show
-  Category sql = categories
-    label T.Text
-    UniqueCategory label
-    deriving Eq Show
+Person
+    name String
+Store
+    name String
+PersonStore
+    personId PersonId
+    storeId StoreId
+    UniquePersonStore personId storeId
+
+  -- User sql = users
+  --   login T.Text
+  --   name T.Text
+  --   password T.Text
+  --   isAdmin Bool
+  --   isPublisher Bool
+  --   categoryId CategoryId
+  --   UniqueLabel name
+  --   Primary login
+  --   deriving Eq Show
+  -- Category sql = categories
+  --   label T.Text
+  --   UniqueCategory label
+  --   deriving Eq Show
   -- ProductCategory
   --   productId ProductId
   --   categoryId CategoryId

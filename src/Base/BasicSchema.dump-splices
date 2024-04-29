@@ -1,0 +1,843 @@
+/home/h/projects/webServer/src/Base/BasicSchema.hs:(32,93)-(67,2): Splicing expression
+    Language.Haskell.TH.Quote.quoteExp
+      PTH.persistLowerCase
+      "\n\
+      \Person\n\
+      \    name String\n\
+      \Store\n\
+      \    name String\n\
+      \PersonStore\n\
+      \    personId PersonId\n\
+      \    storeId StoreId\n\
+      \    UniquePersonStore personId storeId\n\
+      \\n\
+      \  -- User sql = users\n\
+      \  --   login T.Text\n\
+      \  --   name T.Text\n\
+      \  --   password T.Text\n\
+      \  --   isAdmin Bool\n\
+      \  --   isPublisher Bool\n\
+      \  --   categoryId CategoryId\n\
+      \  --   UniqueLabel name\n\
+      \  --   Primary login\n\
+      \  --   deriving Eq Show\n\
+      \  -- Category sql = categories\n\
+      \  --   label T.Text\n\
+      \  --   UniqueCategory label\n\
+      \  --   deriving Eq Show\n\
+      \  -- ProductCategory\n\
+      \  --   productId ProductId\n\
+      \  --   categoryId CategoryId\n\
+      \  --   Primary productId categoryId\n\
+      \  --   deriving Eq Show\n\
+      \  -- Warehouse\n\
+      \  --   productId ProductId\n\
+      \  --   quantity Int\n\
+      \  --   -- created UTCTime default=CURRENT_TIME\n\
+      \  --   -- modified UTCTime default=CURRENT_TIME\n\
+      \  --   deriving Eq Show\n"
+  ======>
+    [(((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.DefaultKey
+            (FieldNameDB (T.pack "id"))))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "Person")))
+                    (EntityNameDB (T.pack "person")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "PersonId")))
+                                SqlInt64)
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [])
+                 [])
+                [])
+               [])
+              [])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "name")))
+                (FieldNameDB (T.pack "name")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "String")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing],
+     (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.DefaultKey
+            (FieldNameDB (T.pack "id"))))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "Store")))
+                    (EntityNameDB (T.pack "store")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "StoreId")))
+                                SqlInt64)
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [])
+                 [])
+                [])
+               [])
+              [])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "name")))
+                (FieldNameDB (T.pack "name")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "String")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing],
+     (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.DefaultKey
+            (FieldNameDB (T.pack "id"))))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "PersonStore")))
+                    (EntityNameDB (T.pack "person_store")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "PersonStoreId")))
+                                SqlInt64)
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [])
+                 [])
+                [(((UniqueDef (ConstraintNameHS (T.pack "UniquePersonStore")))
+                     (ConstraintNameDB (T.pack "unique_person_store")))
+                    ((FieldNameHS (T.pack "personId"), 
+                      FieldNameDB (T.pack "person_id"))
+                       GHC.Base.:|
+                         [(FieldNameHS (T.pack "storeId"), 
+                           FieldNameDB (T.pack "store_id"))]))
+                   []])
+               [])
+              [])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "personId")))
+                (FieldNameDB (T.pack "person_id")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "PersonId")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "storeId")))
+                (FieldNameDB (T.pack "store_id")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "StoreId")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing]]
+/home/h/projects/webServer/src/Base/BasicSchema.hs:(32,1)-(67,2): Splicing declarations
+    PTH.share
+      [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"]
+      ([(((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.DefaultKey
+               (FieldNameDB (T.pack "id"))))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "Person")))
+                       (EntityNameDB (T.pack "person")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "PersonId")))
+                                   SqlInt64)
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [])
+                    [])
+                   [])
+                  [])
+                 [])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "name")))
+                   (FieldNameDB (T.pack "name")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "String")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing],
+        (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.DefaultKey
+               (FieldNameDB (T.pack "id"))))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "Store")))
+                       (EntityNameDB (T.pack "store")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "StoreId")))
+                                   SqlInt64)
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [])
+                    [])
+                   [])
+                  [])
+                 [])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "name")))
+                   (FieldNameDB (T.pack "name")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "String")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing],
+        (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.DefaultKey
+               (FieldNameDB (T.pack "id"))))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "PersonStore")))
+                       (EntityNameDB (T.pack "person_store")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "PersonStoreId")))
+                                   SqlInt64)
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [])
+                    [])
+                   [(((UniqueDef (ConstraintNameHS (T.pack "UniquePersonStore")))
+                        (ConstraintNameDB (T.pack "unique_person_store")))
+                       ((FieldNameHS (T.pack "personId"), 
+                         FieldNameDB (T.pack "person_id"))
+                          GHC.Base.:|
+                            [(FieldNameHS (T.pack "storeId"), 
+                              FieldNameDB (T.pack "store_id"))]))
+                      []])
+                  [])
+                 [])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "personId")))
+                   (FieldNameDB (T.pack "person_id")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "PersonId")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "storeId")))
+                   (FieldNameDB (T.pack "store_id")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "StoreId")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing]])
+  ======>
+    instance PersistField Person where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper ["name"]
+    instance PS.PersistFieldSql Person where
+      PS.sqlType _ = SqlString
+    instance PersistField Store where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper ["name"]
+    instance PS.PersistFieldSql Store where
+      PS.sqlType _ = SqlString
+    instance PersistField PersonStore where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper
+            ["personId", "storeId"]
+    instance PS.PersistFieldSql PersonStore where
+      PS.sqlType _ = SqlString
+    data Person = Person {personName :: !String}
+    type PersonId = PS.Key Person
+    instance PersistEntity Person where
+      type PersistEntityBackend Person = PS.SqlBackend
+      data Unique Person
+      newtype PS.Key Person
+        = PersonKey {unPersonKey :: (BackendKey PS.SqlBackend)}
+        deriving stock Show
+        deriving stock Read
+        deriving newtype Eq
+        deriving newtype Ord
+        deriving newtype path-pieces-0.2.1-E15XfVOwfTfIr2VliI4YGA:Web.PathPieces.PathPiece
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.ToHttpApiData
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.FromHttpApiData
+        deriving newtype PersistField
+        deriving newtype PS.PersistFieldSql
+        deriving newtype ToJSON
+        deriving newtype FromJSON
+      data EntityField Person typ
+        = (typ ~ PersonId) => PersonId | (typ ~ String) => PersonName
+      keyToValues
+        = ((: [])
+             . (toPersistValue . (\ PersonKey {unPersonKey = x} -> x)))
+      keyFromValues
+        = (fmap PersonKey
+             . (fromPersistValue . Database.Persist.TH.headNote))
+      keyFromRecordM = Nothing
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "Person")))
+                     (EntityNameDB (T.pack "person")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "PersonId")))
+                                 SqlInt64)
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [])
+                  [])
+                 [])
+                [])
+               [])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "name"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "name"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "String"),
+                                                                                                       fieldSqlType = PS.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy String),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdField
+                                                                                                 (((((((((((FieldDef
+                                                                                                              (FieldNameHS
+                                                                                                                 (T.pack
+                                                                                                                    "Id")))
+                                                                                                             (FieldNameDB
+                                                                                                                (T.pack
+                                                                                                                   "id")))
+                                                                                                            ((FTTypeCon
+                                                                                                                Nothing)
+                                                                                                               (T.pack
+                                                                                                                  "PersonId")))
+                                                                                                           SqlInt64)
+                                                                                                          [])
+                                                                                                         True)
+                                                                                                        NoReference)
+                                                                                                       ((FieldCascade
+                                                                                                           Nothing)
+                                                                                                          Nothing))
+                                                                                                      Nothing)
+                                                                                                     Nothing)
+                                                                                                    True),
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields (Person x_a4JM) = [SomePersistField x_a4JM]
+      fromPersistValues [x1_a4JO]
+        = Person
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "person")) (T.pack "name"))
+                 . fromPersistValue)
+                x1_a4JO
+      fromPersistValues x_a4JN
+        = (Left
+             $ (mappend (T.pack "Person: fromPersistValues failed on: "))
+                 (T.pack $ show x_a4JN))
+      persistUniqueToFieldNames _
+        = error "Degenerate case, should never happen"
+      persistUniqueToValues _
+        = error "Degenerate case, should never happen"
+      persistUniqueKeys (Person _name_a4JP) = []
+      persistFieldDef PersonId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdField
+               (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                           (FieldNameDB (T.pack "id")))
+                          ((FTTypeCon Nothing) (T.pack "PersonId")))
+                         SqlInt64)
+                        [])
+                       True)
+                      NoReference)
+                     ((FieldCascade Nothing) Nothing))
+                    Nothing)
+                   Nothing)
+                  True))
+      persistFieldDef PersonName
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy Person))
+            (FieldNameHS (T.pack "name"))
+      persistIdField = PersonId
+      fieldLens PersonId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_a4JR) key_a4JS -> (Entity key_a4JS) value_a4JR)
+      fieldLens PersonName
+        = (PTH.lensPTH ((\ Person {personName = x} -> x) . entityVal))
+            (\ (Entity key_a4JT value_a4JU) x_a4JV
+               -> (Entity key_a4JT)
+                    (case value_a4JU of Person {} -> Person {personName = x_a4JV}))
+    instance ToBackendKey PS.SqlBackend Person where
+      toBackendKey = \ PersonKey {unPersonKey = x} -> x
+      fromBackendKey = PersonKey
+    data Store = Store {storeName :: !String}
+    type StoreId = PS.Key Store
+    instance PersistEntity Store where
+      type PersistEntityBackend Store = PS.SqlBackend
+      data Unique Store
+      newtype PS.Key Store
+        = StoreKey {unStoreKey :: (BackendKey PS.SqlBackend)}
+        deriving stock Show
+        deriving stock Read
+        deriving newtype Eq
+        deriving newtype Ord
+        deriving newtype path-pieces-0.2.1-E15XfVOwfTfIr2VliI4YGA:Web.PathPieces.PathPiece
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.ToHttpApiData
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.FromHttpApiData
+        deriving newtype PersistField
+        deriving newtype PS.PersistFieldSql
+        deriving newtype ToJSON
+        deriving newtype FromJSON
+      data EntityField Store typ
+        = (typ ~ StoreId) => StoreId | (typ ~ String) => StoreName
+      keyToValues
+        = ((: []) . (toPersistValue . (\ StoreKey {unStoreKey = x} -> x)))
+      keyFromValues
+        = (fmap StoreKey
+             . (fromPersistValue . Database.Persist.TH.headNote))
+      keyFromRecordM = Nothing
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "Store")))
+                     (EntityNameDB (T.pack "store")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "StoreId")))
+                                 SqlInt64)
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [])
+                  [])
+                 [])
+                [])
+               [])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "name"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "name"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "String"),
+                                                                                                       fieldSqlType = PS.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy String),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdField
+                                                                                                 (((((((((((FieldDef
+                                                                                                              (FieldNameHS
+                                                                                                                 (T.pack
+                                                                                                                    "Id")))
+                                                                                                             (FieldNameDB
+                                                                                                                (T.pack
+                                                                                                                   "id")))
+                                                                                                            ((FTTypeCon
+                                                                                                                Nothing)
+                                                                                                               (T.pack
+                                                                                                                  "StoreId")))
+                                                                                                           SqlInt64)
+                                                                                                          [])
+                                                                                                         True)
+                                                                                                        NoReference)
+                                                                                                       ((FieldCascade
+                                                                                                           Nothing)
+                                                                                                          Nothing))
+                                                                                                      Nothing)
+                                                                                                     Nothing)
+                                                                                                    True),
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields (Store x_a4JW) = [SomePersistField x_a4JW]
+      fromPersistValues [x1_a4JY]
+        = Store
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "store")) (T.pack "name"))
+                 . fromPersistValue)
+                x1_a4JY
+      fromPersistValues x_a4JX
+        = (Left
+             $ (mappend (T.pack "Store: fromPersistValues failed on: "))
+                 (T.pack $ show x_a4JX))
+      persistUniqueToFieldNames _
+        = error "Degenerate case, should never happen"
+      persistUniqueToValues _
+        = error "Degenerate case, should never happen"
+      persistUniqueKeys (Store _name_a4JZ) = []
+      persistFieldDef StoreId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdField
+               (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                           (FieldNameDB (T.pack "id")))
+                          ((FTTypeCon Nothing) (T.pack "StoreId")))
+                         SqlInt64)
+                        [])
+                       True)
+                      NoReference)
+                     ((FieldCascade Nothing) Nothing))
+                    Nothing)
+                   Nothing)
+                  True))
+      persistFieldDef StoreName
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy Store))
+            (FieldNameHS (T.pack "name"))
+      persistIdField = StoreId
+      fieldLens StoreId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_a4K1) key_a4K2 -> (Entity key_a4K2) value_a4K1)
+      fieldLens StoreName
+        = (PTH.lensPTH ((\ Store {storeName = x} -> x) . entityVal))
+            (\ (Entity key_a4K3 value_a4K4) x_a4K5
+               -> (Entity key_a4K3)
+                    (case value_a4K4 of Store {} -> Store {storeName = x_a4K5}))
+    instance ToBackendKey PS.SqlBackend Store where
+      toBackendKey = \ StoreKey {unStoreKey = x} -> x
+      fromBackendKey = StoreKey
+    data PersonStore
+      = PersonStore {personStorePersonId :: !PersonId,
+                     personStoreStoreId :: !StoreId}
+    type PersonStoreId = PS.Key PersonStore
+    instance PersistEntity PersonStore where
+      type PersistEntityBackend PersonStore = PS.SqlBackend
+      data Unique PersonStore = UniquePersonStore PersonId StoreId
+      newtype PS.Key PersonStore
+        = PersonStoreKey {unPersonStoreKey :: (BackendKey PS.SqlBackend)}
+        deriving stock Show
+        deriving stock Read
+        deriving newtype Eq
+        deriving newtype Ord
+        deriving newtype path-pieces-0.2.1-E15XfVOwfTfIr2VliI4YGA:Web.PathPieces.PathPiece
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.ToHttpApiData
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.FromHttpApiData
+        deriving newtype PersistField
+        deriving newtype PS.PersistFieldSql
+        deriving newtype ToJSON
+        deriving newtype FromJSON
+      data EntityField PersonStore typ
+        = (typ ~ PersonStoreId) => PersonStoreId |
+          (typ ~ PersonId) => PersonStorePersonId |
+          (typ ~ StoreId) => PersonStoreStoreId
+      keyToValues
+        = ((: [])
+             . (toPersistValue
+                  . (\ PersonStoreKey {unPersonStoreKey = x} -> x)))
+      keyFromValues
+        = (fmap PersonStoreKey
+             . (fromPersistValue . Database.Persist.TH.headNote))
+      keyFromRecordM = Nothing
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "PersonStore")))
+                     (EntityNameDB (T.pack "person_store")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "PersonStoreId")))
+                                 SqlInt64)
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [])
+                  [])
+                 [(((UniqueDef (ConstraintNameHS (T.pack "UniquePersonStore")))
+                      (ConstraintNameDB (T.pack "unique_person_store")))
+                     ((FieldNameHS (T.pack "personId"), 
+                       FieldNameDB (T.pack "person_id"))
+                        GHC.Base.:|
+                          [(FieldNameHS (T.pack "storeId"), 
+                            FieldNameDB (T.pack "store_id"))]))
+                    []])
+                [])
+               [])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "personId"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "person_id"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "PersonId"),
+                                                                                                       fieldSqlType = PS.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy PersonId),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = ForeignRef
+                                                                                                                          (EntityNameHS
+                                                                                                                             (T.pack
+                                                                                                                                "Person")),
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "storeId"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "store_id"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "StoreId"),
+                                                                                                       fieldSqlType = PS.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy StoreId),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = ForeignRef
+                                                                                                                          (EntityNameHS
+                                                                                                                             (T.pack
+                                                                                                                                "Store")),
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdField
+                                                                                                 (((((((((((FieldDef
+                                                                                                              (FieldNameHS
+                                                                                                                 (T.pack
+                                                                                                                    "Id")))
+                                                                                                             (FieldNameDB
+                                                                                                                (T.pack
+                                                                                                                   "id")))
+                                                                                                            ((FTTypeCon
+                                                                                                                Nothing)
+                                                                                                               (T.pack
+                                                                                                                  "PersonStoreId")))
+                                                                                                           SqlInt64)
+                                                                                                          [])
+                                                                                                         True)
+                                                                                                        NoReference)
+                                                                                                       ((FieldCascade
+                                                                                                           Nothing)
+                                                                                                          Nothing))
+                                                                                                      Nothing)
+                                                                                                     Nothing)
+                                                                                                    True),
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields (PersonStore x_a4K6 x_a4K7)
+        = [SomePersistField x_a4K6, SomePersistField x_a4K7]
+      fromPersistValues [x1_a4K9, x2_a4Ka]
+        = PersonStore
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "person_store")) (T.pack "personId"))
+                 . fromPersistValue)
+                x1_a4K9
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "person_store")) (T.pack "storeId"))
+                 . fromPersistValue)
+                x2_a4Ka
+      fromPersistValues x_a4K8
+        = (Left
+             $ (mappend (T.pack "PersonStore: fromPersistValues failed on: "))
+                 (T.pack $ show x_a4K8))
+      persistUniqueToFieldNames UniquePersonStore {}
+        = ((FieldNameHS (T.pack "personId"), 
+            FieldNameDB (T.pack "person_id"))
+             GHC.Base.:|
+               [(FieldNameHS (T.pack "storeId"), 
+                 FieldNameDB (T.pack "store_id"))])
+      persistUniqueToValues (UniquePersonStore x_a4Kb x_a4Kc)
+        = [toPersistValue x_a4Kb, toPersistValue x_a4Kc]
+      persistUniqueKeys (PersonStore _personId_a4Kd _storeId_a4Ke)
+        = [(UniquePersonStore _personId_a4Kd) _storeId_a4Ke]
+      persistFieldDef PersonStoreId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdField
+               (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                           (FieldNameDB (T.pack "id")))
+                          ((FTTypeCon Nothing) (T.pack "PersonStoreId")))
+                         SqlInt64)
+                        [])
+                       True)
+                      NoReference)
+                     ((FieldCascade Nothing) Nothing))
+                    Nothing)
+                   Nothing)
+                  True))
+      persistFieldDef PersonStorePersonId
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy PersonStore))
+            (FieldNameHS (T.pack "personId"))
+      persistFieldDef PersonStoreStoreId
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy PersonStore))
+            (FieldNameHS (T.pack "storeId"))
+      persistIdField = PersonStoreId
+      fieldLens PersonStoreId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_a4Kg) key_a4Kh -> (Entity key_a4Kh) value_a4Kg)
+      fieldLens PersonStorePersonId
+        = (PTH.lensPTH
+             ((\ PersonStore {personStorePersonId = x} -> x) . entityVal))
+            (\ (Entity key_a4Ki value_a4Kj) x_a4Kk
+               -> (Entity key_a4Ki)
+                    (case value_a4Kj of
+                       PersonStore {personStoreStoreId = personStoreStoreId}
+                         -> PersonStore
+                              {personStorePersonId = x_a4Kk,
+                               personStoreStoreId = personStoreStoreId}))
+      fieldLens PersonStoreStoreId
+        = (PTH.lensPTH
+             ((\ PersonStore {personStoreStoreId = x} -> x) . entityVal))
+            (\ (Entity key_a4Ki value_a4Kj) x_a4Kk
+               -> (Entity key_a4Ki)
+                    (case value_a4Kj of
+                       PersonStore {personStorePersonId = personStorePersonId}
+                         -> PersonStore
+                              {personStorePersonId = personStorePersonId,
+                               personStoreStoreId = x_a4Kk}))
+    instance ToBackendKey PS.SqlBackend PersonStore where
+      toBackendKey = \ PersonStoreKey {unPersonStoreKey = x} -> x
+      fromBackendKey = PersonStoreKey
+    instance GHC.TypeLits.TypeError (NoUniqueKeysError Person) =>
+             OnlyOneUniqueKey Person where
+      onlyUniqueP _ = error "impossible"
+    instance GHC.TypeLits.TypeError (MultipleUniqueKeysError Person) =>
+             AtLeastOneUniqueKey Person where
+      requireUniquesP _ = error "impossible"
+    instance GHC.TypeLits.TypeError (NoUniqueKeysError Store) =>
+             OnlyOneUniqueKey Store where
+      onlyUniqueP _ = error "impossible"
+    instance GHC.TypeLits.TypeError (MultipleUniqueKeysError Store) =>
+             AtLeastOneUniqueKey Store where
+      requireUniquesP _ = error "impossible"
+    instance OnlyOneUniqueKey PersonStore where
+      onlyUniqueP = (head . persistUniqueKeys)
+    instance AtLeastOneUniqueKey PersonStore where
+      requireUniquesP = (Data.List.NonEmpty.fromList . persistUniqueKeys)
+    instance SymbolToField "id" Person (PS.Key Person) where
+      symbolToField = PersonId
+    instance SymbolToField "name" Person String where
+      symbolToField = PersonName
+    instance SymbolToField "id" Store (PS.Key Store) where
+      symbolToField = StoreId
+    instance SymbolToField "name" Store String where
+      symbolToField = StoreName
+    instance SymbolToField "id" PersonStore (PS.Key PersonStore) where
+      symbolToField = PersonStoreId
+    instance SymbolToField "personId" PersonStore PersonId where
+      symbolToField = PersonStorePersonId
+    instance SymbolToField "storeId" PersonStore StoreId where
+      symbolToField = PersonStoreStoreId
+    entityDefListFormigrateAll :: [EntityDef]
+    entityDefListFormigrateAll
+      = [entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy Person),
+         entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy Store),
+         entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy PersonStore)]
+    migrateAll :: PS.Migration
+    migrateAll = PTH.migrateModels entityDefListFormigrateAll

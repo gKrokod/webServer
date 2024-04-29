@@ -12,11 +12,11 @@ data Config = Config {
   configConnect :: ConnectionString --BC.ByteString
 }
 
-runAction :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
-runAction connectionString action = 
-  runStdoutLoggingT $ withPostgresqlConn connectionString $ \backend ->
-    runReaderT action backend
-
-migrateDB :: ConnectionString -> IO ()
-migrateDB connString = runAction connString (runMigration migrateAll)
+-- runAction :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
+-- runAction connectionString action = 
+--   runStdoutLoggingT $ withPostgresqlConn connectionString $ \backend ->
+--     runReaderT action backend
 --
+-- migrateDB :: ConnectionString -> IO ()
+-- migrateDB connString = runAction connString (runMigration migrateAll)
+-- --
