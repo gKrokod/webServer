@@ -24,10 +24,11 @@ import Data.Aeson.Types
 import Database.Persist 
 
 import Control.Monad.Logger (runNoLoggingT, runStderrLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
+import Control.Monad.IO.Class
 import qualified Database.Persist.TH as PTH
 -- import qualified Database.Persist.Sql as PS
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
-import Database.Persist.Postgresql  (SqlPersistT,ConnectionString, insert, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
+import Database.Persist.Postgresql  (rawExecute, SqlPersistT,ConnectionString, insert, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 
@@ -40,22 +41,31 @@ import GHC.Generics (Generic)
 
 -- createDataBase pginfo  =  runDataBaseWithLog pginfo $ runMigration migrateAll
 
+
+
 runDataBaseWithLog :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
-runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 -- runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
+runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 
 runDataBaseWithOutLog :: ConnectionString -> SqlPersistT (NoLoggingT IO) a -> IO a
 runDataBaseWithOutLog pginfo a = runNoLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 
+cleanUp :: (MonadIO m) => SqlPersistT m ()
+cleanUp = rawExecute "TRUNCATE news, images_bank, images" []
+
+dropAll :: (MonadIO m) => SqlPersistT m ()
+-- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
+dropAll = rawExecute "DROP TABLE news, images_bank, images" []
+
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
-News sql = news
+ News sql=news
   title T.Text
   UniqueNews title
-  images
-Image sql = images
+ Image sql=images
   header T.Text
   base64 T.Text
-ImageBank sql images_bank
+  UniqueImage header base64
+ ImageBank sql=images_bank
   newsId NewsId
   imageId ImageId
   UniqueImageBank newsId imageId
