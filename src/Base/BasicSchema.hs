@@ -51,24 +51,33 @@ runDataBaseWithOutLog :: ConnectionString -> SqlPersistT (NoLoggingT IO) a -> IO
 runDataBaseWithOutLog pginfo a = runNoLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 
 cleanUp :: (MonadIO m) => SqlPersistT m ()
-cleanUp = rawExecute "TRUNCATE news, images_bank, images" []
+cleanUp = rawExecute "TRUNCATE news, images_bank, images, categories" []
 
 dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
-dropAll = rawExecute "DROP TABLE news, images_bank, images" []
+dropAll = rawExecute "DROP TABLE news, images_bank, images, categories" []
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
  News sql=news
   title T.Text
+  categoryId CategoryId
   UniqueNews title
+  deriving Show
  Image sql=images
   header T.Text
   base64 T.Text
   UniqueImage header base64
+  deriving Show
  ImageBank sql=images_bank
   newsId NewsId
   imageId ImageId
   UniqueImageBank newsId imageId
+  deriving Show
+ Category sql=categories
+  label T.Text
+  parent T.Text Maybe  -- to do parent CategoryId Maybe .. try to antoher table
+  UniqueCategory label
+  deriving Show
 
   -- User sql = users
   --   login T.Text
