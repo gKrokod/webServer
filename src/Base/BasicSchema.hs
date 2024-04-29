@@ -23,21 +23,42 @@ import Data.Aeson
 import Data.Aeson.Types
 import Database.Persist 
 
+import Control.Monad.Logger (runNoLoggingT, runStderrLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
 import qualified Database.Persist.TH as PTH
-import qualified Database.Persist.Sql as PS
+-- import qualified Database.Persist.Sql as PS
+import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
+import Database.Persist.Postgresql  (SqlPersistT,ConnectionString, insert, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 
+-- runSqlConn :: forall backend m a. (MonadUnliftIO m, BackendCompatible SqlBackend backend) => 
+--   ReaderT backend m a -> backend -> m a
+--
+-- withPostgresqlConn :: (MonadUnliftIO m, MonadLoggerIO m) =>
+--   ConnectionString -> (SqlBackend -> m a) -> m a
+--
+
+-- createDataBase pginfo  =  runDataBaseWithLog pginfo $ runMigration migrateAll
+
+runDataBaseWithLog :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
+runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
+-- runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
+
+runDataBaseWithOutLog :: ConnectionString -> SqlPersistT (NoLoggingT IO) a -> IO a
+runDataBaseWithOutLog pginfo a = runNoLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
-Person
-    name String
-Store
-    name String
-PersonStore
-    personId PersonId
-    storeId StoreId
-    UniquePersonStore personId storeId
+News sql = news
+  title T.Text
+  UniqueNews title
+  images
+Image sql = images
+  header T.Text
+  base64 T.Text
+ImageBank sql images_bank
+  newsId NewsId
+  imageId ImageId
+  UniqueImageBank newsId imageId
 
   -- User sql = users
   --   login T.Text
