@@ -38,7 +38,7 @@ main = do
       -- Prelude.putStrLn "Clean up" -- all row
       -- runDataBaseWithLog (configConnect db') $ cleanUp
       Prelude.putStrLn "Drop All table" -- all row
-      runDataBaseWithLog (configConnect db') $ dropAll
+      -- runDataBaseWithLog (configConnect db') $ dropAll
       Prelude.putStrLn "Make Table in data base"
       runDataBaseWithLog (configConnect db') $ runMigration migrateAll
       doLogic $ configConnect db'
@@ -64,8 +64,10 @@ doLogic pginfo = do
   -- insert news, image, and bind
   runDataBaseWithOutLog pginfo $ do
       catId1 <- insert $ cat1
-      catId2 <- insert $ Category "Man" (Just $ T.pack $ show catId1)
-      catId3 <- insert $ Category "Woman" (Just $ T.pack $ "sdf" <> show catId1)
+      -- catId2 <- insert $ Category "Man" (Just $ T.pack $ show catId1)
+      catId2 <- insert $ Category "Man" (Just catId1)
+      -- catId3 <- insert $ Category "Woman" (Just $ T.pack $ "sdf" <> show catId1)
+      catId3 <- insert $ Category "Woman" (Just catId1)
 
       imageId1 <- insert $ image1
       -- newsId1 <- insert $ news1 (T.pack $ show catId1)
@@ -80,6 +82,10 @@ doLogic pginfo = do
       _ <- insert $ ImageBank newsId1 imageId2
       _ <- insert $ ImageBank newsId2 imageId1
       _ <- insert $ ImageBank newsId3 imageId3
+
+      -- t1 <- insert $ TestKey "testKey2" Nothing
+      -- _ <- insert $ TestKey "testKey1" (Just t1)
+      -- _ <- insert $ TestKey "testKey0" (Just t1) 
       pure ()
   putStrLn $ "Time to insert news, images, bind: " <> $(localtimeTemplate)
   --

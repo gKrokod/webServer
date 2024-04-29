@@ -62,22 +62,22 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   title T.Text
   categoryId CategoryId
   UniqueNews title
-  deriving Show
+  deriving Eq Show
  Image sql=images
   header T.Text
   base64 T.Text
   UniqueImage header base64
-  deriving Show
+  deriving Eq Show
  ImageBank sql=images_bank
   newsId NewsId
   imageId ImageId
   UniqueImageBank newsId imageId
-  deriving Show
+  deriving Eq Show
  Category sql=categories
   label T.Text
-  parent T.Text Maybe  -- to do parent CategoryId Maybe .. try to antoher table
+  parent CategoryId Maybe
   UniqueCategory label
-  deriving Show
+  deriving Eq Show
 
   -- User sql = users
   --   login T.Text
