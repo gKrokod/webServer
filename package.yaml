@@ -53,6 +53,7 @@ library:
   - persistent-postgresql
   - mtl
   - monad-logger
+  - esqueleto
 
 executables:
   serverok-exe:
@@ -68,6 +69,7 @@ executables:
     - bytestring
     - time
     - containers
+    - esqueleto
     # , esqueleto
     # , hedis
     - monad-logger

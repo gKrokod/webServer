@@ -44,6 +44,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , esqueleto
     , monad-logger
     , mtl
     , persistent
@@ -69,6 +70,7 @@ executable serverok-exe
     , base >=4.7 && <5
     , bytestring
     , containers
+    , esqueleto
     , monad-logger
     , mtl
     , persistent

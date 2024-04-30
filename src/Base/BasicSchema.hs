@@ -32,6 +32,7 @@ import Database.Persist.Postgresql  (rawExecute, SqlPersistT,ConnectionString, i
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 
+import Data.Time (UTCTime)
 -- runSqlConn :: forall backend m a. (MonadUnliftIO m, BackendCompatible SqlBackend backend) => 
 --   ReaderT backend m a -> backend -> m a
 --
@@ -51,16 +52,35 @@ runDataBaseWithOutLog :: ConnectionString -> SqlPersistT (NoLoggingT IO) a -> IO
 runDataBaseWithOutLog pginfo a = runNoLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 
 cleanUp :: (MonadIO m) => SqlPersistT m ()
-cleanUp = rawExecute "TRUNCATE news, images_bank, images, categories" []
+cleanUp = rawExecute "TRUNCATE news, images_bank, images, categories, users" []
 
 dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
-dropAll = rawExecute "DROP TABLE news, images_bank, images, categories" []
+dropAll = rawExecute "DROP TABLE news, images_bank, images, categories, users" []
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
+ User sql=users
+  name T.Text
+  login T.Text
+  quasiPassword T.Text
+  created UTCTime
+  isAdmin Bool
+  isPublisher Bool
+  UniqueUser login
+  deriving Eq Show
+ Category sql=categories
+  label T.Text
+  parent CategoryId Maybe
+  UniqueCategory label
+  deriving Eq Show
  News sql=news
   title T.Text
+  created UTCTime
+  userId UserId
   categoryId CategoryId
+  content T.Text
+  imagesIds [ImageId]
+  isPublish Bool
   UniqueNews title
   deriving Eq Show
  Image sql=images
@@ -68,40 +88,11 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   base64 T.Text
   UniqueImage header base64
   deriving Eq Show
- ImageBank sql=images_bank
+ ImageBank sql=images_bank -- for tests.
   newsId NewsId
   imageId ImageId
-  UniqueImageBank newsId imageId
+  -- UniqueImageBank newsId imageId
+  Primary newsId imageId
   deriving Eq Show
- Category sql=categories
-  label T.Text
-  parent CategoryId Maybe
-  UniqueCategory label
-  deriving Eq Show
-
-  -- User sql = users
-  --   login T.Text
-  --   name T.Text
-  --   password T.Text
-  --   isAdmin Bool
-  --   isPublisher Bool
-  --   categoryId CategoryId
-  --   UniqueLabel name
-  --   Primary login
-  --   deriving Eq Show
-  -- Category sql = categories
-  --   label T.Text
-  --   UniqueCategory label
-  --   deriving Eq Show
-  -- ProductCategory
-  --   productId ProductId
-  --   categoryId CategoryId
-  --   Primary productId categoryId
-  --   deriving Eq Show
-  -- Warehouse
-  --   productId ProductId
-  --   quantity Int
-  --   -- created UTCTime default=CURRENT_TIME
-  --   -- modified UTCTime default=CURRENT_TIME
-  --   deriving Eq Show
 |]
+
