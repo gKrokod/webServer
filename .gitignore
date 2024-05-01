@@ -4,3 +4,5 @@
 .history
 *.db
 *.bak
+*.dump-splices
+*.swp

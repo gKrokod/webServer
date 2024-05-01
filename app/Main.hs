@@ -143,7 +143,7 @@ doLogic pginfo = do
   -- newsUser <- fetchNewsUser pginfo 3
   -- mapM_ (putStrLn . (<> "\n") . show) newsUser 
   print "Categorii davaj  1" 
-  nall <- helper pginfo 6 []
+  nall <- getCategories pginfo 2 []
   mapM_ (putStrLn . (<> "\n") . show) nall
 
   pure ()
@@ -157,15 +157,17 @@ doLogic pginfo = do
 --       where_ (cat1 ^. CategoryId ==. val (toSqlKey uid))
       
     --   from cte
-
-helper :: ConnectionString -> Int64 -> [Category] -> IO [Category]
-helper pginfo n acc = do
+--
+-- mnogo zaprosov k db. perepisat cherez withRecursion
+-- perepisat v notacii do maybe monad
+getCategories :: ConnectionString -> Int64 -> [Category] -> IO [Category]
+getCategories pginfo n acc = do
   f <- runDataBaseWithOutLog pginfo (getCategory n) -- get all users with limit 
   case f of
     Nothing -> pure acc
     Just cat -> case (categoryParent cat) of
                   Nothing -> pure (cat : acc)
-                  Just n' -> helper pginfo (fromSqlKey n') (cat : acc)
+                  Just n' -> getCategories pginfo (fromSqlKey n') (cat : acc)
       
 
 getCategory :: MonadIO m => Int64 -> SqlPersistT m (Maybe Category)
