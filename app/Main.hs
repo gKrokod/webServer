@@ -146,20 +146,24 @@ doLogic pginfo = do
   nall <- getCategories pginfo 2 []
   mapM_ (putStrLn . (<> "\n") . show) nall
 
+  print "Kartinki iz novosti 3 davaj" 
+  nall <- fetchImageList pginfo 1
+  -- bb <- mapM (unValue) nall
+  -- mapM_ (putStrLn . (<> "\n") . show) (unValue nall)
+  let new = concatMap unValue nall
+  print new
+  -- mapM_ (putStrLn . (<> "\n") . show) (unValue nall)
+  res <- mapM (runDataBaseWithOutLog pginfo . getImage . toSqlKey . unSqlBackendKey . unImageKey) new
+  print res
+
   pure ()
 
--- -- fetchCategories :: ConnectionString -> Int64 -> IO [Entity Category]
--- fetchCategories connString uid = runDataBaseWithLog connString fetchAction
---   where
---     -- fetchAction :: (MonadIO m) => SqlPersistT m [Entity Category]
---     fetchAction = select $
---       cat1 <- from $ table @Category
---       where_ (cat1 ^. CategoryId ==. val (toSqlKey uid))
+getImage :: MonadIO m => ImageId -> SqlPersistT m (Maybe Image)
+getImage n = get n
       
-    --   from cte
 --
 -- mnogo zaprosov k db. perepisat cherez withRecursion
--- perepisat v notacii do maybe monad
+-- perepisat v notacii do maybe monad -- mozno perepisat cherez unfoldr
 getCategories :: ConnectionString -> Int64 -> [Category] -> IO [Category]
 getCategories pginfo n acc = do
   f <- runDataBaseWithOutLog pginfo (getCategory n) -- get all users with limit 
@@ -186,6 +190,42 @@ fetchNewsUser connString uid = runDataBaseWithLog connString fetchAction
       news <- from $ table @News
       where_ (news ^. NewsUserId ==. val (toSqlKey uid))
       pure news
+
+
+-- fetchImageFromNews :: ConnectionString -> Int64 -> IO [Entity Image]
+-- fetchImageFromNews connString uid = runDataBaseWithLog connString fetchAction
+--   where
+--     fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
+--     fetchAction = 
+--       select $ do
+--       (news :& images) <- from $ table @News
+--         `leftJoin` table @Image
+--         `on` (\(news :& images) -> images ^. ImageId `in_`  (news ^. NewsImagesIds))
+--         -- `on` (\(news :& images) -> images ^. ImageId `in_` news ^. NewsImagesIds)
+--       pure images
+
+fetchImageList :: ConnectionString -> Int64 -> IO [Value [ImageId]]
+fetchImageList connString uid = runDataBaseWithLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m [Value [ImageId]]
+    fetchAction = select $ do
+      news <- from $ table @News
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
+      pure $ news ^. NewsImagesIds
+
+-- fetchImageFromNews :: ConnectionString -> Int64 -> IO [Entity Image]
+-- fetchImageFromNews connString uid = runDataBaseWithLog connString fetchAction
+--   where
+--     fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
+--     fetchAction = select $ do
+--       news <- from $ table @News
+--       where_ (news ^. NewsId ==. val (toSqlKey uid))
+--       let list = (news ^. NewsImagesIds)
+--       image <- from $ table @Image
+--       -- where_ (image ^. ImageId ==. val (toSqlKey uid))
+--       -- where_ (image ^. ImageId `in_` valList (map toSqlKey [1,2,3]) )-- news ^. NewsImagesIds)
+--       where_ (image ^. ImageId `in_` (list))
+--       pure image
 
 fetchImage :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImage connString uid = runDataBaseWithLog connString fetchAction
