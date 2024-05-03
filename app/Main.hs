@@ -157,14 +157,13 @@ doLogic pginfo = do
   print res
 
   print "Kartinki iz novosti 3 davaj" 
-  nall <- fetchImageList pginfo 1
-  mapM_ (putStrLn . (<> "\n") . show) nall
+  nall <- fetchImageBank pginfo 1
+  mapM_ (putStrLn . (<> "\n") . show . entityVal) nall
 
   pure ()
 
 getImage :: MonadIO m => ImageId -> SqlPersistT m (Maybe Image)
 getImage n = get n
-      
 --
 -- mnogo zaprosov k db. perepisat cherez withRecursion
 -- perepisat v notacii do maybe monad -- mozno perepisat cherez unfoldr
@@ -186,7 +185,7 @@ getCategory n = get (toSqlKey n)
     --   where_ (cat1 ^. CategoryId ==. val (toSqlKey uid))
     --   pure cat1
 
-fetchImageBank :: ConnectionString -> Int64 -> IO [(Entity News, Entity Image)]
+fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
   where
     -- fetchAction :: (MonadIO m) => SqlPersistT m [Value [ImageId]]
@@ -194,10 +193,12 @@ fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
       (news :& imagebank :& image) <- 
         from $ table @News
          `innerJoin` table @ImageBank
-         `on`  (\(n :& i) -> (n ^. NewsId) ==. (i ^. ImageBankNewsId))
+         -- `on`  (\(n :& i) -> val (toSqlKey uid) ==. (i ^. ImageBankNewsId))
+         `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
          `innerJoin` table @Image
          `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
-      pure $ (news, image)
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
+      pure $ (image)
 
 fetchNewsUser :: ConnectionString -> Int64 -> IO [Entity News]
 fetchNewsUser connString uid = runDataBaseWithLog connString fetchAction
@@ -229,19 +230,6 @@ fetchImageList connString uid = runDataBaseWithLog connString fetchAction
       where_ (news ^. NewsId ==. val (toSqlKey uid))
       pure $ news ^. NewsImagesIds
 
--- fetchImageFromNews :: ConnectionString -> Int64 -> IO [Entity Image]
--- fetchImageFromNews connString uid = runDataBaseWithLog connString fetchAction
---   where
---     fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
---     fetchAction = select $ do
---       news <- from $ table @News
---       where_ (news ^. NewsId ==. val (toSqlKey uid))
---       let list = (news ^. NewsImagesIds)
---       image <- from $ table @Image
---       -- where_ (image ^. ImageId ==. val (toSqlKey uid))
---       -- where_ (image ^. ImageId `in_` valList (map toSqlKey [1,2,3]) )-- news ^. NewsImagesIds)
---       where_ (image ^. ImageId `in_` (list))
---       pure image
 
 fetchImage :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImage connString uid = runDataBaseWithLog connString fetchAction

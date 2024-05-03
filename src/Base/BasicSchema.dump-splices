@@ -1,4 +1,4 @@
-/home/h/projects/webServer/src/Base/BasicSchema.hs:(61,93)-(97,2): Splicing expression
+/home/w/projects/warp/src/Base/BasicSchema.hs:(61,93)-(97,2): Splicing expression
     Language.Haskell.TH.Quote.quoteExp
       PTH.persistLowerCase
       "\n\
@@ -358,7 +358,7 @@
             ((FieldCascade Nothing) Nothing))
            Nothing)
           Nothing]]
-/home/h/projects/webServer/src/Base/BasicSchema.hs:(61,1)-(97,2): Splicing declarations
+/home/w/projects/warp/src/Base/BasicSchema.hs:(61,1)-(97,2): Splicing declarations
     PTH.share
       [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"]
       ([(((Database.Persist.Quasi.Internal.UnboundEntityDef [])
@@ -2202,6 +2202,2293 @@
         = (error
              $ ("fromPersistValue: expected PersistList, got: "
                   `mappend` show got_a8Sa))
+    instance persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql (Database.Persist.Key ImageBank) where
+      persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+        _
+        = SqlString
+    instance ToJSON (Database.Persist.Key ImageBank)
+    instance FromJSON (Database.Persist.Key ImageBank)
+    instance OnlyOneUniqueKey User where
+      onlyUniqueP = (head . persistUniqueKeys)
+    instance AtLeastOneUniqueKey User where
+      requireUniquesP = (Data.List.NonEmpty.fromList . persistUniqueKeys)
+    instance OnlyOneUniqueKey Category where
+      onlyUniqueP = (head . persistUniqueKeys)
+    instance AtLeastOneUniqueKey Category where
+      requireUniquesP = (Data.List.NonEmpty.fromList . persistUniqueKeys)
+    instance OnlyOneUniqueKey News where
+      onlyUniqueP = (head . persistUniqueKeys)
+    instance AtLeastOneUniqueKey News where
+      requireUniquesP = (Data.List.NonEmpty.fromList . persistUniqueKeys)
+    instance OnlyOneUniqueKey Image where
+      onlyUniqueP = (head . persistUniqueKeys)
+    instance AtLeastOneUniqueKey Image where
+      requireUniquesP = (Data.List.NonEmpty.fromList . persistUniqueKeys)
+    instance GHC.TypeLits.TypeError (NoUniqueKeysError ImageBank) =>
+             OnlyOneUniqueKey ImageBank where
+      onlyUniqueP _ = error "impossible"
+    instance GHC.TypeLits.TypeError (MultipleUniqueKeysError ImageBank) =>
+             AtLeastOneUniqueKey ImageBank where
+      requireUniquesP _ = error "impossible"
+    instance SymbolToField "id" User (Database.Persist.Key User) where
+      symbolToField = UserId
+    instance SymbolToField "name" User T.Text where
+      symbolToField = UserName
+    instance SymbolToField "login" User T.Text where
+      symbolToField = UserLogin
+    instance SymbolToField "quasiPassword" User T.Text where
+      symbolToField = UserQuasiPassword
+    instance SymbolToField "created" User UTCTime where
+      symbolToField = UserCreated
+    instance SymbolToField "isAdmin" User Bool where
+      symbolToField = UserIsAdmin
+    instance SymbolToField "isPublisher" User Bool where
+      symbolToField = UserIsPublisher
+    instance SymbolToField "id" Category (Database.Persist.Key Category) where
+      symbolToField = CategoryId
+    instance SymbolToField "label" Category T.Text where
+      symbolToField = CategoryLabel
+    instance SymbolToField "parent" Category (Maybe CategoryId) where
+      symbolToField = CategoryParent
+    instance SymbolToField "id" News (Database.Persist.Key News) where
+      symbolToField = NewsId
+    instance SymbolToField "title" News T.Text where
+      symbolToField = NewsTitle
+    instance SymbolToField "created" News UTCTime where
+      symbolToField = NewsCreated
+    instance SymbolToField "userId" News UserId where
+      symbolToField = NewsUserId
+    instance SymbolToField "categoryId" News CategoryId where
+      symbolToField = NewsCategoryId
+    instance SymbolToField "content" News T.Text where
+      symbolToField = NewsContent
+    instance SymbolToField "imagesIds" News [ImageId] where
+      symbolToField = NewsImagesIds
+    instance SymbolToField "isPublish" News Bool where
+      symbolToField = NewsIsPublish
+    instance SymbolToField "id" Image (Database.Persist.Key Image) where
+      symbolToField = ImageId
+    instance SymbolToField "header" Image T.Text where
+      symbolToField = ImageHeader
+    instance SymbolToField "base64" Image T.Text where
+      symbolToField = ImageBase64
+    instance SymbolToField "newsId" ImageBank NewsId where
+      symbolToField = ImageBankNewsId
+    instance SymbolToField "imageId" ImageBank ImageId where
+      symbolToField = ImageBankImageId
+    entityDefListFormigrateAll :: [EntityDef]
+    entityDefListFormigrateAll
+      = [entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy User),
+         entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy Category),
+         entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy News),
+         entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy Image),
+         entityDef (Data.Proxy.Proxy :: Data.Proxy.Proxy ImageBank)]
+    migrateAll :: Database.Persist.Sql.Migration.Migration
+    migrateAll = PTH.migrateModels entityDefListFormigrateAll
+/home/w/projects/warp/src/Base/BasicSchema.hs:(61,93)-(97,2): Splicing expression
+    Language.Haskell.TH.Quote.quoteExp
+      PTH.persistLowerCase
+      "\n\
+      \ User sql=users\n\
+      \  name T.Text\n\
+      \  login T.Text\n\
+      \  quasiPassword T.Text\n\
+      \  created UTCTime\n\
+      \  isAdmin Bool\n\
+      \  isPublisher Bool\n\
+      \  UniqueUser login\n\
+      \  deriving Eq Show\n\
+      \ Category sql=categories\n\
+      \  label T.Text\n\
+      \  parent CategoryId Maybe\n\
+      \  UniqueCategory label\n\
+      \  deriving Eq Show\n\
+      \ News sql=news\n\
+      \  title T.Text\n\
+      \  created UTCTime\n\
+      \  userId UserId\n\
+      \  categoryId CategoryId\n\
+      \  content T.Text\n\
+      \  imagesIds [ImageId]\n\
+      \  isPublish Bool\n\
+      \  UniqueNews title\n\
+      \  deriving Eq Show\n\
+      \ Image sql=images\n\
+      \  header T.Text\n\
+      \  base64 T.Text\n\
+      \  UniqueImage header base64\n\
+      \  deriving Eq Show\n\
+      \ ImageBank sql=images_bank -- for tests.\n\
+      \  newsId NewsId\n\
+      \  imageId ImageId\n\
+      \  -- UniqueImageBank newsId imageId\n\
+      \  Primary newsId imageId\n\
+      \  deriving Eq Show\n"
+  ======>
+    [(((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.DefaultKey
+            (FieldNameDB (T.pack "id"))))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "User")))
+                    (EntityNameDB (T.pack "users")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "UserId")))
+                                SqlInt64)
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [T.pack "sql=users"])
+                 [])
+                [(((UniqueDef (ConstraintNameHS (T.pack "UniqueUser")))
+                     (ConstraintNameDB (T.pack "unique_user")))
+                    ((FieldNameHS (T.pack "login"), FieldNameDB (T.pack "login"))
+                       GHC.Base.:| []))
+                   []])
+               [])
+              [T.pack "Eq", T.pack "Show"])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "name")))
+                (FieldNameDB (T.pack "name")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "login")))
+                (FieldNameDB (T.pack "login")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "quasiPassword")))
+                (FieldNameDB (T.pack "quasi_password")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "created")))
+                (FieldNameDB (T.pack "created")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "UTCTime")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "isAdmin")))
+                (FieldNameDB (T.pack "is_admin")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "Bool")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "isPublisher")))
+                (FieldNameDB (T.pack "is_publisher")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "Bool")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing],
+     (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.DefaultKey
+            (FieldNameDB (T.pack "id"))))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "Category")))
+                    (EntityNameDB (T.pack "categories")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "CategoryId")))
+                                SqlInt64)
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [T.pack "sql=categories"])
+                 [])
+                [(((UniqueDef (ConstraintNameHS (T.pack "UniqueCategory")))
+                     (ConstraintNameDB (T.pack "unique_category")))
+                    ((FieldNameHS (T.pack "label"), FieldNameDB (T.pack "label"))
+                       GHC.Base.:| []))
+                   []])
+               [])
+              [T.pack "Eq", T.pack "Show"])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "label")))
+                (FieldNameDB (T.pack "label")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "parent")))
+                (FieldNameDB (T.pack "parent")))
+               [FieldAttrMaybe])
+              True)
+             ((FTTypeCon Nothing) (T.pack "CategoryId")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing],
+     (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.DefaultKey
+            (FieldNameDB (T.pack "id"))))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "News")))
+                    (EntityNameDB (T.pack "news")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "NewsId")))
+                                SqlInt64)
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [T.pack "sql=news"])
+                 [])
+                [(((UniqueDef (ConstraintNameHS (T.pack "UniqueNews")))
+                     (ConstraintNameDB (T.pack "unique_news")))
+                    ((FieldNameHS (T.pack "title"), FieldNameDB (T.pack "title"))
+                       GHC.Base.:| []))
+                   []])
+               [])
+              [T.pack "Eq", T.pack "Show"])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "title")))
+                (FieldNameDB (T.pack "title")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "created")))
+                (FieldNameDB (T.pack "created")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "UTCTime")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "userId")))
+                (FieldNameDB (T.pack "user_id")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "UserId")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "categoryId")))
+                (FieldNameDB (T.pack "category_id")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "CategoryId")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "content")))
+                (FieldNameDB (T.pack "content")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "imagesIds")))
+                (FieldNameDB (T.pack "images_ids")))
+               [])
+              True)
+             (FTList ((FTTypeCon Nothing) (T.pack "ImageId"))))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "isPublish")))
+                (FieldNameDB (T.pack "is_publish")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "Bool")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing],
+     (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.DefaultKey
+            (FieldNameDB (T.pack "id"))))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "Image")))
+                    (EntityNameDB (T.pack "images")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "ImageId")))
+                                SqlInt64)
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [T.pack "sql=images"])
+                 [])
+                [(((UniqueDef (ConstraintNameHS (T.pack "UniqueImage")))
+                     (ConstraintNameDB (T.pack "unique_image")))
+                    ((FieldNameHS (T.pack "header"), FieldNameDB (T.pack "header"))
+                       GHC.Base.:|
+                         [(FieldNameHS (T.pack "base64"), FieldNameDB (T.pack "base64"))]))
+                   []])
+               [])
+              [T.pack "Eq", T.pack "Show"])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "header")))
+                (FieldNameDB (T.pack "header")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "base64")))
+                (FieldNameDB (T.pack "base64")))
+               [])
+              True)
+             ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing],
+     (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+         (Database.Persist.Quasi.Internal.NaturalKey
+            ((Database.Persist.Quasi.Internal.UnboundCompositeDef
+                [FieldNameHS (T.pack "newsId"), FieldNameHS (T.pack "imageId")])
+               [])))
+        (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                     (EntityNameHS (T.pack "ImageBank")))
+                    (EntityNameDB (T.pack "images_bank")))
+                   (EntityIdField
+                      (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                  (FieldNameDB (T.pack "id")))
+                                 ((FTTypeCon Nothing) (T.pack "ImageBankId")))
+                                (SqlOther (T.pack "Primary Key")))
+                               [])
+                              True)
+                             NoReference)
+                            ((FieldCascade Nothing) Nothing))
+                           Nothing)
+                          Nothing)
+                         True)))
+                  [T.pack "sql=images_bank"])
+                 [])
+                [])
+               [])
+              [T.pack "Eq", T.pack "Show"])
+             Data.Map.Internal.Tip)
+            False)
+           Nothing))
+       [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "newsId")))
+                (FieldNameDB (T.pack "news_id")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "NewsId")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing,
+        (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                 (FieldNameHS (T.pack "imageId")))
+                (FieldNameDB (T.pack "image_id")))
+               [])
+              True)
+             ((FTTypeCon Nothing) (T.pack "ImageId")))
+            ((FieldCascade Nothing) Nothing))
+           Nothing)
+          Nothing]]
+/home/w/projects/warp/src/Base/BasicSchema.hs:(61,1)-(97,2): Splicing declarations
+    PTH.share
+      [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"]
+      ([(((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.DefaultKey
+               (FieldNameDB (T.pack "id"))))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "User")))
+                       (EntityNameDB (T.pack "users")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "UserId")))
+                                   SqlInt64)
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [T.pack "sql=users"])
+                    [])
+                   [(((UniqueDef (ConstraintNameHS (T.pack "UniqueUser")))
+                        (ConstraintNameDB (T.pack "unique_user")))
+                       ((FieldNameHS (T.pack "login"), FieldNameDB (T.pack "login"))
+                          GHC.Base.:| []))
+                      []])
+                  [])
+                 [T.pack "Eq", T.pack "Show"])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "name")))
+                   (FieldNameDB (T.pack "name")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "login")))
+                   (FieldNameDB (T.pack "login")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "quasiPassword")))
+                   (FieldNameDB (T.pack "quasi_password")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "created")))
+                   (FieldNameDB (T.pack "created")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "UTCTime")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "isAdmin")))
+                   (FieldNameDB (T.pack "is_admin")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "Bool")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "isPublisher")))
+                   (FieldNameDB (T.pack "is_publisher")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "Bool")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing],
+        (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.DefaultKey
+               (FieldNameDB (T.pack "id"))))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "Category")))
+                       (EntityNameDB (T.pack "categories")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "CategoryId")))
+                                   SqlInt64)
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [T.pack "sql=categories"])
+                    [])
+                   [(((UniqueDef (ConstraintNameHS (T.pack "UniqueCategory")))
+                        (ConstraintNameDB (T.pack "unique_category")))
+                       ((FieldNameHS (T.pack "label"), FieldNameDB (T.pack "label"))
+                          GHC.Base.:| []))
+                      []])
+                  [])
+                 [T.pack "Eq", T.pack "Show"])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "label")))
+                   (FieldNameDB (T.pack "label")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "parent")))
+                   (FieldNameDB (T.pack "parent")))
+                  [FieldAttrMaybe])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "CategoryId")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing],
+        (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.DefaultKey
+               (FieldNameDB (T.pack "id"))))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "News")))
+                       (EntityNameDB (T.pack "news")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "NewsId")))
+                                   SqlInt64)
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [T.pack "sql=news"])
+                    [])
+                   [(((UniqueDef (ConstraintNameHS (T.pack "UniqueNews")))
+                        (ConstraintNameDB (T.pack "unique_news")))
+                       ((FieldNameHS (T.pack "title"), FieldNameDB (T.pack "title"))
+                          GHC.Base.:| []))
+                      []])
+                  [])
+                 [T.pack "Eq", T.pack "Show"])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "title")))
+                   (FieldNameDB (T.pack "title")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "created")))
+                   (FieldNameDB (T.pack "created")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "UTCTime")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "userId")))
+                   (FieldNameDB (T.pack "user_id")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "UserId")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "categoryId")))
+                   (FieldNameDB (T.pack "category_id")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "CategoryId")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "content")))
+                   (FieldNameDB (T.pack "content")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "imagesIds")))
+                   (FieldNameDB (T.pack "images_ids")))
+                  [])
+                 True)
+                (FTList ((FTTypeCon Nothing) (T.pack "ImageId"))))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "isPublish")))
+                   (FieldNameDB (T.pack "is_publish")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "Bool")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing],
+        (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.DefaultKey
+               (FieldNameDB (T.pack "id"))))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "Image")))
+                       (EntityNameDB (T.pack "images")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "ImageId")))
+                                   SqlInt64)
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [T.pack "sql=images"])
+                    [])
+                   [(((UniqueDef (ConstraintNameHS (T.pack "UniqueImage")))
+                        (ConstraintNameDB (T.pack "unique_image")))
+                       ((FieldNameHS (T.pack "header"), FieldNameDB (T.pack "header"))
+                          GHC.Base.:|
+                            [(FieldNameHS (T.pack "base64"), FieldNameDB (T.pack "base64"))]))
+                      []])
+                  [])
+                 [T.pack "Eq", T.pack "Show"])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "header")))
+                   (FieldNameDB (T.pack "header")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "base64")))
+                   (FieldNameDB (T.pack "base64")))
+                  [])
+                 True)
+                ((FTTypeCon (Just (T.pack "T"))) (T.pack "Text")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing],
+        (((Database.Persist.Quasi.Internal.UnboundEntityDef [])
+            (Database.Persist.Quasi.Internal.NaturalKey
+               ((Database.Persist.Quasi.Internal.UnboundCompositeDef
+                   [FieldNameHS (T.pack "newsId"), FieldNameHS (T.pack "imageId")])
+                  [])))
+           (((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                        (EntityNameHS (T.pack "ImageBank")))
+                       (EntityNameDB (T.pack "images_bank")))
+                      (EntityIdField
+                         (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                     (FieldNameDB (T.pack "id")))
+                                    ((FTTypeCon Nothing) (T.pack "ImageBankId")))
+                                   (SqlOther (T.pack "Primary Key")))
+                                  [])
+                                 True)
+                                NoReference)
+                               ((FieldCascade Nothing) Nothing))
+                              Nothing)
+                             Nothing)
+                            True)))
+                     [T.pack "sql=images_bank"])
+                    [])
+                   [])
+                  [])
+                 [T.pack "Eq", T.pack "Show"])
+                Data.Map.Internal.Tip)
+               False)
+              Nothing))
+          [(((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "newsId")))
+                   (FieldNameDB (T.pack "news_id")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "NewsId")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing,
+           (((((((Database.Persist.Quasi.Internal.UnboundFieldDef
+                    (FieldNameHS (T.pack "imageId")))
+                   (FieldNameDB (T.pack "image_id")))
+                  [])
+                 True)
+                ((FTTypeCon Nothing) (T.pack "ImageId")))
+               ((FieldCascade Nothing) Nothing))
+              Nothing)
+             Nothing]])
+  ======>
+    instance PersistField User where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper
+            ["name", "login", "quasiPassword", "created", "isAdmin",
+             "isPublisher"]
+    instance persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql User where
+      persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+        _
+        = SqlString
+    instance PersistField Category where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper
+            ["label", "parent"]
+    instance persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql Category where
+      persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+        _
+        = SqlString
+    instance PersistField News where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper
+            ["title", "created", "userId", "categoryId", "content",
+             "imagesIds", "isPublish"]
+    instance persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql News where
+      persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+        _
+        = SqlString
+    instance PersistField Image where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper
+            ["header", "base64"]
+    instance persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql Image where
+      persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+        _
+        = SqlString
+    instance PersistField ImageBank where
+      toPersistValue = Database.Persist.TH.entityToPersistValueHelper
+      fromPersistValue
+        = Database.Persist.TH.entityFromPersistValueHelper
+            ["newsId", "imageId"]
+    instance persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql ImageBank where
+      persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+        _
+        = SqlString
+    data User
+      = User {userName :: !T.Text,
+              userLogin :: !T.Text,
+              userQuasiPassword :: !T.Text,
+              userCreated :: !UTCTime,
+              userIsAdmin :: !Bool,
+              userIsPublisher :: !Bool}
+      deriving stock (Eq, Show)
+    type UserId = Database.Persist.Key User
+    instance PersistEntity User where
+      type PersistEntityBackend User = Database.Persist.SqlBackend.Internal.SqlBackend
+      data Unique User = UniqueUser T.Text
+      newtype Database.Persist.Key User
+        = UserKey {unUserKey :: (BackendKey Database.Persist.SqlBackend.Internal.SqlBackend)}
+        deriving stock Show
+        deriving stock Read
+        deriving newtype Eq
+        deriving newtype Ord
+        deriving newtype path-pieces-0.2.1-E15XfVOwfTfIr2VliI4YGA:Web.PathPieces.PathPiece
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.ToHttpApiData
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.FromHttpApiData
+        deriving newtype PersistField
+        deriving newtype persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql
+        deriving newtype ToJSON
+        deriving newtype FromJSON
+      data EntityField User typ
+        = (typ ~ UserId) => UserId |
+          (typ ~ T.Text) => UserName |
+          (typ ~ T.Text) => UserLogin |
+          (typ ~ T.Text) => UserQuasiPassword |
+          (typ ~ UTCTime) => UserCreated |
+          (typ ~ Bool) => UserIsAdmin |
+          (typ ~ Bool) => UserIsPublisher
+      keyToValues
+        = ((: []) . (toPersistValue . (\ UserKey {unUserKey = x} -> x)))
+      keyFromValues
+        = (fmap UserKey
+             . (fromPersistValue . Database.Persist.TH.headNote))
+      keyFromRecordM = Nothing
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "User")))
+                     (EntityNameDB (T.pack "users")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "UserId")))
+                                 SqlInt64)
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [T.pack "sql=users"])
+                  [])
+                 [(((UniqueDef (ConstraintNameHS (T.pack "UniqueUser")))
+                      (ConstraintNameDB (T.pack "unique_user")))
+                     ((FieldNameHS (T.pack "login"), FieldNameDB (T.pack "login"))
+                        GHC.Base.:| []))
+                    []])
+                [])
+               [T.pack "Eq", T.pack "Show"])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "name"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "name"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "login"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "login"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "quasiPassword"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "quasi_password"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "created"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "created"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "UTCTime"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy UTCTime),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "isAdmin"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "is_admin"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "Bool"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy Bool),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "isPublisher"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "is_publisher"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "Bool"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy Bool),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdField
+                                                                                                 (((((((((((FieldDef
+                                                                                                              (FieldNameHS
+                                                                                                                 (T.pack
+                                                                                                                    "Id")))
+                                                                                                             (FieldNameDB
+                                                                                                                (T.pack
+                                                                                                                   "id")))
+                                                                                                            ((FTTypeCon
+                                                                                                                Nothing)
+                                                                                                               (T.pack
+                                                                                                                  "UserId")))
+                                                                                                           SqlInt64)
+                                                                                                          [])
+                                                                                                         True)
+                                                                                                        NoReference)
+                                                                                                       ((FieldCascade
+                                                                                                           Nothing)
+                                                                                                          Nothing))
+                                                                                                      Nothing)
+                                                                                                     Nothing)
+                                                                                                    True),
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields (User x_anxD x_anxE x_anxF x_anxG x_anxH x_anxI)
+        = [SomePersistField x_anxD, SomePersistField x_anxE,
+           SomePersistField x_anxF, SomePersistField x_anxG,
+           SomePersistField x_anxH, SomePersistField x_anxI]
+      fromPersistValues
+        [x1_anxK, x2_anxL, x3_anxM, x4_anxN, x5_anxO, x6_anxP]
+        = User
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "users")) (T.pack "name"))
+                 . fromPersistValue)
+                x1_anxK
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "users")) (T.pack "login"))
+                 . fromPersistValue)
+                x2_anxL
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "users")) (T.pack "quasiPassword"))
+                 . fromPersistValue)
+                x3_anxM
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "users")) (T.pack "created"))
+                 . fromPersistValue)
+                x4_anxN
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "users")) (T.pack "isAdmin"))
+                 . fromPersistValue)
+                x5_anxO
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "users")) (T.pack "isPublisher"))
+                 . fromPersistValue)
+                x6_anxP
+      fromPersistValues x_anxJ
+        = (Left
+             $ (mappend (T.pack "User: fromPersistValues failed on: "))
+                 (T.pack $ show x_anxJ))
+      persistUniqueToFieldNames UniqueUser {}
+        = ((FieldNameHS (T.pack "login"), FieldNameDB (T.pack "login"))
+             GHC.Base.:| [])
+      persistUniqueToValues (UniqueUser x_anxQ) = [toPersistValue x_anxQ]
+      persistUniqueKeys
+        (User _name_anxR _login_anxS _quasiPassword_anxT _created_anxU
+              _isAdmin_anxV _isPublisher_anxW)
+        = [UniqueUser _login_anxS]
+      persistFieldDef UserId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdField
+               (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                           (FieldNameDB (T.pack "id")))
+                          ((FTTypeCon Nothing) (T.pack "UserId")))
+                         SqlInt64)
+                        [])
+                       True)
+                      NoReference)
+                     ((FieldCascade Nothing) Nothing))
+                    Nothing)
+                   Nothing)
+                  True))
+      persistFieldDef UserName
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy User))
+            (FieldNameHS (T.pack "name"))
+      persistFieldDef UserLogin
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy User))
+            (FieldNameHS (T.pack "login"))
+      persistFieldDef UserQuasiPassword
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy User))
+            (FieldNameHS (T.pack "quasiPassword"))
+      persistFieldDef UserCreated
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy User))
+            (FieldNameHS (T.pack "created"))
+      persistFieldDef UserIsAdmin
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy User))
+            (FieldNameHS (T.pack "isAdmin"))
+      persistFieldDef UserIsPublisher
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy User))
+            (FieldNameHS (T.pack "isPublisher"))
+      persistIdField = UserId
+      fieldLens UserId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_anxY) key_anxZ -> (Entity key_anxZ) value_anxY)
+      fieldLens UserName
+        = (PTH.lensPTH ((\ User {userName = x} -> x) . entityVal))
+            (\ (Entity key_any0 value_any1) x_any2
+               -> (Entity key_any0)
+                    (case value_any1 of
+                       User {userLogin = userLogin, userQuasiPassword = userQuasiPassword,
+                             userCreated = userCreated, userIsAdmin = userIsAdmin,
+                             userIsPublisher = userIsPublisher}
+                         -> User
+                              {userName = x_any2, userLogin = userLogin,
+                               userQuasiPassword = userQuasiPassword, userCreated = userCreated,
+                               userIsAdmin = userIsAdmin, userIsPublisher = userIsPublisher}))
+      fieldLens UserLogin
+        = (PTH.lensPTH ((\ User {userLogin = x} -> x) . entityVal))
+            (\ (Entity key_any0 value_any1) x_any2
+               -> (Entity key_any0)
+                    (case value_any1 of
+                       User {userName = userName, userQuasiPassword = userQuasiPassword,
+                             userCreated = userCreated, userIsAdmin = userIsAdmin,
+                             userIsPublisher = userIsPublisher}
+                         -> User
+                              {userName = userName, userLogin = x_any2,
+                               userQuasiPassword = userQuasiPassword, userCreated = userCreated,
+                               userIsAdmin = userIsAdmin, userIsPublisher = userIsPublisher}))
+      fieldLens UserQuasiPassword
+        = (PTH.lensPTH ((\ User {userQuasiPassword = x} -> x) . entityVal))
+            (\ (Entity key_any0 value_any1) x_any2
+               -> (Entity key_any0)
+                    (case value_any1 of
+                       User {userName = userName, userLogin = userLogin,
+                             userCreated = userCreated, userIsAdmin = userIsAdmin,
+                             userIsPublisher = userIsPublisher}
+                         -> User
+                              {userName = userName, userLogin = userLogin,
+                               userQuasiPassword = x_any2, userCreated = userCreated,
+                               userIsAdmin = userIsAdmin, userIsPublisher = userIsPublisher}))
+      fieldLens UserCreated
+        = (PTH.lensPTH ((\ User {userCreated = x} -> x) . entityVal))
+            (\ (Entity key_any0 value_any1) x_any2
+               -> (Entity key_any0)
+                    (case value_any1 of
+                       User {userName = userName, userLogin = userLogin,
+                             userQuasiPassword = userQuasiPassword, userIsAdmin = userIsAdmin,
+                             userIsPublisher = userIsPublisher}
+                         -> User
+                              {userName = userName, userLogin = userLogin,
+                               userQuasiPassword = userQuasiPassword, userCreated = x_any2,
+                               userIsAdmin = userIsAdmin, userIsPublisher = userIsPublisher}))
+      fieldLens UserIsAdmin
+        = (PTH.lensPTH ((\ User {userIsAdmin = x} -> x) . entityVal))
+            (\ (Entity key_any0 value_any1) x_any2
+               -> (Entity key_any0)
+                    (case value_any1 of
+                       User {userName = userName, userLogin = userLogin,
+                             userQuasiPassword = userQuasiPassword, userCreated = userCreated,
+                             userIsPublisher = userIsPublisher}
+                         -> User
+                              {userName = userName, userLogin = userLogin,
+                               userQuasiPassword = userQuasiPassword, userCreated = userCreated,
+                               userIsAdmin = x_any2, userIsPublisher = userIsPublisher}))
+      fieldLens UserIsPublisher
+        = (PTH.lensPTH ((\ User {userIsPublisher = x} -> x) . entityVal))
+            (\ (Entity key_any0 value_any1) x_any2
+               -> (Entity key_any0)
+                    (case value_any1 of
+                       User {userName = userName, userLogin = userLogin,
+                             userQuasiPassword = userQuasiPassword, userCreated = userCreated,
+                             userIsAdmin = userIsAdmin}
+                         -> User
+                              {userName = userName, userLogin = userLogin,
+                               userQuasiPassword = userQuasiPassword, userCreated = userCreated,
+                               userIsAdmin = userIsAdmin, userIsPublisher = x_any2}))
+    instance ToBackendKey Database.Persist.SqlBackend.Internal.SqlBackend User where
+      toBackendKey = \ UserKey {unUserKey = x} -> x
+      fromBackendKey = UserKey
+    data Category
+      = Category {categoryLabel :: !T.Text,
+                  categoryParent :: !(Maybe CategoryId)}
+      deriving stock (Eq, Show)
+    type CategoryId = Database.Persist.Key Category
+    instance PersistEntity Category where
+      type PersistEntityBackend Category = Database.Persist.SqlBackend.Internal.SqlBackend
+      data Unique Category = UniqueCategory T.Text
+      newtype Database.Persist.Key Category
+        = CategoryKey {unCategoryKey :: (BackendKey Database.Persist.SqlBackend.Internal.SqlBackend)}
+        deriving stock Show
+        deriving stock Read
+        deriving newtype Eq
+        deriving newtype Ord
+        deriving newtype path-pieces-0.2.1-E15XfVOwfTfIr2VliI4YGA:Web.PathPieces.PathPiece
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.ToHttpApiData
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.FromHttpApiData
+        deriving newtype PersistField
+        deriving newtype persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql
+        deriving newtype ToJSON
+        deriving newtype FromJSON
+      data EntityField Category typ
+        = (typ ~ CategoryId) => CategoryId |
+          (typ ~ T.Text) => CategoryLabel |
+          (typ ~ Maybe CategoryId) => CategoryParent
+      keyToValues
+        = ((: [])
+             . (toPersistValue . (\ CategoryKey {unCategoryKey = x} -> x)))
+      keyFromValues
+        = (fmap CategoryKey
+             . (fromPersistValue . Database.Persist.TH.headNote))
+      keyFromRecordM = Nothing
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "Category")))
+                     (EntityNameDB (T.pack "categories")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "CategoryId")))
+                                 SqlInt64)
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [T.pack "sql=categories"])
+                  [])
+                 [(((UniqueDef (ConstraintNameHS (T.pack "UniqueCategory")))
+                      (ConstraintNameDB (T.pack "unique_category")))
+                     ((FieldNameHS (T.pack "label"), FieldNameDB (T.pack "label"))
+                        GHC.Base.:| []))
+                    []])
+                [])
+               [T.pack "Eq", T.pack "Show"])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "label"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "label"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "parent"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "parent"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "CategoryId"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy CategoryId),
+                                                                                                       fieldAttrs = [FieldAttrMaybe],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = ForeignRef
+                                                                                                                          (EntityNameHS
+                                                                                                                             (T.pack
+                                                                                                                                "Category")),
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdField
+                                                                                                 (((((((((((FieldDef
+                                                                                                              (FieldNameHS
+                                                                                                                 (T.pack
+                                                                                                                    "Id")))
+                                                                                                             (FieldNameDB
+                                                                                                                (T.pack
+                                                                                                                   "id")))
+                                                                                                            ((FTTypeCon
+                                                                                                                Nothing)
+                                                                                                               (T.pack
+                                                                                                                  "CategoryId")))
+                                                                                                           SqlInt64)
+                                                                                                          [])
+                                                                                                         True)
+                                                                                                        NoReference)
+                                                                                                       ((FieldCascade
+                                                                                                           Nothing)
+                                                                                                          Nothing))
+                                                                                                      Nothing)
+                                                                                                     Nothing)
+                                                                                                    True),
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields (Category x_any3 x_any4)
+        = [SomePersistField x_any3, SomePersistField x_any4]
+      fromPersistValues [x1_any6, x2_any7]
+        = Category
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "categories")) (T.pack "label"))
+                 . fromPersistValue)
+                x1_any6
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "categories")) (T.pack "parent"))
+                 . fromPersistValue)
+                x2_any7
+      fromPersistValues x_any5
+        = (Left
+             $ (mappend (T.pack "Category: fromPersistValues failed on: "))
+                 (T.pack $ show x_any5))
+      persistUniqueToFieldNames UniqueCategory {}
+        = ((FieldNameHS (T.pack "label"), FieldNameDB (T.pack "label"))
+             GHC.Base.:| [])
+      persistUniqueToValues (UniqueCategory x_any8)
+        = [toPersistValue x_any8]
+      persistUniqueKeys (Category _label_any9 _parent_anya)
+        = [UniqueCategory _label_any9]
+      persistFieldDef CategoryId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdField
+               (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                           (FieldNameDB (T.pack "id")))
+                          ((FTTypeCon Nothing) (T.pack "CategoryId")))
+                         SqlInt64)
+                        [])
+                       True)
+                      NoReference)
+                     ((FieldCascade Nothing) Nothing))
+                    Nothing)
+                   Nothing)
+                  True))
+      persistFieldDef CategoryLabel
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy Category))
+            (FieldNameHS (T.pack "label"))
+      persistFieldDef CategoryParent
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy Category))
+            (FieldNameHS (T.pack "parent"))
+      persistIdField = CategoryId
+      fieldLens CategoryId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_anyc) key_anyd -> (Entity key_anyd) value_anyc)
+      fieldLens CategoryLabel
+        = (PTH.lensPTH ((\ Category {categoryLabel = x} -> x) . entityVal))
+            (\ (Entity key_anye value_anyf) x_anyg
+               -> (Entity key_anye)
+                    (case value_anyf of
+                       Category {categoryParent = categoryParent}
+                         -> Category
+                              {categoryLabel = x_anyg, categoryParent = categoryParent}))
+      fieldLens CategoryParent
+        = (PTH.lensPTH
+             ((\ Category {categoryParent = x} -> x) . entityVal))
+            (\ (Entity key_anye value_anyf) x_anyg
+               -> (Entity key_anye)
+                    (case value_anyf of
+                       Category {categoryLabel = categoryLabel}
+                         -> Category
+                              {categoryLabel = categoryLabel, categoryParent = x_anyg}))
+    instance ToBackendKey Database.Persist.SqlBackend.Internal.SqlBackend Category where
+      toBackendKey = \ CategoryKey {unCategoryKey = x} -> x
+      fromBackendKey = CategoryKey
+    data News
+      = News {newsTitle :: !T.Text,
+              newsCreated :: !UTCTime,
+              newsUserId :: !UserId,
+              newsCategoryId :: !CategoryId,
+              newsContent :: !T.Text,
+              newsImagesIds :: ![ImageId],
+              newsIsPublish :: !Bool}
+      deriving stock (Eq, Show)
+    type NewsId = Database.Persist.Key News
+    instance PersistEntity News where
+      type PersistEntityBackend News = Database.Persist.SqlBackend.Internal.SqlBackend
+      data Unique News = UniqueNews T.Text
+      newtype Database.Persist.Key News
+        = NewsKey {unNewsKey :: (BackendKey Database.Persist.SqlBackend.Internal.SqlBackend)}
+        deriving stock Show
+        deriving stock Read
+        deriving newtype Eq
+        deriving newtype Ord
+        deriving newtype path-pieces-0.2.1-E15XfVOwfTfIr2VliI4YGA:Web.PathPieces.PathPiece
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.ToHttpApiData
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.FromHttpApiData
+        deriving newtype PersistField
+        deriving newtype persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql
+        deriving newtype ToJSON
+        deriving newtype FromJSON
+      data EntityField News typ
+        = (typ ~ NewsId) => NewsId |
+          (typ ~ T.Text) => NewsTitle |
+          (typ ~ UTCTime) => NewsCreated |
+          (typ ~ UserId) => NewsUserId |
+          (typ ~ CategoryId) => NewsCategoryId |
+          (typ ~ T.Text) => NewsContent |
+          (typ ~ [ImageId]) => NewsImagesIds |
+          (typ ~ Bool) => NewsIsPublish
+      keyToValues
+        = ((: []) . (toPersistValue . (\ NewsKey {unNewsKey = x} -> x)))
+      keyFromValues
+        = (fmap NewsKey
+             . (fromPersistValue . Database.Persist.TH.headNote))
+      keyFromRecordM = Nothing
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "News")))
+                     (EntityNameDB (T.pack "news")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "NewsId")))
+                                 SqlInt64)
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [T.pack "sql=news"])
+                  [])
+                 [(((UniqueDef (ConstraintNameHS (T.pack "UniqueNews")))
+                      (ConstraintNameDB (T.pack "unique_news")))
+                     ((FieldNameHS (T.pack "title"), FieldNameDB (T.pack "title"))
+                        GHC.Base.:| []))
+                    []])
+                [])
+               [T.pack "Eq", T.pack "Show"])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "title"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "title"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "created"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "created"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "UTCTime"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy UTCTime),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "userId"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "user_id"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "UserId"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy UserId),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = ForeignRef
+                                                                                                                          (EntityNameHS
+                                                                                                                             (T.pack
+                                                                                                                                "User")),
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "categoryId"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "category_id"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "CategoryId"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy CategoryId),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = ForeignRef
+                                                                                                                          (EntityNameHS
+                                                                                                                             (T.pack
+                                                                                                                                "Category")),
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "content"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "content"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "imagesIds"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "images_ids"),
+                                                                                                       fieldType = FTList
+                                                                                                                     ((FTTypeCon
+                                                                                                                         Nothing)
+                                                                                                                        (T.pack
+                                                                                                                           "ImageId")),
+                                                                                                       fieldSqlType = SqlString,
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "isPublish"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "is_publish"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "Bool"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy Bool),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdField
+                                                                                                 (((((((((((FieldDef
+                                                                                                              (FieldNameHS
+                                                                                                                 (T.pack
+                                                                                                                    "Id")))
+                                                                                                             (FieldNameDB
+                                                                                                                (T.pack
+                                                                                                                   "id")))
+                                                                                                            ((FTTypeCon
+                                                                                                                Nothing)
+                                                                                                               (T.pack
+                                                                                                                  "NewsId")))
+                                                                                                           SqlInt64)
+                                                                                                          [])
+                                                                                                         True)
+                                                                                                        NoReference)
+                                                                                                       ((FieldCascade
+                                                                                                           Nothing)
+                                                                                                          Nothing))
+                                                                                                      Nothing)
+                                                                                                     Nothing)
+                                                                                                    True),
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields
+        (News x_anyh x_anyi x_anyj x_anyk x_anyl x_anym x_anyn)
+        = [SomePersistField x_anyh, SomePersistField x_anyi,
+           SomePersistField x_anyj, SomePersistField x_anyk,
+           SomePersistField x_anyl, SomePersistField x_anym,
+           SomePersistField x_anyn]
+      fromPersistValues
+        [x1_anyp, x2_anyq, x3_anyr, x4_anys, x5_anyt, x6_anyu, x7_anyv]
+        = News
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "news")) (T.pack "title"))
+                 . fromPersistValue)
+                x1_anyp
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "news")) (T.pack "created"))
+                 . fromPersistValue)
+                x2_anyq
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "news")) (T.pack "userId"))
+                 . fromPersistValue)
+                x3_anyr
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "news")) (T.pack "categoryId"))
+                 . fromPersistValue)
+                x4_anys
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "news")) (T.pack "content"))
+                 . fromPersistValue)
+                x5_anyt
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "news")) (T.pack "imagesIds"))
+                 . fromPersistValue)
+                x6_anyu
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "news")) (T.pack "isPublish"))
+                 . fromPersistValue)
+                x7_anyv
+      fromPersistValues x_anyo
+        = (Left
+             $ (mappend (T.pack "News: fromPersistValues failed on: "))
+                 (T.pack $ show x_anyo))
+      persistUniqueToFieldNames UniqueNews {}
+        = ((FieldNameHS (T.pack "title"), FieldNameDB (T.pack "title"))
+             GHC.Base.:| [])
+      persistUniqueToValues (UniqueNews x_anyw) = [toPersistValue x_anyw]
+      persistUniqueKeys
+        (News _title_anyx _created_anyy _userId_anyz _categoryId_anyA
+              _content_anyB _imagesIds_anyC _isPublish_anyD)
+        = [UniqueNews _title_anyx]
+      persistFieldDef NewsId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdField
+               (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                           (FieldNameDB (T.pack "id")))
+                          ((FTTypeCon Nothing) (T.pack "NewsId")))
+                         SqlInt64)
+                        [])
+                       True)
+                      NoReference)
+                     ((FieldCascade Nothing) Nothing))
+                    Nothing)
+                   Nothing)
+                  True))
+      persistFieldDef NewsTitle
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy News))
+            (FieldNameHS (T.pack "title"))
+      persistFieldDef NewsCreated
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy News))
+            (FieldNameHS (T.pack "created"))
+      persistFieldDef NewsUserId
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy News))
+            (FieldNameHS (T.pack "userId"))
+      persistFieldDef NewsCategoryId
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy News))
+            (FieldNameHS (T.pack "categoryId"))
+      persistFieldDef NewsContent
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy News))
+            (FieldNameHS (T.pack "content"))
+      persistFieldDef NewsImagesIds
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy News))
+            (FieldNameHS (T.pack "imagesIds"))
+      persistFieldDef NewsIsPublish
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy News))
+            (FieldNameHS (T.pack "isPublish"))
+      persistIdField = NewsId
+      fieldLens NewsId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_anyF) key_anyG -> (Entity key_anyG) value_anyF)
+      fieldLens NewsTitle
+        = (PTH.lensPTH ((\ News {newsTitle = x} -> x) . entityVal))
+            (\ (Entity key_anyH value_anyI) x_anyJ
+               -> (Entity key_anyH)
+                    (case value_anyI of
+                       News {newsCreated = newsCreated, newsUserId = newsUserId,
+                             newsCategoryId = newsCategoryId, newsContent = newsContent,
+                             newsImagesIds = newsImagesIds, newsIsPublish = newsIsPublish}
+                         -> News
+                              {newsTitle = x_anyJ, newsCreated = newsCreated,
+                               newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                               newsContent = newsContent, newsImagesIds = newsImagesIds,
+                               newsIsPublish = newsIsPublish}))
+      fieldLens NewsCreated
+        = (PTH.lensPTH ((\ News {newsCreated = x} -> x) . entityVal))
+            (\ (Entity key_anyH value_anyI) x_anyJ
+               -> (Entity key_anyH)
+                    (case value_anyI of
+                       News {newsTitle = newsTitle, newsUserId = newsUserId,
+                             newsCategoryId = newsCategoryId, newsContent = newsContent,
+                             newsImagesIds = newsImagesIds, newsIsPublish = newsIsPublish}
+                         -> News
+                              {newsTitle = newsTitle, newsCreated = x_anyJ,
+                               newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                               newsContent = newsContent, newsImagesIds = newsImagesIds,
+                               newsIsPublish = newsIsPublish}))
+      fieldLens NewsUserId
+        = (PTH.lensPTH ((\ News {newsUserId = x} -> x) . entityVal))
+            (\ (Entity key_anyH value_anyI) x_anyJ
+               -> (Entity key_anyH)
+                    (case value_anyI of
+                       News {newsTitle = newsTitle, newsCreated = newsCreated,
+                             newsCategoryId = newsCategoryId, newsContent = newsContent,
+                             newsImagesIds = newsImagesIds, newsIsPublish = newsIsPublish}
+                         -> News
+                              {newsTitle = newsTitle, newsCreated = newsCreated,
+                               newsUserId = x_anyJ, newsCategoryId = newsCategoryId,
+                               newsContent = newsContent, newsImagesIds = newsImagesIds,
+                               newsIsPublish = newsIsPublish}))
+      fieldLens NewsCategoryId
+        = (PTH.lensPTH ((\ News {newsCategoryId = x} -> x) . entityVal))
+            (\ (Entity key_anyH value_anyI) x_anyJ
+               -> (Entity key_anyH)
+                    (case value_anyI of
+                       News {newsTitle = newsTitle, newsCreated = newsCreated,
+                             newsUserId = newsUserId, newsContent = newsContent,
+                             newsImagesIds = newsImagesIds, newsIsPublish = newsIsPublish}
+                         -> News
+                              {newsTitle = newsTitle, newsCreated = newsCreated,
+                               newsUserId = newsUserId, newsCategoryId = x_anyJ,
+                               newsContent = newsContent, newsImagesIds = newsImagesIds,
+                               newsIsPublish = newsIsPublish}))
+      fieldLens NewsContent
+        = (PTH.lensPTH ((\ News {newsContent = x} -> x) . entityVal))
+            (\ (Entity key_anyH value_anyI) x_anyJ
+               -> (Entity key_anyH)
+                    (case value_anyI of
+                       News {newsTitle = newsTitle, newsCreated = newsCreated,
+                             newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                             newsImagesIds = newsImagesIds, newsIsPublish = newsIsPublish}
+                         -> News
+                              {newsTitle = newsTitle, newsCreated = newsCreated,
+                               newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                               newsContent = x_anyJ, newsImagesIds = newsImagesIds,
+                               newsIsPublish = newsIsPublish}))
+      fieldLens NewsImagesIds
+        = (PTH.lensPTH ((\ News {newsImagesIds = x} -> x) . entityVal))
+            (\ (Entity key_anyH value_anyI) x_anyJ
+               -> (Entity key_anyH)
+                    (case value_anyI of
+                       News {newsTitle = newsTitle, newsCreated = newsCreated,
+                             newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                             newsContent = newsContent, newsIsPublish = newsIsPublish}
+                         -> News
+                              {newsTitle = newsTitle, newsCreated = newsCreated,
+                               newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                               newsContent = newsContent, newsImagesIds = x_anyJ,
+                               newsIsPublish = newsIsPublish}))
+      fieldLens NewsIsPublish
+        = (PTH.lensPTH ((\ News {newsIsPublish = x} -> x) . entityVal))
+            (\ (Entity key_anyH value_anyI) x_anyJ
+               -> (Entity key_anyH)
+                    (case value_anyI of
+                       News {newsTitle = newsTitle, newsCreated = newsCreated,
+                             newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                             newsContent = newsContent, newsImagesIds = newsImagesIds}
+                         -> News
+                              {newsTitle = newsTitle, newsCreated = newsCreated,
+                               newsUserId = newsUserId, newsCategoryId = newsCategoryId,
+                               newsContent = newsContent, newsImagesIds = newsImagesIds,
+                               newsIsPublish = x_anyJ}))
+    instance ToBackendKey Database.Persist.SqlBackend.Internal.SqlBackend News where
+      toBackendKey = \ NewsKey {unNewsKey = x} -> x
+      fromBackendKey = NewsKey
+    data Image
+      = Image {imageHeader :: !T.Text, imageBase64 :: !T.Text}
+      deriving stock (Eq, Show)
+    type ImageId = Database.Persist.Key Image
+    instance PersistEntity Image where
+      type PersistEntityBackend Image = Database.Persist.SqlBackend.Internal.SqlBackend
+      data Unique Image = UniqueImage T.Text T.Text
+      newtype Database.Persist.Key Image
+        = ImageKey {unImageKey :: (BackendKey Database.Persist.SqlBackend.Internal.SqlBackend)}
+        deriving stock Show
+        deriving stock Read
+        deriving newtype Eq
+        deriving newtype Ord
+        deriving newtype path-pieces-0.2.1-E15XfVOwfTfIr2VliI4YGA:Web.PathPieces.PathPiece
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.ToHttpApiData
+        deriving newtype http-api-data-0.4.3-8AwfdtQImWAISYRgwZNRi0:Web.Internal.HttpApiData.FromHttpApiData
+        deriving newtype PersistField
+        deriving newtype persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql
+        deriving newtype ToJSON
+        deriving newtype FromJSON
+      data EntityField Image typ
+        = (typ ~ ImageId) => ImageId |
+          (typ ~ T.Text) => ImageHeader |
+          (typ ~ T.Text) => ImageBase64
+      keyToValues
+        = ((: []) . (toPersistValue . (\ ImageKey {unImageKey = x} -> x)))
+      keyFromValues
+        = (fmap ImageKey
+             . (fromPersistValue . Database.Persist.TH.headNote))
+      keyFromRecordM = Nothing
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "Image")))
+                     (EntityNameDB (T.pack "images")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "ImageId")))
+                                 SqlInt64)
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [T.pack "sql=images"])
+                  [])
+                 [(((UniqueDef (ConstraintNameHS (T.pack "UniqueImage")))
+                      (ConstraintNameDB (T.pack "unique_image")))
+                     ((FieldNameHS (T.pack "header"), FieldNameDB (T.pack "header"))
+                        GHC.Base.:|
+                          [(FieldNameHS (T.pack "base64"), FieldNameDB (T.pack "base64"))]))
+                    []])
+                [])
+               [T.pack "Eq", T.pack "Show"])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "header"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "header"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "base64"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "base64"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      (Just
+                                                                                                                         (T.pack
+                                                                                                                            "T")))
+                                                                                                                     (T.pack
+                                                                                                                        "Text"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy T.Text),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = NoReference,
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdField
+                                                                                                 (((((((((((FieldDef
+                                                                                                              (FieldNameHS
+                                                                                                                 (T.pack
+                                                                                                                    "Id")))
+                                                                                                             (FieldNameDB
+                                                                                                                (T.pack
+                                                                                                                   "id")))
+                                                                                                            ((FTTypeCon
+                                                                                                                Nothing)
+                                                                                                               (T.pack
+                                                                                                                  "ImageId")))
+                                                                                                           SqlInt64)
+                                                                                                          [])
+                                                                                                         True)
+                                                                                                        NoReference)
+                                                                                                       ((FieldCascade
+                                                                                                           Nothing)
+                                                                                                          Nothing))
+                                                                                                      Nothing)
+                                                                                                     Nothing)
+                                                                                                    True),
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields (Image x_anyK x_anyL)
+        = [SomePersistField x_anyK, SomePersistField x_anyL]
+      fromPersistValues [x1_anyN, x2_anyO]
+        = Image
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "images")) (T.pack "header"))
+                 . fromPersistValue)
+                x1_anyN
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "images")) (T.pack "base64"))
+                 . fromPersistValue)
+                x2_anyO
+      fromPersistValues x_anyM
+        = (Left
+             $ (mappend (T.pack "Image: fromPersistValues failed on: "))
+                 (T.pack $ show x_anyM))
+      persistUniqueToFieldNames UniqueImage {}
+        = ((FieldNameHS (T.pack "header"), FieldNameDB (T.pack "header"))
+             GHC.Base.:|
+               [(FieldNameHS (T.pack "base64"), FieldNameDB (T.pack "base64"))])
+      persistUniqueToValues (UniqueImage x_anyP x_anyQ)
+        = [toPersistValue x_anyP, toPersistValue x_anyQ]
+      persistUniqueKeys (Image _header_anyR _base64_anyS)
+        = [(UniqueImage _header_anyR) _base64_anyS]
+      persistFieldDef ImageId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdField
+               (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                           (FieldNameDB (T.pack "id")))
+                          ((FTTypeCon Nothing) (T.pack "ImageId")))
+                         SqlInt64)
+                        [])
+                       True)
+                      NoReference)
+                     ((FieldCascade Nothing) Nothing))
+                    Nothing)
+                   Nothing)
+                  True))
+      persistFieldDef ImageHeader
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy Image))
+            (FieldNameHS (T.pack "header"))
+      persistFieldDef ImageBase64
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy Image))
+            (FieldNameHS (T.pack "base64"))
+      persistIdField = ImageId
+      fieldLens ImageId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_anyU) key_anyV -> (Entity key_anyV) value_anyU)
+      fieldLens ImageHeader
+        = (PTH.lensPTH ((\ Image {imageHeader = x} -> x) . entityVal))
+            (\ (Entity key_anyW value_anyX) x_anyY
+               -> (Entity key_anyW)
+                    (case value_anyX of
+                       Image {imageBase64 = imageBase64}
+                         -> Image {imageHeader = x_anyY, imageBase64 = imageBase64}))
+      fieldLens ImageBase64
+        = (PTH.lensPTH ((\ Image {imageBase64 = x} -> x) . entityVal))
+            (\ (Entity key_anyW value_anyX) x_anyY
+               -> (Entity key_anyW)
+                    (case value_anyX of
+                       Image {imageHeader = imageHeader}
+                         -> Image {imageHeader = imageHeader, imageBase64 = x_anyY}))
+    instance ToBackendKey Database.Persist.SqlBackend.Internal.SqlBackend Image where
+      toBackendKey = \ ImageKey {unImageKey = x} -> x
+      fromBackendKey = ImageKey
+    data ImageBank
+      = ImageBank {imageBankNewsId :: !NewsId,
+                   imageBankImageId :: !ImageId}
+      deriving stock (Eq, Show)
+    type ImageBankId = Database.Persist.Key ImageBank
+    instance PersistEntity ImageBank where
+      type PersistEntityBackend ImageBank = Database.Persist.SqlBackend.Internal.SqlBackend
+      data Unique ImageBank
+      data Database.Persist.Key ImageBank
+        = ImageBankKey {imageBankKeynewsId :: NewsId,
+                        imageBankKeyimageId :: ImageId}
+        deriving stock Show
+        deriving stock Read
+        deriving stock Eq
+        deriving stock Ord
+        deriving stock Generic
+      data EntityField ImageBank typ
+        = (typ ~ ImageBankId) => ImageBankId |
+          (typ ~ NewsId) => ImageBankNewsId |
+          (typ ~ ImageId) => ImageBankImageId
+      keyToValues record_anz8
+        = [toPersistValue (imageBankKeynewsId record_anz8),
+           toPersistValue (imageBankKeyimageId record_anz8)]
+      keyFromValues [x1_anza, x2_anzb]
+        = ImageBankKey
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "images_bank")) (T.pack "newsId"))
+                 . fromPersistValue)
+                x1_anza
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "images_bank")) (T.pack "imageId"))
+                 . fromPersistValue)
+                x2_anzb
+      keyFromValues x_anz9
+        = (Left
+             $ (mappend (T.pack "ImageBank: keyFromValues failed on: "))
+                 (T.pack $ show x_anz9))
+      keyFromRecordM
+        = Just
+            (\ record_anzh
+               -> (ImageBankKey (imageBankNewsId record_anzh))
+                    (imageBankImageId record_anzh))
+      entityDef _
+        = ((((((((((persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.EntityDef
+                      (EntityNameHS (T.pack "ImageBank")))
+                     (EntityNameDB (T.pack "images_bank")))
+                    (EntityIdField
+                       (((((((((((FieldDef (FieldNameHS (T.pack "Id")))
+                                   (FieldNameDB (T.pack "id")))
+                                  ((FTTypeCon Nothing) (T.pack "ImageBankId")))
+                                 (SqlOther (T.pack "Primary Key")))
+                                [])
+                               True)
+                              NoReference)
+                             ((FieldCascade Nothing) Nothing))
+                            Nothing)
+                           Nothing)
+                          True)))
+                   [T.pack "sql=images_bank"])
+                  [])
+                 [])
+                [])
+               [T.pack "Eq", T.pack "Show"])
+              Data.Map.Internal.Tip)
+             False)
+            Nothing
+            {persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityFields = [FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "newsId"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "news_id"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "NewsId"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy NewsId),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = ForeignRef
+                                                                                                                          (EntityNameHS
+                                                                                                                             (T.pack
+                                                                                                                                "News")),
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False},
+                                                                                                    FieldDef
+                                                                                                      {fieldHaskell = FieldNameHS
+                                                                                                                        (T.pack
+                                                                                                                           "imageId"),
+                                                                                                       fieldDB = FieldNameDB
+                                                                                                                   (T.pack
+                                                                                                                      "image_id"),
+                                                                                                       fieldType = (FTTypeCon
+                                                                                                                      Nothing)
+                                                                                                                     (T.pack
+                                                                                                                        "ImageId"),
+                                                                                                       fieldSqlType = persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
+                                                                                                                        (Data.Proxy.Proxy ::
+                                                                                                                           Data.Proxy.Proxy ImageId),
+                                                                                                       fieldAttrs = [],
+                                                                                                       fieldStrict = True,
+                                                                                                       fieldReference = ForeignRef
+                                                                                                                          (EntityNameHS
+                                                                                                                             (T.pack
+                                                                                                                                "Image")),
+                                                                                                       fieldCascade = (FieldCascade
+                                                                                                                         Nothing)
+                                                                                                                        Nothing,
+                                                                                                       fieldComments = Nothing,
+                                                                                                       fieldGenerated = Nothing,
+                                                                                                       fieldIsImplicitIdColumn = False}],
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityId = EntityIdNaturalKey
+                                                                                                 CompositeDef
+                                                                                                   {compositeFields = Data.List.NonEmpty.fromList
+                                                                                                                        [(Database.Persist.TH.lookupEntityField
+                                                                                                                            (Data.Proxy.Proxy ::
+                                                                                                                               Data.Proxy.Proxy ImageBank))
+                                                                                                                           (FieldNameHS
+                                                                                                                              (T.pack
+                                                                                                                                 "newsId")),
+                                                                                                                         (Database.Persist.TH.lookupEntityField
+                                                                                                                            (Data.Proxy.Proxy ::
+                                                                                                                               Data.Proxy.Proxy ImageBank))
+                                                                                                                           (FieldNameHS
+                                                                                                                              (T.pack
+                                                                                                                                 "imageId"))],
+                                                                                                    compositeAttrs = []},
+             persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Types.Base.entityForeigns = []}
+      toPersistFields (ImageBank x_anyZ x_anz0)
+        = [SomePersistField x_anyZ, SomePersistField x_anz0]
+      fromPersistValues [x1_anz2, x2_anz3]
+        = ImageBank
+            <$>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "images_bank")) (T.pack "newsId"))
+                 . fromPersistValue)
+                x1_anz2
+            <*>
+              (Database.Persist.TH.mapLeft
+                 ((PTH.fieldError (T.pack "images_bank")) (T.pack "imageId"))
+                 . fromPersistValue)
+                x2_anz3
+      fromPersistValues x_anz1
+        = (Left
+             $ (mappend (T.pack "ImageBank: fromPersistValues failed on: "))
+                 (T.pack $ show x_anz1))
+      persistUniqueToFieldNames _
+        = error "Degenerate case, should never happen"
+      persistUniqueToValues _
+        = error "Degenerate case, should never happen"
+      persistUniqueKeys (ImageBank _newsId_anz4 _imageId_anz5) = []
+      persistFieldDef ImageBankId
+        = Database.Persist.TH.stripIdFieldImpl
+            (EntityIdNaturalKey
+               CompositeDef
+                 {compositeFields = Data.List.NonEmpty.fromList
+                                      [(Database.Persist.TH.lookupEntityField
+                                          (Data.Proxy.Proxy :: Data.Proxy.Proxy ImageBank))
+                                         (FieldNameHS (T.pack "newsId")),
+                                       (Database.Persist.TH.lookupEntityField
+                                          (Data.Proxy.Proxy :: Data.Proxy.Proxy ImageBank))
+                                         (FieldNameHS (T.pack "imageId"))],
+                  compositeAttrs = []})
+      persistFieldDef ImageBankNewsId
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy ImageBank))
+            (FieldNameHS (T.pack "newsId"))
+      persistFieldDef ImageBankImageId
+        = (Database.Persist.TH.lookupEntityField
+             (Data.Proxy.Proxy :: Data.Proxy.Proxy ImageBank))
+            (FieldNameHS (T.pack "imageId"))
+      persistIdField = ImageBankId
+      fieldLens ImageBankId
+        = (PTH.lensPTH entityKey)
+            (\ (Entity _ value_anzc) key_anzd -> (Entity key_anzd) value_anzc)
+      fieldLens ImageBankNewsId
+        = (PTH.lensPTH
+             ((\ ImageBank {imageBankNewsId = x} -> x) . entityVal))
+            (\ (Entity key_anze value_anzf) x_anzg
+               -> (Entity key_anze)
+                    (case value_anzf of
+                       ImageBank {imageBankImageId = imageBankImageId}
+                         -> ImageBank
+                              {imageBankNewsId = x_anzg, imageBankImageId = imageBankImageId}))
+      fieldLens ImageBankImageId
+        = (PTH.lensPTH
+             ((\ ImageBank {imageBankImageId = x} -> x) . entityVal))
+            (\ (Entity key_anze value_anzf) x_anzg
+               -> (Entity key_anze)
+                    (case value_anzf of
+                       ImageBank {imageBankNewsId = imageBankNewsId}
+                         -> ImageBank
+                              {imageBankNewsId = imageBankNewsId, imageBankImageId = x_anzg}))
+    instance PersistField (Database.Persist.Key ImageBank) where
+      toPersistValue = (PersistList . keyToValues)
+      fromPersistValue (PersistList l_anz6) = keyFromValues l_anz6
+      fromPersistValue got_anz7
+        = (error
+             $ ("fromPersistValue: expected PersistList, got: "
+                  `mappend` show got_anz7))
     instance persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.PersistFieldSql (Database.Persist.Key ImageBank) where
       persistent-2.13.3.5-2RpXYPsly8d7lfymAx4ys3:Database.Persist.Sql.Class.sqlType
         _

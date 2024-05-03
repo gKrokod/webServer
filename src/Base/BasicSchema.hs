@@ -56,7 +56,7 @@ cleanUp = rawExecute "TRUNCATE news, images_bank, images, categories, users" []
 
 dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
-dropAll = rawExecute "DROP TABLE news, images_bank, images, categories, users" []
+dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users" []
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
  User sql=users
