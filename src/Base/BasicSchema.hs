@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -ddump-splices #-}
-{-# OPTIONS_GHC -ddump-to-file #-}
+-- {-# OPTIONS_GHC -ddump-splices #-}
+-- {-# OPTIONS_GHC -ddump-to-file #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}

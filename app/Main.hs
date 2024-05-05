@@ -142,7 +142,7 @@ doLogic pginfo = do
 
   -- newsUser <- fetchNewsUser pginfo 3
   -- mapM_ (putStrLn . (<> "\n") . show) newsUser 
-  print "Categorii davaj  1" 
+  print "Categorii davaj  2" 
   nall <- getCategories pginfo 2 []
   mapM_ (putStrLn . (<> "\n") . show) nall
 
@@ -157,8 +157,12 @@ doLogic pginfo = do
   print res
 
   print "Kartinki iz novosti 3 davaj" 
-  nall <- fetchImageBank pginfo 1
+  nall <- fetchImageBank pginfo 3
   mapM_ (putStrLn . (<> "\n") . show . entityVal) nall
+
+  print "Snova Categorii davaj  2" 
+  nall <- getCategories' pginfo 8
+  mapM_ (putStrLn . (<> "\n") . show) nall
 
   pure ()
 
@@ -184,6 +188,26 @@ getCategory n = get (toSqlKey n)
     --   cat1 <- from $ table @Category
     --   where_ (cat1 ^. CategoryId ==. val (toSqlKey uid))
     --   pure cat1
+
+getCategories' :: ConnectionString -> Int64 -> IO [Entity Category]
+getCategories' connString uid = runDataBaseWithLog connString fetchAction
+  where
+    fetchAction ::  (MonadIO m) => SqlPersistT m [Entity Category]
+    fetchAction = select $ do
+      cte <- withRecursive
+               ( do
+                   childCategory <- from $ table @Category
+                   where_ (childCategory ^. CategoryId ==. val (toSqlKey uid))
+                   pure childCategory
+               )
+               unionAll_
+               (\self -> do
+                   parent <- from self
+                   childCategory <- from $ table @Category
+                   where_ (just (childCategory ^. CategoryId) ==. parent ^. CategoryParent)
+                   pure childCategory
+               )
+      from cte
 
 fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
