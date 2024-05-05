@@ -108,12 +108,16 @@ doLogic pginfo = do
       catId9 <- insert $ Category "witch" (Just catId3)
 --- news + image_bank
       t <- liftIO getCurrentTime
-      newsId1 <- insert $ News "News about Witch from user1" t userId1 catId9 "Witch have an apple. Photo 1 and 2" [imageId1, imageId2] False
+      newsId1 <- insert $ News "News about Witch from user1" t userId1 catId9 "Witch have an apple. Photo 1 and 2"  False
+      -- newsId1 <- insert $ News "News about Witch from user1" t userId1 catId9 "Witch have an apple. Photo 1 and 2" [imageId1, imageId2] False
       _ <- insert $ ImageBank newsId1 imageId1
       _ <- insert $ ImageBank newsId1 imageId2
-      newsId2 <- insert $ News "News about Warrior from user2" t userId2 catId4 "Warrior like Woman. No photo" [] False
-      newsId3 <- insert $ News "News about Good from user3" t userId3 catId8 "Good is good. Photo 1 and 3" [imageId1, imageId3] True
-      newsId4 <- insert $ News "News about Good from user1" t userId1 catId7 "Evil is evil. Photo 1" [imageId1] True
+      newsId2 <- insert $ News "News about Warrior from user2" t userId2 catId4 "Warrior like Woman. No photo"  False
+      -- newsId2 <- insert $ News "News about Warrior from user2" t userId2 catId4 "Warrior like Woman. No photo" [] False
+      newsId3 <- insert $ News "News about Good from user3" t userId3 catId8 "Good is good. Photo 1 and 3"  True
+      -- newsId3 <- insert $ News "News about Good from user3" t userId3 catId8 "Good is good. Photo 1 and 3" [imageId1, imageId3] True
+      newsId4 <- insert $ News "News about Good from user1" t userId1 catId7 "Evil is evil. Photo 1"  True
+      -- newsId4 <- insert $ News "News about Good from user1" t userId1 catId7 "Evil is evil. Photo 1" [imageId1] True
       _ <- insert $ ImageBank newsId3 imageId1
       _ <- insert $ ImageBank newsId3 imageId3
       pure ()
@@ -146,23 +150,18 @@ doLogic pginfo = do
   nall <- getCategories pginfo 2 []
   mapM_ (putStrLn . (<> "\n") . show) nall
 
-  print "Kartinki iz novosti 1 davaj" 
-  nall <- fetchImageList pginfo 1
-  -- bb <- mapM (unValue) nall
-  -- mapM_ (putStrLn . (<> "\n") . show) (unValue nall)
-  let new = concatMap unValue nall
-  print new
-  -- mapM_ (putStrLn . (<> "\n") . show) (unValue nall)
-  res <- mapM (runDataBaseWithOutLog pginfo . getImage . toSqlKey . unSqlBackendKey . unImageKey) new
-  print res
-
-  print "Kartinki iz novosti 3 davaj" 
-  nall <- fetchImageBank pginfo 3
-  mapM_ (putStrLn . (<> "\n") . show . entityVal) nall
-
   print "Snova Categorii davaj  2" 
   nall <- getCategories' pginfo 8
   mapM_ (putStrLn . (<> "\n") . show) nall
+
+  print "Kartinki iz novosti 3 davaj" 
+  nall <- fetchImageBank pginfo 1
+  mapM_ (putStrLn . (<> "\n") . show . entityVal) nall
+
+  print "Davaj vse iz novosti 1" 
+  nall <- getFullNews pginfo 2
+  -- mapM_ (putStrLn . (<> "\n") . show ) nall
+  (putStrLn . show)  nall
 
   pure ()
 
@@ -181,13 +180,33 @@ getCategories pginfo n acc = do
                   Just n' -> getCategories pginfo (fromSqlKey n') (cat : acc)
       
 
+getFullNews :: ConnectionString -> Int64 -> IO (Maybe News, Maybe User, [Entity Category], [Entity Image])
+getFullNews connString uid = runDataBaseWithLog connString $ do
+  news <- getNews uid
+  let userid = maybe 0 (fromSqlKey . newsUserId) news 
+  let catid = maybe 0 (fromSqlKey . newsCategoryId) news 
+  user <- getUser userid 
+  cat <- fetchActionCat catid
+  images <- fetchActionImage uid
+  pure (news, user, cat, images)
+
+
+fetchActionImage :: (MonadIO m) => Int64 -> SqlPersistT m [Entity Image]
+fetchActionImage nuid = select $ do
+  (news :& imagebank :& image) <- 
+    from $ table @News
+     `innerJoin` table @ImageBank
+     `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+     `innerJoin` table @Image
+     `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+  where_ (news ^. NewsId ==. val (toSqlKey nuid))
+  pure $ (image)
+
+getNews :: MonadIO m => Int64 -> SqlPersistT m (Maybe News)
+getNews n = get (toSqlKey n) 
+
 getCategory :: MonadIO m => Int64 -> SqlPersistT m (Maybe Category)
 getCategory n = get (toSqlKey n) 
-    -- fetchAction :: (MonadIO m) => SqlPersistT m [Entity Category]
-    -- fetchAction = select $ do
-    --   cat1 <- from $ table @Category
-    --   where_ (cat1 ^. CategoryId ==. val (toSqlKey uid))
-    --   pure cat1
 
 getCategories' :: ConnectionString -> Int64 -> IO [Entity Category]
 getCategories' connString uid = runDataBaseWithLog connString fetchAction
@@ -196,28 +215,39 @@ getCategories' connString uid = runDataBaseWithLog connString fetchAction
     fetchAction = select $ do
       cte <- withRecursive
                ( do
-                   childCategory <- from $ table @Category
-                   where_ (childCategory ^. CategoryId ==. val (toSqlKey uid))
-                   pure childCategory
-               )
+                   child <- from $ table @Category
+                   where_ (child ^. CategoryId ==. val (toSqlKey uid))
+                   pure child)
                unionAll_
                (\self -> do
-                   parent <- from self
-                   childCategory <- from $ table @Category
-                   where_ (just (childCategory ^. CategoryId) ==. parent ^. CategoryParent)
-                   pure childCategory
-               )
+                   child <- from self
+                   parent <- from $ table @Category
+                   where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
+                   pure parent)
       from cte
 
+fetchActionCat ::  (MonadIO m) => Int64 -> SqlPersistT m [Entity Category]
+fetchActionCat uid = select $ do
+  cte <- withRecursive
+           ( do
+               child <- from $ table @Category
+               where_ (child ^. CategoryId ==. val (toSqlKey uid))
+               pure child)
+           unionAll_
+           (\self -> do
+               child <- from self
+               parent <- from $ table @Category
+               where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
+               pure parent)
+  from cte
 fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
   where
-    -- fetchAction :: (MonadIO m) => SqlPersistT m [Value [ImageId]]
+    fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
     fetchAction = select $ do
       (news :& imagebank :& image) <- 
         from $ table @News
          `innerJoin` table @ImageBank
-         -- `on`  (\(n :& i) -> val (toSqlKey uid) ==. (i ^. ImageBankNewsId))
          `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
          `innerJoin` table @Image
          `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
@@ -245,15 +275,15 @@ fetchNewsUser connString uid = runDataBaseWithLog connString fetchAction
 --         -- `on` (\(news :& images) -> images ^. ImageId `in_` news ^. NewsImagesIds)
 --       pure images
 
-fetchImageList :: ConnectionString -> Int64 -> IO [Value [ImageId]]
-fetchImageList connString uid = runDataBaseWithLog connString fetchAction
-  where
-    fetchAction :: (MonadIO m) => SqlPersistT m [Value [ImageId]]
-    fetchAction = select $ do
-      news <- from $ table @News
-      where_ (news ^. NewsId ==. val (toSqlKey uid))
-      pure $ news ^. NewsImagesIds
-
+-- fetchImageList :: ConnectionString -> Int64 -> IO [Value [ImageId]]
+-- fetchImageList connString uid = runDataBaseWithLog connString fetchAction
+--   where
+--     fetchAction :: (MonadIO m) => SqlPersistT m [Value [ImageId]]
+--     fetchAction = select $ do
+--       news <- from $ table @News
+--       where_ (news ^. NewsId ==. val (toSqlKey uid))
+--       pure $ news ^. NewsImagesIds
+--
 
 fetchImage :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImage connString uid = runDataBaseWithLog connString fetchAction

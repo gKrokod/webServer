@@ -79,7 +79,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   userId UserId
   categoryId CategoryId
   content T.Text
-  imagesIds [ImageId]
+  -- imagesIds [ImageId]
   isPublish Bool
   UniqueNews title
   deriving Eq Show
