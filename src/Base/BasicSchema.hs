@@ -52,22 +52,26 @@ runDataBaseWithOutLog :: ConnectionString -> SqlPersistT (NoLoggingT IO) a -> IO
 runDataBaseWithOutLog pginfo a = runNoLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 
 cleanUp :: (MonadIO m) => SqlPersistT m ()
-cleanUp = rawExecute "TRUNCATE news, images_bank, images, categories, users" []
+cleanUp = rawExecute "TRUNCATE news, images_bank, images, categories, users, passwords" []
 
 dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
-dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users" []
+dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
  User sql=users
   name T.Text
   login T.Text
-  quasiPassword T.Text
+  -- quasiPassword T.Text
+  passwordId PasswordId
   created UTCTime
   isAdmin Bool
   isPublisher Bool
   UniqueUser login
   deriving Eq Show
+ Password sql=passwords
+   quasiPassword T.Text
+   deriving Eq Show
  Category sql=categories
   label T.Text
   parent CategoryId Maybe

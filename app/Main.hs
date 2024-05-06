@@ -53,24 +53,34 @@ main = do
       doLogic $ configConnect db'
   -- pure ()
 
-user1 :: UTCTime -> User
-user1 t = User { userName = "user1"
+password1, password2, password3 :: Password
+password1 = Password "qpass1"
+password2 = Password "qpass2"
+password3 = Password "qpass3"
+
+
+user1 :: UTCTime -> PasswordId -> User
+user1 t id = User { userName = "user1"
              , userLogin = "login1"
-             , userQuasiPassword = "qpass1"
+             , userPasswordId = id
              , userCreated = t
              , userIsAdmin = True
              , userIsPublisher = False }
-user2 :: UTCTime -> User
-user2 t = User { userName = "user2"
+-- user2 :: UTCTime -> User
+user2 :: UTCTime -> PasswordId -> User
+user2 t id = User { userName = "user2"
              , userLogin = "login2"
-             , userQuasiPassword = "qpass2"
+             , userPasswordId = id
+             -- , userQuasiPassword = "qpass2"
              , userCreated = t
              , userIsAdmin = True
              , userIsPublisher = True }
-user3 :: UTCTime -> User
-user3 t = User { userName = "user3"
+-- user3 :: UTCTime -> User
+user3 :: UTCTime -> PasswordId -> User
+user3 t id = User { userName = "user3"
              , userLogin = "login3"
-             , userQuasiPassword = "qpass3"
+             , userPasswordId = id
+             -- , userQuasiPassword = "qpass3"
              , userCreated = t
              , userIsAdmin = False
              , userIsPublisher = True }
@@ -89,10 +99,14 @@ doLogic pginfo = do
       imageId1 <- insert image1
       imageId2 <- insert image2
       imageId3 <- insert image3
+--- passwords
+      passId1 <- insert password1
+      passId2 <- insert password2
+      passId3 <- insert password3
 --- users
-      let u1 = user1 time
-      let u2 = user2 time
-      let u3 = user3 time
+      let u1 = user1 time passId1
+      let u2 = user2 time passId2
+      let u3 = user3 time passId3
       userId1 <- insert u1
       userId2 <- insert u2
       userId3 <- insert u3
@@ -158,8 +172,9 @@ doLogic pginfo = do
   nall <- fetchImageBank pginfo 1
   mapM_ (putStrLn . (<> "\n") . show . entityVal) nall
 
-  print "Davaj vse iz novosti 1" 
-  nall <- getFullNews pginfo 2
+  let num = 1 
+  print $ "Davaj vse iz novosti "  <> show num
+  nall <- getFullNews pginfo num
   -- mapM_ (putStrLn . (<> "\n") . show ) nall
   (putStrLn . show)  nall
 
@@ -178,7 +193,6 @@ getCategories pginfo n acc = do
     Just cat -> case (categoryParent cat) of
                   Nothing -> pure (cat : acc)
                   Just n' -> getCategories pginfo (fromSqlKey n') (cat : acc)
-      
 
 getFullNews :: ConnectionString -> Int64 -> IO (Maybe News, Maybe User, [Entity Category], [Entity Image])
 getFullNews connString uid = runDataBaseWithLog connString $ do
