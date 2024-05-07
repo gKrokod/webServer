@@ -2,13 +2,17 @@ name:                webServer
 version:             0.1.0.0
 github:              "githubuser/webServer"
 license:             BSD-3-Clause
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2024 Author name here"
+author:              "gKrokod"
+maintainer:          "@ofspb"
+copyright:           "2024 gKrokod"
 
 extra-source-files:
 - README.md
 - CHANGELOG.md
+default-extensions:
+- OverloadedStrings
+- DeriveGeneric
+- LambdaCase
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -35,6 +39,12 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+    - text
+    - bytestring
+    - persistent-postgresql
+    - aeson
+
 
 executables:
   webServer-exe:
