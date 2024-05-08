@@ -9,6 +9,7 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as L 
 import qualified Data.Text.Encoding as E (encodeUtf8)
 import Database.Persist.Postgresql (ConnectionString)
+import Control.Exception
 
 data ConfigDataBase = MkConfigDataBase {
     cHostDB :: T.Text
@@ -23,7 +24,7 @@ data ConfigDataBase = MkConfigDataBase {
 
 --for work 
 loadConfigDB :: IO (Either String ConfigDataBase)
-loadConfigDB =  eitherDecode <$> L.readFile "config/db.cfg"
+loadConfigDB =  eitherDecode <$> try $ L.readFile "config/db3.cfg"
 
 configDB :: IO (Either String ConnectionString)
 configDB = do
