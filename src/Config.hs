@@ -9,7 +9,9 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as L 
 import qualified Data.Text.Encoding as E (encodeUtf8)
 import Database.Persist.Postgresql (ConnectionString)
-import Control.Exception
+import Control.Exception -- (try, Exception, catch)
+import Control.Monad (join)
+import System.IO.Error
 
 data ConfigDataBase = MkConfigDataBase {
     cHostDB :: T.Text
@@ -22,22 +24,45 @@ data ConfigDataBase = MkConfigDataBase {
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
---for work 
-loadConfigDB :: IO (Either String ConfigDataBase)
-loadConfigDB =  eitherDecode <$> try $ L.readFile "config/db3.cfg"
+-- readConf :: IO (Either String L.ByteString)
+-- readConf :: IO (Either String ConfigDataBase)
+-- readConf :: IO (Either String ConfigDataBase)
+readConf :: IO (Either SomeException ConfigDataBase)
+-- readConf = either (Left . userError) (Right) <$> eitherDecode <$> L.readFile "config/db3.cfg"
+readConf = either (\_ -> (Left $ toException NonTermination)) (Right) <$> eitherDecode <$> L.readFile "config/db.cfg"
 
-configDB :: IO (Either String ConnectionString)
-configDB = do
-  config <- loadConfigDB
-  case config of 
-    Left decodeError -> pure $ Left decodeError
-    Right cfg -> pure $ Right $
-                   E.encodeUtf8 $ 
-                     mconcat ["host=", cHostDB $ cfg
-                             ," port=", cPortDB $ cfg
-                             , " user=", cUserDB $ cfg
-                             , " dbname=", cNameDB $ cfg
-                             , " password=", cPasswordDB $ cfg]
+
+
+--for work 
+-- loadConfigDB :: IO (Either String ConfigDataBase)
+-- loadConfigDB :: IO (Either String L.ByteString)
+-- loadConfigDB :: IO (Either SomeException ConfigDataBase)
+loadConfigDB :: IO (Either SomeException ConfigDataBase)
+loadConfigDB = join <$> try (
+    either (\_ -> (Left $ toException NonTermination)) Right 
+    <$> eitherDecode 
+    <$> L.readFile "config/db.cfg")
+  
+
+--     txt <- L.readFile "config/db3.cfg"
+--     let r = eitherDecode  txt 
+--     pure r
+                  -- (eitherDecode <$> L.readFile "config/db3.cfg")
+
+--  (fmap eitherDecode) (try $ L.readFile "config/db3.cfg")
+
+-- configDB :: IO (Either String ConnectionString)
+-- configDB = do
+--   config <- loadConfigDB
+--   case config of 
+--     Left decodeError -> pure $ Left decodeError
+--     Right cfg -> pure $ Right $
+--                    E.encodeUtf8 $ 
+--                      mconcat ["host=", cHostDB $ cfg
+--                              ," port=", cPortDB $ cfg
+--                              , " user=", cUserDB $ cfg
+--                              , " dbname=", cNameDB $ cfg
+--                              , " password=", cPasswordDB $ cfg]
 -- for testing
 createConfigFile :: IO ()
 createConfigFile = do
