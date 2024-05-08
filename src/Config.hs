@@ -11,11 +11,13 @@ import qualified Data.Text.Encoding as E (encodeUtf8)
 import Database.Persist.Postgresql (ConnectionString)
 
 data ConfigDataBase = MkConfigDataBase {
-    cHost :: T.Text
-  , cPort :: T.Text
-  , cUser :: T.Text
-  , cDBname :: T.Text
-  , cPassword :: T.Text
+    cHostDB :: T.Text
+  , cPortDB :: T.Text
+  , cUserDB :: T.Text
+  , cNameDB :: T.Text
+  , cPasswordDB :: T.Text,
+    cLimitData :: Int,
+    cPortServer :: Int
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
@@ -30,20 +32,22 @@ configDB = do
     Left decodeError -> pure $ Left decodeError
     Right cfg -> pure $ Right $
                    E.encodeUtf8 $ 
-                     mconcat ["host=", cHost $ cfg
-                             ," port=", cPort $ cfg
-                             , " user=", cUser $ cfg
-                             , " dbname=", cDBname $ cfg
-                             , " password=", cPassword $ cfg]
+                     mconcat ["host=", cHostDB $ cfg
+                             ," port=", cPortDB $ cfg
+                             , " user=", cUserDB $ cfg
+                             , " dbname=", cNameDB $ cfg
+                             , " password=", cPasswordDB $ cfg]
 -- for testing
 createConfigFile :: IO ()
 createConfigFile = do
   let testConfig = MkConfigDataBase {
-      cHost = "127.0.0.1"
-    , cPort = "5432"
-    , cUser = "bob"
-    , cDBname = "bobdb"
-    , cPassword = "1"
+      cHostDB = "127.0.0.1"
+    , cPortDB = "5432"
+    , cUserDB = "bob"
+    , cNameDB = "bobdb"
+    , cPasswordDB = "1"
+    , cLimitData = 5
+    , cPortServer = 4221
   } 
   let configToJSON = encode testConfig :: L.ByteString
-  L.writeFile "config/db1.cfg" (configToJSON)
+  L.writeFile "config/db.cfg" (configToJSON)
