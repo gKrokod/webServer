@@ -15,8 +15,8 @@ main :: IO ()
 main = do 
   readConfig <- loadConfigDB
   case readConfig of
-    Left e -> print "Error load config" >> pure ()
-    Right connectString -> do
+    Left e -> print e >> pure ()
+    Right (c) -> do
       print "Config loaded"
       pure () 
 -- configDB :: IO (Either String ConnectionString)
