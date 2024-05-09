@@ -13,6 +13,7 @@ default-extensions:
 - OverloadedStrings
 - DeriveGeneric
 - LambdaCase
+- TypeApplications
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -44,6 +45,8 @@ library:
     - bytestring
     - persistent-postgresql
     - aeson
+    - persistent
+    - time
 
 
 executables:

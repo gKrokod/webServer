@@ -1,6 +1,5 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Config where
 
@@ -10,9 +9,7 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as L 
 import qualified Data.Text.Encoding as E (encodeUtf8)
 import Database.Persist.Postgresql (ConnectionString)
-import Control.Exception -- (try, Exception, catch)
-import Control.Monad (join)
-import System.IO.Error
+import Control.Exception (try, SomeException, displayException)
 
 data ConfigDataBase = MkConfigDataBase {
     cHostDB :: T.Text
@@ -30,13 +27,15 @@ data ConfigDataBase = MkConfigDataBase {
 loadConfigDB :: IO (Either String ConfigDataBase)
 loadConfigDB = either (Left . displayException) eitherDecode 
                <$> try @SomeException (L.readFile "config/db.cfg")
-  
+
+--for potencial work
 -- loadConfigDB :: IO (Either SomeException ConfigDataBase)
 -- loadConfigDB = join <$> try (
 --     either (\_ -> (Left $ toException NonTermination)) Right 
 --     <$> eitherDecode 
 --     <$> L.readFile "config/db.cfg")
-
+--
+-- info for connect witj postgres
 connectionString :: ConfigDataBase -> ConnectionString
 connectionString cfg = E.encodeUtf8 $ 
                mconcat ["host=", cHostDB $ cfg
