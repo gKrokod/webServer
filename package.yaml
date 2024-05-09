@@ -47,6 +47,7 @@ library:
     - aeson
     - persistent
     - time
+    - monad-logger
 
 
 executables:

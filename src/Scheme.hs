@@ -14,7 +14,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-
 module Scheme where
 
 import qualified Database.Persist.TH as PTH
