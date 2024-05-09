@@ -4,6 +4,8 @@ import Config
 import Scheme
 -- import Database.Persist.Postgresql (ConnectionString)
 import qualified Data.ByteString.Lazy as L 
+import qualified Handlers.Logger
+import qualified Handlers.Base
   
 
 main :: IO ()
