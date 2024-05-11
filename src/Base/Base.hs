@@ -1,4 +1,5 @@
 module Base.Base where
+import Base.FillTables
 import Scheme (migrateAll)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
 import Control.Monad.Logger (runNoLoggingT, runStderrLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))

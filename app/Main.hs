@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Config 
+import Config (loadConfig, ConfigDataBase, connectionString, whenMakeTables)
 import Scheme
 -- import Database.Persist.Postgresql (ConnectionString)
 import qualified Data.ByteString.Lazy as L 
@@ -13,13 +13,13 @@ main :: IO ()
 main = do 
   putStrLn "Main Start"
   -- load config
-  config <- loadConfigDB
-  case config of
-    Left e -> putStrLn "repair config file:" >> putStrLn e >> pure () --
-    Right cfg -> do
-      putStrLn "Make Tables"
-      BB.makeTables (connectionString cfg)
-      logic cfg
+  config <- loadConfig
+-- make Tables and Fill its if need
+  whenMakeTables config $ putStrLn "Make Tables" >> BB.makeTables (connectionString config)
+
+  logic config
+   
+
 
 logic :: ConfigDataBase -> IO () 
 logic cfg = do

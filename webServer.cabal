@@ -26,6 +26,8 @@ source-repository head
 library
   exposed-modules:
       Base.Base
+      Base.FillTables
+      Base.LocalTime
       Config
       Handlers.Base
       Handlers.Logger
@@ -49,6 +51,7 @@ library
     , monad-logger
     , persistent
     , persistent-postgresql
+    , template-haskell
     , text
     , time
   default-language: Haskell2010

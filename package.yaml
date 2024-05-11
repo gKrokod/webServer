@@ -48,6 +48,7 @@ library:
     - persistent
     - time
     - monad-logger
+    - template-haskell
 
 
 executables:

@@ -9,7 +9,8 @@ import GHC.Generics (Generic)
 import qualified Data.ByteString.Lazy as L 
 import qualified Data.Text.Encoding as E (encodeUtf8)
 import Database.Persist.Postgresql (ConnectionString)
-import Control.Exception (try, SomeException, displayException)
+import Control.Exception (throwIO, try, SomeException, displayException)
+import Control.Monad (when)
 
 data ConfigDataBase = MkConfigDataBase {
     cHostDB :: T.Text
@@ -18,15 +19,31 @@ data ConfigDataBase = MkConfigDataBase {
   , cNameDB :: T.Text
   , cPasswordDB :: T.Text,
     cLimitData :: Int,
-    cPortServer :: Int
+    cPortServer :: Int,
+    cCreateAndFillTable :: Maybe DoIt
 } deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
+data DoIt = DoIt 
+  deriving stock (Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+whenMakeTables :: Applicative f => ConfigDataBase -> f () -> f ()
+whenMakeTables cfg = when $ case (cCreateAndFillTable cfg) of
+                              Nothing -> False
+                              (Just _) -> True
 
 --for work 
 loadConfigDB :: IO (Either String ConfigDataBase)
 loadConfigDB = either (Left . displayException) eitherDecode 
                <$> try @SomeException (L.readFile "config/db.cfg")
+
+loadConfig :: IO (ConfigDataBase)
+loadConfig = do
+  cfg <- loadConfigDB
+  case cfg of
+    Left error' -> throwIO $ userError error'
+    Right config -> pure config
 
 --for potencial work
 -- loadConfigDB :: IO (Either SomeException ConfigDataBase)
@@ -54,6 +71,8 @@ createConfigFile = do
     , cPasswordDB = "1"
     , cLimitData = 5
     , cPortServer = 4221
+    , cCreateAndFillTable = Just DoIt
+                                    -- , cCreateAndFillTable = Nothing 
   } 
   let configToJSON = encode testConfig :: L.ByteString
   L.writeFile "config/db.cfg" (configToJSON)
