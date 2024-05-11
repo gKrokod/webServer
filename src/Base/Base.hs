@@ -8,13 +8,26 @@ import Database.Persist.Postgresql  (rawExecute, SqlPersistT,ConnectionString, i
 
 makeTables :: ConnectionString -> IO () 
 makeTables pginfo = do
-  putStrLn "Drop All table" -- all row
+  putStrLn "Drop All tables" -- all row
   -- runDataBaseWithLog pginfo dropAll
   runDataBaseWithOutLog pginfo dropAll
-  putStrLn "Make Table in data base"
+  putStrLn "Make Tables in data base"
   runDataBaseWithOutLog pginfo $ runMigration migrateAll
   -- runDataBaseWithLog pginfo $ runMigration migrateAll
   pure ()
+
+fillTables :: ConnectionString -> IO ()
+fillTables pginfo = do
+  putStrLn "Fill All tables" 
+  runDataBaseWithLog pginfo $ do
+    mapM_ insert [image1,image2,image3]
+    mapM_ insert [cat1,cat2, cat3,cat4,cat5,cat6,cat7,cat8, cat9]
+    mapM_ insert [password1,password2,password3]
+    mapM_ insert [user1,user2,user3]
+    mapM_ insert [news1, news2, news3, news4] 
+    mapM_ insert [imageBank1, imageBank2, imageBank3, imageBank4, imageBank5] 
+  pure ()
+
 
 runDataBaseWithLog :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
 -- runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 

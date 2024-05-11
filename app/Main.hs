@@ -15,7 +15,7 @@ main = do
   -- load config
   config <- loadConfig
 -- make Tables and Fill its if need
-  whenMakeTables config $ putStrLn "Make Tables" >> BB.makeTables (connectionString config)
+  whenMakeTables config $ putStrLn "Make Tables" >> BB.makeTables (connectionString config) >> BB.fillTables (connectionString config)
 
   logic config
    
