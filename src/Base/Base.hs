@@ -7,8 +7,8 @@ import Control.Monad.IO.Class (MonadIO)
 import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,ConnectionString, insert, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
--- import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) )
-import Database.Esqueleto.Experimental 
+import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_)
+-- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 
 makeAndFillTables :: ConnectionString -> IO ()
@@ -29,12 +29,12 @@ fillTables pginfo = do
   putStrLn "Fill All tables" 
   runDataBaseWithLog pginfo $ do
   -- runDataBaseWithOutLog pginfo $ do
-    mapM_ insert [image1,image2,image3]
-    mapM_ insert [cat1,cat2, cat3,cat4,cat5,cat6,cat7,cat8, cat9]
-    mapM_ insert [password1,password2,password3]
-    mapM_ insert [user1,user2,user3]
-    mapM_ insert [news1, news2, news3, news4] 
-    mapM_ insert [imageBank1, imageBank2, imageBank3, imageBank4, imageBank5] 
+    insertMany_ [image1,image2,image3]
+    insertMany_ [cat1,cat2, cat3,cat4,cat5,cat6,cat7,cat8, cat9]
+    insertMany_ [password1,password2,password3]
+    insertMany_ [user1,user2,user3]
+    insertMany_ [news1, news2, news3, news4] 
+    insertMany_ [imageBank1, imageBank2, imageBank3, imageBank4, imageBank5] 
   pure ()
 
 

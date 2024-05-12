@@ -71,7 +71,7 @@ createConfigFile = do
     , cPasswordDB = "1"
     , cLimitData = 5
     , cPortServer = 4221
-    , cCreateAndFillTable = Just DoIt
+    , cCreateAndFillTable = Just DoIt --Nothing --Just DoIt
                                     -- , cCreateAndFillTable = Nothing 
   } 
   let configToJSON = encode testConfig :: L.ByteString

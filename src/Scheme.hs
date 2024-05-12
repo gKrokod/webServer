@@ -14,11 +14,16 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Scheme where
 
+import GHC.Generics (Generic)
 import qualified Database.Persist.TH as PTH
 import qualified Data.Text as T
 import Data.Time (UTCTime)
+import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
  User sql=users
@@ -37,7 +42,8 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   label T.Text
   parent CategoryId Maybe
   UniqueCategory label
-  deriving Eq Show
+  -- deriving Generic
+  deriving Eq Show Generic ToJSON
  News sql=news
   title T.Text
   created UTCTime
