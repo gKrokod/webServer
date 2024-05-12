@@ -49,6 +49,7 @@ library:
     - time
     - monad-logger
     - template-haskell
+    - esqueleto
 
 
 executables:

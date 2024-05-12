@@ -12,11 +12,10 @@ import qualified Base.Base as BB
 main :: IO ()
 main = do 
   putStrLn "Main Start"
-  -- load config
   config <- loadConfig
 -- make Tables and Fill its if need
-  whenMakeTables config $ putStrLn "Make Tables" >> BB.makeTables (connectionString config) >> BB.fillTables (connectionString config)
-
+  -- whenMakeTables config $ putStrLn "Make and fill Tables" 
+  --                         >> BB.makeAndFillTables (connectionString config)
   logic config
    
 
@@ -24,5 +23,10 @@ main = do
 logic :: ConfigDataBase -> IO () 
 logic cfg = do
  putStrLn "Do Logic"
+ let pginfo = connectionString cfg
+ xs <- BB.getCategories pginfo 9 
+ print xs
+ xs <- BB.fetchImageBank pginfo 1 
+ print xs
  pure ()
 

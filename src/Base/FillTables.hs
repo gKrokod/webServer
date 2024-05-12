@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 module Base.FillTables where
+  -- data for test database
 import Scheme
 import Data.Time (UTCTime)
 import Base.LocalTime (localtimeTemplate)
@@ -29,7 +30,7 @@ image2  = Image "header2" "base64 n 2"
 image3  = Image "header3" "base64 n 3" 
 
 cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9 :: Category
-cat1 = Category {categoryLabel = "Abstact", categoryParent = Nothing }
+cat1 = Category {categoryLabel = "Abstract", categoryParent = Nothing }
 cat2 = Category "Man" (Just $ toSqlKey 1)
 cat3 = Category "Woman" (Just $ toSqlKey 1)
 cat4 = Category "Warrior" (Just $ toSqlKey 2)
