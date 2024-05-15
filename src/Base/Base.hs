@@ -10,6 +10,8 @@ import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
+import qualified Data.Text as T
+import Data.Time (UTCTime)
 
 makeAndFillTables :: ConnectionString -> IO ()
 makeAndFillTables pginfo = makeTables pginfo >> fillTables pginfo
@@ -83,3 +85,25 @@ fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
          `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
       where_ (news ^. NewsId ==. val (toSqlKey uid))
       pure $ (image)
+
+type Name = T.Text
+type Login = T.Text
+type PasswordUser = T.Text
+type ErrorDB = T.Text
+type Success = Either ErrorDB T.Text
+
+-- createUser :: (Monad m) => ConnectionString -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Int64) 
+createUser :: (Monad m) => ConnectionString -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Success) 
+createUser = undefined
+
+getAllUsers :: (Monad m) => ConnectionString -> m [User]
+getAllUsers = undefined
+
+-- data Handle m = Handle 
+--   {
+--     logger :: Handlers.Logger.Handle m,
+--     createUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
+--     -- createUser :: User -> m (),
+--     getAllUsers :: m [User]
+--     -- add some func
+--   }

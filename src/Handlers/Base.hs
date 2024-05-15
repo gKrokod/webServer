@@ -9,12 +9,13 @@ import Data.Time (UTCTime)
 type Name = T.Text
 type Login = T.Text
 type PasswordUser = T.Text
+type ErrorDB = T.Text
+type Success = Either ErrorDB T.Text
 
 data Handle m = Handle 
   {
     logger :: Handlers.Logger.Handle m,
-    createUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
-    -- createUser :: User -> m (),
+    createUser :: Name -> Login -> PasswordUser -> Bool -> Bool -> m (Success), 
     getAllUsers :: m [User]
     -- add some func
   }

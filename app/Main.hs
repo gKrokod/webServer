@@ -5,8 +5,10 @@ import Scheme
 -- import Database.Persist.Postgresql (ConnectionString)
 import qualified Data.ByteString.Lazy as L 
 import qualified Handlers.Logger
+import Handlers.Logger (Log(Debug))
 import qualified Handlers.Base
 import qualified Base.Base as BB 
+import qualified Logger
 import Database.Persist.Postgresql  (keyValueEntityToJSON, ConnectionString, runMigration, entityIdToJSON)
 
 main :: IO ()
@@ -20,8 +22,18 @@ main = do
 
 logic :: ConfigDataBase -> IO () 
 logic cfg = do
- putStrLn "Do Logic"
  let pginfo = connectionString cfg
+ putStrLn "Do Logic"
+ let logHandle = Handlers.Logger.Handle
+       { Handlers.Logger.levelLogger = Debug,
+         Handlers.Logger.writeLog = Logger.writeLog
+       }
+ let baseHandle = Handlers.Base.Handle
+       { Handlers.Base.logger = logHandle,
+         Handlers.Base.createUser = BB.createUser pginfo,
+         Handlers.Base.getAllUsers = BB.getAllUsers pginfo
+     }
+
  xs <- BB.getCategories pginfo 1 
  print "Abstract"
  let xs' = map keyValueEntityToJSON xs
@@ -33,3 +45,11 @@ logic cfg = do
  print xs
  pure ()
 
+-- data Handle m = Handle 
+--   {
+--     logger :: Handlers.Logger.Handle m,
+--     createUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
+--     -- createUser :: User -> m (),
+--     getAllUsers :: m [User]
+--     -- add some func
+--   }
