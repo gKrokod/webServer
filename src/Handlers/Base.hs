@@ -11,18 +11,30 @@ type Login = T.Text
 type Time = UTCTime
 type PasswordUser = T.Text
 data Success = Put | Get deriving Show
+type Label = T.Text
+type NewLabel = T.Text
 
 data Handle m = Handle 
   {
     logger :: Handlers.Logger.Handle m,
+    panigate :: Int,
     putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
     findUserByLogin :: Login -> m (Maybe User), 
     getTime :: m (UTCTime),
-    getAllUsers :: m [User]
+    getAllUsers :: m [User],
+
+    putCategory :: Label -> Maybe Label -> m (), 
+    getAllCategories :: m [Category],
+    findCategoryByLabel :: Label -> m (Maybe Label)
     -- add some func
   }
 
 
+updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
+updateCategory h label newlabel parent = undefined 
+
+-- cat1 = Category {categoryLabel = "Abstract", categoryParent = Nothing }
+--
 createUser :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
 createUser h name login pwd admin publish = do
   exist <- findUserByLogin h login
@@ -39,24 +51,14 @@ createUser h name login pwd admin publish = do
                 pure $ Right Put 
 
 
-getUser :: (Monad m) => Handle m -> Login -> m (Maybe User)
-getUser h login = do
-  logMessage (logger h) Debug ("get User: " <> login)
-  xs <- getAllUsers h
-  let helper :: [User] -> Login -> Maybe User
-      helper (x : xs) login | userLogin x == login = Just x
-                            | otherwise = helper xs login
-      helper [] _ = Nothing
-  pure (helper xs login)
-
-checkPassword :: (Monad m) => Handle m -> Login -> PasswordUser -> m (Bool)
-checkPassword h login pass = do
-  logMessage (logger h) Debug ("check password for User: " <> login)
-  mbUser <- getUser h login
-  pure $ case mbUser of
-           Nothing -> False
-           Just user -> pass == undefined (userPasswordId user)  -- tyt nyzen poisk po tablise passwordod
-                           -- :: PasswordIdUser -> PasswordUser
+-- checkPassword :: (Monad m) => Handle m -> Login -> PasswordUser -> m (Bool)
+-- checkPassword h login pass = do
+--   logMessage (logger h) Debug ("check password for User: " <> login)
+--   mbUser <- getUser h login
+--   pure $ case mbUser of
+--            Nothing -> False
+--            Just user -> pass == undefined (userPasswordId user)  -- tyt nyzen poisk po tablise passwordod
+--                            -- :: PasswordIdUser -> PasswordUser
 
 --
 -- data Handle m = Handle {

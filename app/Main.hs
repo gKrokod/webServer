@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Config (loadConfig, ConfigDataBase, connectionString, whenMakeTables)
+import Config (loadConfig, ConfigDataBase, connectionString, whenMakeTables, cLimitData)
 import Scheme
 -- import Database.Persist.Postgresql (ConnectionString)
 import qualified Data.ByteString.Lazy as L 
@@ -31,15 +31,27 @@ logic cfg = do
         }
   let baseHandle = Handlers.Base.Handle
         { Handlers.Base.logger = logHandle,
+------------------------------ user end point
           Handlers.Base.putUser = BB.putUser pginfo,
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
           Handlers.Base.getTime = getCurrentTime,
-          Handlers.Base.getAllUsers = BB.getAllUsers pginfo
+          Handlers.Base.getAllUsers = BB.getAllUsers pginfo (cLimitData cfg)
+--------------------------------
+------------------------------ category end point
+--
+--------------------------------
+          -- Handlers.Base.panigate = cLimitData cfg, -- somnitelno
       }
+  print "START users:"
+  alluser <- Handlers.Base.getAllUsers baseHandle 
+  mapM_ print alluser
   cuser <- Handlers.Base.createUser baseHandle "Vova1" "LOGIN1" "pssss"  True True
   case cuser of
     Left e -> print e
-    Right _ -> print "User Create"
+    Right a -> print a >> print "User Create"
+  print "FINISH users:"
+  alluser <- Handlers.Base.getAllUsers baseHandle 
+  mapM_ print alluser
 --  xs <- BB.getCategories pginfo 1 
 --  print "Abstract"
 --  let xs' = map keyValueEntityToJSON xs

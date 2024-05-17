@@ -9,7 +9,7 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_)
-import Database.Esqueleto.Experimental (getBy, get)
+import Database.Esqueleto.Experimental (getBy, limit)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -61,6 +61,35 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
+------------------------------------------------------------------------------------------------------------
+putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
+putUser pginfo name login pwd time admin publish  = do
+  runDataBaseWithLog pginfo $ do
+    pId <- insert $ Password pwd 
+    insert $ User name login pId time admin publish
+    pure ()
+
+findUserByLogin :: ConnectionString -> Login -> IO (Maybe User) 
+findUserByLogin connString login = runDataBaseWithLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m (Maybe User)
+    fetchAction = (fmap . fmap) entityVal (getBy $ UniqueUserLogin login)
+
+type LimitData = Int
+
+getAllUsers :: ConnectionString -> LimitData -> IO [User]
+getAllUsers connString l = runDataBaseWithLog connString fetchAction
+  where
+    -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
+    fetchAction ::  (MonadIO m) => SqlPersistT m [User]
+    fetchAction = (fmap . fmap) entityVal 
+                  (select $ do
+                  users <- from $ table @User
+                  limit (fromIntegral l)
+                  pure (users))
+------------------------------------------------------------------------------------------------------------
+ 
+
 getCategories :: ConnectionString -> Int64 -> IO [Entity Category]
 getCategories connString uid = runDataBaseWithLog connString fetchAction
   where
@@ -94,44 +123,4 @@ fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
       pure $ (image)
 
 
--- createUser :: (Monad m) => ConnectionString -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Int64) 
-putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
-putUser pginfo name login pwd time admin publish  = do
-  runDataBaseWithLog pginfo $ do
-    pId <- insert $ Password pwd 
-    insert $ User name login pId time admin publish
-    pure ()
 
-findUserByLogin :: ConnectionString -> Login -> IO (Maybe User) 
-findUserByLogin connString login = runDataBaseWithLog connString fetchAction
-  where
-    fetchAction :: (MonadIO m) => SqlPersistT m (Maybe User)
-    fetchAction = (fmap . fmap) entityVal (getBy $ UniqueUserLogin login)
-
-getAllUsers :: (Monad m) => ConnectionString -> m [User]
-getAllUsers = undefined
---   runDataBaseWithLog pginfo $ do
---   -- runDataBaseWithOutLog pginfo $ do
---     insertMany_ [image1,image2,image3]
---     insertMany_ [cat1,cat2, cat3,cat4,cat5,cat6,cat7,cat8, cat9]
-
--- data Handle m = Handle 
---   {
---     logger :: Handlers.Logger.Handle m,
---     createUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (Either T.Text Success), 
---     -- createUser :: User -> m (),
---     getAllUsers :: m [User]
---     -- add some func
---   }
--- fillTables :: ConnectionString -> IO ()
--- fillTables pginfo = do
---   putStrLn "Fill All tables" 
---   runDataBaseWithLog pginfo $ do
---   -- runDataBaseWithOutLog pginfo $ do
---     insertMany_ [image1,image2,image3]
---     insertMany_ [cat1,cat2, cat3,cat4,cat5,cat6,cat7,cat8, cat9]
---     insertMany_ [password1,password2,password3]
---     insertMany_ [user1,user2,user3]
---     insertMany_ [news1, news2, news3, news4] 
---     insertMany_ [imageBank1, imageBank2, imageBank3, imageBank4, imageBank5] 
---   pure ()
