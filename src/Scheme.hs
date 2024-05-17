@@ -33,7 +33,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   created UTCTime
   isAdmin Bool
   isPublisher Bool
-  UniqueUser login
+  UniqueUserLogin login
   deriving Eq Show
  Password sql=passwords
    quasiPassword T.Text

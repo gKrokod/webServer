@@ -8,17 +8,35 @@ import Data.Time (UTCTime)
 
 type Name = T.Text
 type Login = T.Text
+type Time = UTCTime
 type PasswordUser = T.Text
-type ErrorDB = T.Text
-type Success = Either ErrorDB T.Text
+data Success = Put | Get deriving Show
 
 data Handle m = Handle 
   {
     logger :: Handlers.Logger.Handle m,
-    createUser :: Name -> Login -> PasswordUser -> Bool -> Bool -> m (Success), 
+    putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
+    findUserByLogin :: Login -> m (Maybe User), 
+    getTime :: m (UTCTime),
     getAllUsers :: m [User]
     -- add some func
   }
+
+
+createUser :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
+createUser h name login pwd admin publish = do
+  exist <- findUserByLogin h login
+  case exist of
+    Just _ -> do
+                logMessage (logger h) Warning ("Login arleady taken: " <> login)
+                pure $ Left "Login arleady taken"
+    Nothing-> do
+                logMessage (logger h) Debug ("Create user...")
+                -- makeHashPassword pwd
+                let pwd' = pwd
+                time <- getTime h
+                putUser h name login pwd' time admin publish 
+                pure $ Right Put 
 
 
 getUser :: (Monad m) => Handle m -> Login -> m (Maybe User)
