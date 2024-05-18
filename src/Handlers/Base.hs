@@ -10,7 +10,7 @@ type Name = T.Text
 type Login = T.Text
 type Time = UTCTime
 type PasswordUser = T.Text
-data Success = Put | Get deriving Show
+data Success = Put | Change | Get deriving Show
 type Label = T.Text
 type NewLabel = T.Text
 
@@ -24,19 +24,77 @@ data Handle m = Handle
     getAllUsers :: m [User],
 
     putCategory :: Label -> Maybe Label -> m (), 
+    changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
     getAllCategories :: m [Category],
-    findCategoryByLabel :: Label -> m (Maybe Label)
+    getBranchCategories :: Label -> m [Category],
+    findCategoryByLabel :: Label -> m (Maybe Category)
     -- add some func
   }
 
-
 updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
-updateCategory h label newlabel parent = undefined 
+updateCategory h label newlabel parent = do
+  logMessage (logger h) Debug ("Check category for label for update: " <> label <> " " <> newlabel)
+  exist <- findCategoryByLabel h label
+  existNew <- findCategoryByLabel h newlabel
+  -- let flag = label == newlabel
+  let existNew' = if (label == newlabel) then Nothing else existNew
+  case (exist, existNew', parent) of
+    (Just _, Nothing, Nothing) -> do
+                                    logMessage (logger h) Debug ("Create category without parent and label: " <> label)
+                                    changeCategory h label newlabel parent
+                                    pure $ Right Change 
+    (Just _, Nothing, Just labelParent) -> do
+                                    logMessage (logger h) Debug ("Update category: " <> label)
+                                    logMessage (logger h) Debug ("Check parent for category. Parent: " <> labelParent)
+                                    exist <- findCategoryByLabel h labelParent
+                                    case exist of
+                                      Nothing -> do
+                                        logMessage (logger h) Warning ("Abort. Parent dont' exist: " <> labelParent)
+                                        pure $ Left "Parent dont' exist"
+                                      _ -> do
+                                        logMessage (logger h) Debug ("Parent exist")
+                                        changeCategory h label newlabel parent
+                                        pure $ Right Change 
+    _ -> do
+          logMessage (logger h) Warning ("Abort. Category don't exist or .... Category: " <> label)
+          pure $ Left "Category dont' exist or ..."
+          
+
+createCategory :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
+createCategory h label parent = do
+  logMessage (logger h) Debug ("Check category for label for create: " <> label)
+  exist <- findCategoryByLabel h label
+  case (exist, parent) of
+    (Just _, _) -> do
+                logMessage (logger h) Warning ("Category arleady taken: " <> label)
+                pure $ Left "Category arleady taken"
+    (Nothing, Nothing) -> do
+                logMessage (logger h) Debug ("Create category without parent and label: " <> label)
+                putCategory h label parent
+                pure $ Right Put 
+    (Nothing, Just labelParent) -> do
+                logMessage (logger h) Debug ("Create category with parent and label: " <> labelParent <> " " <> label)
+                logMessage (logger h) Debug ("Check parent: " <> labelParent)
+                exist <- findCategoryByLabel h labelParent
+                case exist of
+                  Nothing -> do
+                    logMessage (logger h) Warning ("Abort. Parent dont' exist: " <> labelParent)
+                    pure $ Left "Parent dont' exist"
+                  _ -> do
+                    logMessage (logger h) Debug ("Parent exist")
+                    putCategory h label parent 
+                    pure $ Right Put 
+    _ -> do
+                logMessage (logger h) Warning ("fail for createCategory: ")
+                pure $ Left "fail for create Category "
+
 
 -- cat1 = Category {categoryLabel = "Abstract", categoryParent = Nothing }
+-- cat3 = Category "Woman" (Just $ toSqlKey 1)
 --
 createUser :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
 createUser h name login pwd admin publish = do
+  logMessage (logger h) Debug ("check user By login for  create: " <> login)
   exist <- findUserByLogin h login
   case exist of
     Just _ -> do

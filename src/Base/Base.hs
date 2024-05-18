@@ -4,18 +4,19 @@ import Scheme --(migrateAll, Category)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
 import Control.Monad.Logger (runNoLoggingT, runStderrLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
 import Control.Monad.IO.Class (MonadIO)
-import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,ConnectionString, insert, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
+import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,ConnectionString, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
 -- import Database.Persist.Postgresql  (getBy)
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_)
-import Database.Esqueleto.Experimental (getBy, limit)
+import Database.Esqueleto.Experimental (getBy, limit, insert, replace)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Handlers.Base (Success(..), Name, Login, PasswordUser)
+import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel)
 import Data.Time (getCurrentTime)
+import Control.Exception (throwIO)
 
 -- type Name = T.Text
 -- type Login = T.Text
@@ -89,6 +90,55 @@ getAllUsers connString l = runDataBaseWithLog connString fetchAction
                   pure (users))
 ------------------------------------------------------------------------------------------------------------
  
+putCategory :: ConnectionString -> Label -> Maybe Label -> IO () 
+putCategory pginfo label parent = do
+  runDataBaseWithLog pginfo $ do
+    case parent of
+      Nothing -> insert $ Category label Nothing
+      Just labelParent -> do
+        parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent 
+        -- esli nothing to yze opisano v handlers, ne vuzuvaetsya
+        insert $ Category label parentId 
+    pure ()
+
+changeCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO () 
+changeCategory pginfo label newLabel parent = do
+  runDataBaseWithLog pginfo $ do
+    labelId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel label 
+    case (labelId, parent) of
+      (Just id, Nothing) -> replace id $ Category newLabel Nothing
+      (Just id , Just labelParent) -> do
+        parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent
+        replace id $ Category newLabel parentId
+      _ -> pure ()  -- label don't exist
+    pure ()
+
+findCategoryByLabel :: ConnectionString -> Label -> IO (Maybe Category) 
+findCategoryByLabel connString label = runDataBaseWithLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Category)
+    fetchAction = (fmap . fmap) entityVal (getBy $ UniqueCategoryLabel label)
+
+    -- putCategory :: Label -> Maybe Label -> m (), 
+    -- changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
+    -- getAllCategories :: m [Category],
+    -- findCategoryByLabel :: Label -> m (Maybe Category)
+
+getAllCategories :: ConnectionString -> LimitData -> IO [Category]
+getAllCategories connString l = runDataBaseWithLog connString fetchAction
+  where
+    -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
+    fetchAction ::  (MonadIO m) => SqlPersistT m [Category]
+    fetchAction = (fmap . fmap) entityVal 
+                  (select $ do
+                  categories <- from $ table @Category
+                  limit (fromIntegral l)
+                  pure (categories))
+
+    -- getBranchCategories :: Label -> m [Category],
+    --
+getBranchCategories :: ConnectionString -> LimitData -> Label -> IO [Category]
+getBranchCategories connString l label = undefined 
 
 getCategories :: ConnectionString -> Int64 -> IO [Entity Category]
 getCategories connString uid = runDataBaseWithLog connString fetchAction
@@ -108,6 +158,7 @@ getCategories connString uid = runDataBaseWithLog connString fetchAction
                    pure parent)
       from cte
 
+------------------------------------------------------------------------------------------------------------
 fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
   where

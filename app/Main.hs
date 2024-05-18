@@ -35,9 +35,14 @@ logic cfg = do
           Handlers.Base.putUser = BB.putUser pginfo,
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
           Handlers.Base.getTime = getCurrentTime,
-          Handlers.Base.getAllUsers = BB.getAllUsers pginfo (cLimitData cfg)
+          Handlers.Base.getAllUsers = BB.getAllUsers pginfo (cLimitData cfg),
 --------------------------------
 ------------------------------ category end point
+          Handlers.Base.findCategoryByLabel = BB.findCategoryByLabel pginfo,
+          Handlers.Base.putCategory = BB.putCategory pginfo,
+          Handlers.Base.changeCategory = BB.changeCategory pginfo,
+          Handlers.Base.getBranchCategories = BB.getBranchCategories pginfo (cLimitData cfg),
+          Handlers.Base.getAllCategories = BB.getAllCategories pginfo (cLimitData cfg)
 --
 --------------------------------
           -- Handlers.Base.panigate = cLimitData cfg, -- somnitelno
@@ -61,5 +66,19 @@ logic cfg = do
 --  xs <- BB.fetchImageBank pginfo 1 
 --  
 --  print xs
+  print "START Categories:"
+  allcategories <- Handlers.Base.getAllCategories baseHandle 
+  mapM_ print allcategories
+  print "ADD TWO Categories:"
+  Handlers.Base.createCategory baseHandle "Dark" (Just "Warrior") --(Just "Woman" :: Handlers.Base.Label)
+  Handlers.Base.createCategory baseHandle "ONO" Nothing --(Just "Woman" :: Handlers.Base.Label)
+  allcategories <- Handlers.Base.getAllCategories baseHandle 
+  mapM_ print allcategories
+  print "Update TWO Categories:"
+  -- Handlers.Base.updateCategory baseHandle "Dark" "Light" (Just "Warrior") --(Just "Woman" :: Handlers.Base.Label)
+  Handlers.Base.updateCategory baseHandle "Dark" "Light" Nothing --(Just "Woman" :: Handlers.Base.Label)
+  Handlers.Base.updateCategory baseHandle "ONO" "ONO2" (Just "Man") --(Just "Woman" :: Handlers.Base.Label)
+  allcategories <- Handlers.Base.getAllCategories baseHandle 
+  mapM_ print allcategories
   pure ()
 

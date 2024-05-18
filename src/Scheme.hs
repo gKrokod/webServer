@@ -41,7 +41,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
  Category sql=categories
   label T.Text
   parent CategoryId Maybe
-  UniqueCategory label
+  UniqueCategoryLabel label
   -- deriving Generic
   deriving Eq Show Generic ToJSON
  News sql=news

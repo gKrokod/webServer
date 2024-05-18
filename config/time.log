@@ -1,0 +1,172 @@
+[Debug] check user By login for  create: LOGIN1[Debug] Create user...[Debug] Check category for label for create: Dark[Debug] Create category with parent and label: Warrior Dark[Debug] Check parent: Warrior[Debug] Parent exist[Debug] Check category for label for create: ONO[Debug] Create category without parent and label: ONO[Debug] Check category for label for update: Dark[Debug] Update category: Dark[Debug] Check parent for category. Parent: Warrior[Debug] Parent exist[Debug] Check category for label for update: ONO[Warning] Abort. Category don't exist or .... Category: ONO[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Debug] Update category: Dark
+[Debug] Check parent for category. Parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for update: ONO
+[Warning] Abort. Category don't exist or .... Category: ONO
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Warning] Abort. Category don't exist or .... Category: ONO
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO
+[Warning] Abort. Category don't exist or .... Category: ONO
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Warning] Abort. Category don't exist or .... Category: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Warning] Abort. Category don't exist or .... Category: ONO
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
