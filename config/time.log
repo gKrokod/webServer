@@ -170,3 +170,50 @@
 [Debug] Update category: ONO
 [Debug] Check parent for category. Parent: Man
 [Debug] Parent exist
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-05-26 20:10:09.267502761 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-05-26 20:18:14.552013599 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-05-26 20:18:14.766054627 UTC
+[Debug] check user By login for  create: loginsalagi
+[Debug] Create user...

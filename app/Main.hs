@@ -11,6 +11,8 @@ import qualified Base.Base as BB
 import qualified Logger
 import Database.Persist.Postgresql  (keyValueEntityToJSON, ConnectionString, runMigration, entityIdToJSON)
 import Data.Time (getCurrentTime)
+import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
 
 main :: IO ()
 main = do 
@@ -25,6 +27,8 @@ logic :: ConfigDataBase -> IO ()
 logic cfg = do
   let pginfo = connectionString cfg
   putStrLn "Do Logic"
+  t <- getCurrentTime
+  Logger.writeLog ( T.pack $ show t )
   let logHandle = Handlers.Logger.Handle
         { Handlers.Logger.levelLogger = Debug,
           Handlers.Logger.writeLog = Logger.writeLog
@@ -47,6 +51,7 @@ logic cfg = do
 --------------------------------
           -- Handlers.Base.panigate = cLimitData cfg, -- somnitelno
       }
+
   print "START users:"
   alluser <- Handlers.Base.getAllUsers baseHandle 
   mapM_ print alluser
@@ -80,5 +85,18 @@ logic cfg = do
   Handlers.Base.updateCategory baseHandle "ONO" "ONO2" (Just "Man") --(Just "Woman" :: Handlers.Base.Label)
   allcategories <- Handlers.Base.getAllCategories baseHandle 
   mapM_ print allcategories
+
+  print "CREATE user"
+  t <- getCurrentTime
+  Logger.writeLog ( T.pack $ show t )
+  print "Type name, login, password"
+  name <- TIO.getLine
+  login <- TIO.getLine
+  pass <- TIO.getLine
+  cuser <- Handlers.Base.createUser baseHandle name login pass  False False
+  case cuser of
+    Left e -> print e
+    Right a -> print a >> print "User Create"
   pure ()
+
 
