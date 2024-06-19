@@ -46,19 +46,22 @@ logic cfg = do
           Handlers.Base.putCategory = BB.putCategory pginfo,
           Handlers.Base.changeCategory = BB.changeCategory pginfo,
           Handlers.Base.getBranchCategories = BB.getBranchCategories pginfo (cLimitData cfg),
-          Handlers.Base.getAllCategories = BB.getAllCategories pginfo (cLimitData cfg)
---
+          Handlers.Base.getAllCategories = BB.getAllCategories pginfo (cLimitData cfg),
 --------------------------------
-          -- Handlers.Base.panigate = cLimitData cfg, -- somnitelno
+------------------------------ image end points
+          Handlers.Base.getImage = BB.getImage pginfo
       }
   print "#########################################################################################"
   print "#########################################################################################"
   print "*******************************************************************************************************"
   print "****************************************************************************************************************"
-  print "START Categories:"
-  allcategories <- Handlers.Base.getAllCategories baseHandle 
-  mapM_ print allcategories
-  a <- BB.getCategories pginfo 4
+
+  print "Image "
+  a <- BB.fetchImageBank pginfo 1
   mapM_ print a
+  print "getOne and Two"
+  a <- Handlers.Base.getImage baseHandle 1
+  b <- Handlers.Base.getImage baseHandle 2
+  mapM_ print [a,b]
 
   pure ()

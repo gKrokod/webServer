@@ -38,3 +38,14 @@
   print "****************************************************************************************************************"
 
 
+  print "START Categories:"
+  allcategories <- Handlers.Base.getAllCategories baseHandle 
+  mapM_ print allcategories
+
+  print "Categories nomer"
+  a <- BB.getCategories pginfo 9
+  mapM_ print a
+
+  print "Categories vetka"
+  allcategories <- Handlers.Base.getBranchCategories baseHandle "Witch"
+  mapM_ print allcategories

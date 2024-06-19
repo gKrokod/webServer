@@ -9,7 +9,7 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_)
-import Database.Esqueleto.Experimental (getBy, limit, insert, replace)
+import Database.Esqueleto.Experimental (getBy, limit, insert, replace, get)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -145,19 +145,15 @@ getAllCategories connString l = runDataBaseWithOutLog connString fetchAction
     -- getBranchCategories :: Label -> m [Category],
     --
 getBranchCategories :: ConnectionString -> LimitData -> Label -> IO [Category]
-getBranchCategories connString l label = undefined -- runDataBaseWithOutLog connString fetchAction
-    -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
-
-getCategories :: ConnectionString -> Int64 -> IO [Entity Category]
-getCategories connString uid = runDataBaseWithOutLog connString fetchAction
--- getCategories connString uid = runDataBaseWithLog connString fetchAction
+getBranchCategories connString l label = runDataBaseWithOutLog connString fetchAction 
   where
-    fetchAction ::  (MonadIO m) => SqlPersistT m [Entity Category]
-    fetchAction = select $ do
+    fetchAction ::  (MonadIO m) => SqlPersistT m [Category]
+    fetchAction = (fmap . fmap) entityVal 
+      (select $ do
       cte <- withRecursive
                ( do
                    child <- from $ table @Category
-                   where_ (child ^. CategoryId ==. val (toSqlKey uid))
+                   where_ (child ^. CategoryLabel ==. val (label))
                    pure child)
                unionAll_
                (\self -> do
@@ -165,9 +161,38 @@ getCategories connString uid = runDataBaseWithOutLog connString fetchAction
                    parent <- from $ table @Category
                    where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
                    pure parent)
-      from cte
+      limit (fromIntegral l)
+      from cte)
+
+-- getCategories :: ConnectionString -> Int64 -> IO [Entity Category] --for debugging
+-- -- getCategories connString uid = runDataBaseWithOutLog connString fetchAction
+-- getCategories connString uid = runDataBaseWithLog connString fetchAction
+--   where
+--     fetchAction ::  (MonadIO m) => SqlPersistT m [Entity Category]
+--     fetchAction = select $ do
+--       cte <- withRecursive
+--                ( do
+--                    child <- from $ table @Category
+--                    where_ (child ^. CategoryId ==. val (toSqlKey uid))
+--                    pure child)
+--                unionAll_
+--                (\self -> do
+--                    child <- from self
+--                    parent <- from $ table @Category
+--                    where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
+--                    pure parent)
+--       -- limit 1
+--       from cte
 
 ------------------------------------------------------------------------------------------------------------
+  --for api news
+getImage :: ConnectionString -> Int64 -> IO (Maybe Image) 
+getImage connString uid = runDataBaseWithOutLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
+    fetchAction = get (toSqlKey uid)
+
+
 fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
 fetchImageBank connString uid = runDataBaseWithOutLog connString fetchAction
 -- fetchImageBank connString uid = runDataBaseWithLog connString fetchAction

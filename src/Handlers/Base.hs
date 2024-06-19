@@ -5,6 +5,7 @@ import Handlers.Logger (Log(..), logMessage)
 import qualified Handlers.Logger 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
+import Data.Int (Int64)
 
 type Name = T.Text
 type Login = T.Text
@@ -13,24 +14,47 @@ type PasswordUser = T.Text
 data Success = Put | Change | Get deriving Show
 type Label = T.Text
 type NewLabel = T.Text
+type NumberImage = Int64
+type Header = T.Text
+type Base64 = T.Text
 
 data Handle m = Handle 
   {
     logger :: Handlers.Logger.Handle m,
     panigate :: Int,
-
+-- api user: create +, getall (getAllUsers) +
     putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
     findUserByLogin :: Login -> m (Maybe User), 
     getTime :: m (UTCTime),
     getAllUsers :: m [User],
-
+-- api category: create +, getall (getAllCategories) +, edit +      add getBranchCategories for news api
     putCategory :: Label -> Maybe Label -> m (), 
     changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
     getAllCategories :: m [Category],
     getBranchCategories :: Label -> m [Category],
-    findCategoryByLabel :: Label -> m (Maybe Category)
+    findCategoryByLabel :: Label -> m (Maybe Category),
+-- api imagy: getOne
+    getImage :: NumberImage -> m (Maybe Image),
+    putImage :: Header -> Base64 -> m () -- todo
     -- add some func
   }
+-- при сохранении картинки надо учесть в какую новость она ложится и учесть таблицу связей новостей и картинок еще.
+--
+-- createImage :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
+-- createImage h name login pwd admin publish = do
+--   logMessage (logger h) Debug ("check user By login for  create: " <> login)
+--   exist <- findUserByLogin h login
+--   case exist of
+--     Just _ -> do
+--                 logMessage (logger h) Warning ("Login arleady taken: " <> login)
+--                 pure $ Left "Login arleady taken"
+--     Nothing-> do
+--                 logMessage (logger h) Debug ("Create user...")
+--                 -- makeHashPassword pwd
+--                 let pwd' = pwd
+--                 time <- getTime h
+--                 putUser h name login pwd' time admin publish 
+--                 pure $ Right Put 
 
 updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
 updateCategory h label newlabel parent = do
