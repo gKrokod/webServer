@@ -1,0 +1,40 @@
+
+  print "#########################################################################################"
+  print "START users:"
+  alluser <- Handlers.Base.getAllUsers baseHandle 
+  mapM_ print alluser
+  cuser <- Handlers.Base.createUser baseHandle "Vova1" "LOGIN1" "pssss"  True True
+  case cuser of
+    Left e -> print e
+    Right a -> print a >> print "User Create"
+  print "FINISH users:"
+  alluser <- Handlers.Base.getAllUsers baseHandle 
+  mapM_ print alluser
+  print "#########################################################################################"
+--  xs <- BB.getCategories pginfo 1 
+--  print "Abstract"
+--  let xs' = map keyValueEntityToJSON xs
+--  let xs'' = map entityIdToJSON xs
+--  print xs'
+--  print xs''
+--  xs <- BB.fetchImageBank pginfo 1 
+--  
+--  print xs
+  print "*******************************************************************************************************"
+  print "START Categories:"
+  allcategories <- Handlers.Base.getAllCategories baseHandle 
+  mapM_ print allcategories
+  print "ADD TWO Categories:"
+  Handlers.Base.createCategory baseHandle "Dark" (Just "Warrior") --(Just "Woman" :: Handlers.Base.Label)
+  Handlers.Base.createCategory baseHandle "ONO" Nothing --(Just "Woman" :: Handlers.Base.Label)
+  allcategories <- Handlers.Base.getAllCategories baseHandle 
+  mapM_ print allcategories
+  print "FINISH. Update TWO Categories:"
+  -- Handlers.Base.updateCategory baseHandle "Dark" "Light" (Just "Warrior") --(Just "Woman" :: Handlers.Base.Label)
+  Handlers.Base.updateCategory baseHandle "Dark" "Light" Nothing --(Just "Woman" :: Handlers.Base.Label)
+  Handlers.Base.updateCategory baseHandle "ONO" "ONO2" (Just "Man") --(Just "Woman" :: Handlers.Base.Label)
+  allcategories <- Handlers.Base.getAllCategories baseHandle 
+  mapM_ print allcategories
+  print "****************************************************************************************************************"
+
+

@@ -37,8 +37,8 @@ makeTables pginfo = do
 fillTables :: ConnectionString -> IO ()
 fillTables pginfo = do
   putStrLn "Fill All tables" 
-  runDataBaseWithLog pginfo $ do
-  -- runDataBaseWithOutLog pginfo $ do
+  -- runDataBaseWithLog pginfo $ do
+  runDataBaseWithOutLog pginfo $ do
     insertMany_ [image1,image2,image3]
     insertMany_ [cat1,cat2, cat3,cat4,cat5,cat6,cat7,cat8, cat9]
     insertMany_ [password1,password2,password3]
@@ -65,13 +65,15 @@ dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories
 ------------------------------------------------------------------------------------------------------------
 putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
 putUser pginfo name login pwd time admin publish  = do
-  runDataBaseWithLog pginfo $ do
+  runDataBaseWithOutLog pginfo $ do
+  -- runDataBaseWithLog pginfo $ do
     pId <- insert $ Password pwd 
     insert $ User name login pId time admin publish
     pure ()
 
 findUserByLogin :: ConnectionString -> Login -> IO (Maybe User) 
-findUserByLogin connString login = runDataBaseWithLog connString fetchAction
+-- findUserByLogin connString login = runDataBaseWithLog connString fetchAction
+findUserByLogin connString login = runDataBaseWithOutLog connString fetchAction
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe User)
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueUserLogin login)
@@ -79,7 +81,8 @@ findUserByLogin connString login = runDataBaseWithLog connString fetchAction
 type LimitData = Int
 
 getAllUsers :: ConnectionString -> LimitData -> IO [User]
-getAllUsers connString l = runDataBaseWithLog connString fetchAction
+getAllUsers connString l = runDataBaseWithOutLog connString fetchAction
+-- getAllUsers connString l = runDataBaseWithLog connString fetchAction
   where
     -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
     fetchAction ::  (MonadIO m) => SqlPersistT m [User]
@@ -92,7 +95,8 @@ getAllUsers connString l = runDataBaseWithLog connString fetchAction
  
 putCategory :: ConnectionString -> Label -> Maybe Label -> IO () 
 putCategory pginfo label parent = do
-  runDataBaseWithLog pginfo $ do
+  runDataBaseWithOutLog pginfo $ do
+  -- runDataBaseWithLog pginfo $ do
     case parent of
       Nothing -> insert $ Category label Nothing
       Just labelParent -> do
@@ -103,7 +107,8 @@ putCategory pginfo label parent = do
 
 changeCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO () 
 changeCategory pginfo label newLabel parent = do
-  runDataBaseWithLog pginfo $ do
+  runDataBaseWithOutLog pginfo $ do
+  -- runDataBaseWithLog pginfo $ do
     labelId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel label 
     case (labelId, parent) of
       (Just id, Nothing) -> replace id $ Category newLabel Nothing
@@ -114,7 +119,8 @@ changeCategory pginfo label newLabel parent = do
     pure ()
 
 findCategoryByLabel :: ConnectionString -> Label -> IO (Maybe Category) 
-findCategoryByLabel connString label = runDataBaseWithLog connString fetchAction
+findCategoryByLabel connString label = runDataBaseWithOutLog connString fetchAction
+-- findCategoryByLabel connString label = runDataBaseWithLog connString fetchAction
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Category)
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueCategoryLabel label)
@@ -125,7 +131,8 @@ findCategoryByLabel connString label = runDataBaseWithLog connString fetchAction
     -- findCategoryByLabel :: Label -> m (Maybe Category)
 
 getAllCategories :: ConnectionString -> LimitData -> IO [Category]
-getAllCategories connString l = runDataBaseWithLog connString fetchAction
+-- getAllCategories connString l = runDataBaseWithLog connString fetchAction
+getAllCategories connString l = runDataBaseWithOutLog connString fetchAction
   where
     -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
     fetchAction ::  (MonadIO m) => SqlPersistT m [Category]
@@ -138,10 +145,12 @@ getAllCategories connString l = runDataBaseWithLog connString fetchAction
     -- getBranchCategories :: Label -> m [Category],
     --
 getBranchCategories :: ConnectionString -> LimitData -> Label -> IO [Category]
-getBranchCategories connString l label = undefined 
+getBranchCategories connString l label = undefined -- runDataBaseWithOutLog connString fetchAction
+    -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
 
 getCategories :: ConnectionString -> Int64 -> IO [Entity Category]
-getCategories connString uid = runDataBaseWithLog connString fetchAction
+getCategories connString uid = runDataBaseWithOutLog connString fetchAction
+-- getCategories connString uid = runDataBaseWithLog connString fetchAction
   where
     fetchAction ::  (MonadIO m) => SqlPersistT m [Entity Category]
     fetchAction = select $ do
@@ -160,7 +169,8 @@ getCategories connString uid = runDataBaseWithLog connString fetchAction
 
 ------------------------------------------------------------------------------------------------------------
 fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
-fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
+fetchImageBank connString uid = runDataBaseWithOutLog connString fetchAction
+-- fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
   where
     fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
     fetchAction = select $ do

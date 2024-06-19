@@ -217,3 +217,243 @@
 2024-05-26 20:18:14.766054627 UTC
 [Debug] check user By login for  create: loginsalagi
 [Debug] Create user...
+2024-06-18 13:24:00.874963742 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 13:24:01.127718864 UTC
+[Debug] check user By login for  create: 321
+[Debug] Create user...
+2024-06-18 15:03:31.130517547 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:03:31.388121875 UTC
+2024-06-18 15:05:22.251800452 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:05:22.511765438 UTC
+[Debug] check user By login for  create: sdf
+[Debug] Create user...
+2024-06-18 15:05:28.567007402 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:05:28.80021928 UTC
+[Debug] check user By login for  create: 2
+[Debug] Create user...
+2024-06-18 15:09:55.289768359 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:10:05.17549589 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:11:00.39211594 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:12:32.686167512 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:13:37.403686701 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:14:09.123778818 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:15:19.25937586 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:16:24.848635592 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:16:54.158769957 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 15:17:20.730480169 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-18 16:01:00.387196953 UTC
+[Debug] check user By login for  create: LOGIN1
+[Debug] Create user...
+[Debug] Check category for label for create: Dark
+[Debug] Create category with parent and label: Warrior Dark
+[Debug] Check parent: Warrior
+[Debug] Parent exist
+[Debug] Check category for label for create: ONO
+[Debug] Create category without parent and label: ONO
+[Debug] Check category for label for update: Dark Light
+[Debug] Create category without parent and label: Dark
+[Debug] Check category for label for update: ONO ONO2
+[Debug] Update category: ONO
+[Debug] Check parent for category. Parent: Man
+[Debug] Parent exist
+2024-06-19 12:12:13.399741413 UTC
+2024-06-19 12:12:32.774956228 UTC
+2024-06-19 12:19:08.755474732 UTC
+2024-06-19 12:23:02.292885913 UTC
+2024-06-19 12:23:11.80795743 UTC

@@ -18,6 +18,7 @@ data Handle m = Handle
   {
     logger :: Handlers.Logger.Handle m,
     panigate :: Int,
+
     putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
     findUserByLogin :: Login -> m (Maybe User), 
     getTime :: m (UTCTime),
@@ -49,7 +50,7 @@ updateCategory h label newlabel parent = do
                                     exist <- findCategoryByLabel h labelParent
                                     case exist of
                                       Nothing -> do
-                                        logMessage (logger h) Warning ("Abort. Parent dont' exist: " <> labelParent)
+                                        logMessage (logger h) Warning ("Abort. Parent don't exist: " <> labelParent)
                                         pure $ Left "Parent dont' exist"
                                       _ -> do
                                         logMessage (logger h) Debug ("Parent exist")
@@ -57,7 +58,7 @@ updateCategory h label newlabel parent = do
                                         pure $ Right Change 
     _ -> do
           logMessage (logger h) Warning ("Abort. Category don't exist or .... Category: " <> label)
-          pure $ Left "Category dont' exist or ..."
+          pure $ Left "Category don't's exist or ..."
           
 
 createCategory :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
