@@ -49,19 +49,33 @@ logic cfg = do
           Handlers.Base.getAllCategories = BB.getAllCategories pginfo (cLimitData cfg),
 --------------------------------
 ------------------------------ image end points
-          Handlers.Base.getImage = BB.getImage pginfo
+          Handlers.Base.getImage = BB.getImage pginfo,
+          Handlers.Base.putImage = BB.putImage pginfo
       }
   print "#########################################################################################"
   print "#########################################################################################"
   print "*******************************************************************************************************"
   print "****************************************************************************************************************"
 
-  print "Image "
-  a <- BB.fetchImageBank pginfo 1
-  mapM_ print a
-  print "getOne and Two"
-  a <- Handlers.Base.getImage baseHandle 1
-  b <- Handlers.Base.getImage baseHandle 2
-  mapM_ print [a,b]
+  print "Get News 1 "
+  a <- BB.getNews' pginfo 1
+  print a
+
+  print "Get Full News 1 "
+  a <- BB.getFullNews pginfo 1
+  print a
+  -- a <- BB.fetchImageBank pginfo 1
+  -- mapM_ print a
+  -- print "getOne and Two"
+  -- a <- Handlers.Base.getImage baseHandle 1
+  -- b <- Handlers.Base.getImage baseHandle 2
+  -- mapM_ print [a,b]
+  -- -- pure
+  -- print "insert 4 and 5"
+  -- Handlers.Base.putImage baseHandle "4444" "Base64 4444"
+  -- Handlers.Base.putImage baseHandle "header 5" "base64 5555"
+  -- a <- Handlers.Base.getImage baseHandle 4
+  -- b <- Handlers.Base.getImage baseHandle 5
+  -- mapM_ print [a,b]
 
   pure ()

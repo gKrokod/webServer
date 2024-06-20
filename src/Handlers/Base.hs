@@ -6,7 +6,6 @@ import qualified Handlers.Logger
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Data.Int (Int64)
-
 type Name = T.Text
 type Login = T.Text
 type Time = UTCTime
@@ -35,10 +34,13 @@ data Handle m = Handle
     findCategoryByLabel :: Label -> m (Maybe Category),
 -- api imagy: getOne
     getImage :: NumberImage -> m (Maybe Image),
-    putImage :: Header -> Base64 -> m () -- todo
+    putImage :: Header -> Base64 -> m (), 
     -- add some func
+    putNews :: m (),
+    getAllNews :: m [News]
+    --
   }
--- при сохранении картинки надо учесть в какую новость она ложится и учесть таблицу связей новостей и картинок еще.
+-- при сохранении новости! картинки надо учесть в какую новость она ложится и учесть таблицу связей новостей и картинок еще.
 --
 -- createImage :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
 -- createImage h name login pwd admin publish = do
@@ -144,15 +146,6 @@ createUser h name login pwd admin publish = do
 --                            -- :: PasswordIdUser -> PasswordUser
 
 --
--- data Handle m = Handle {
---   updateUser :: User -> m (),
---   updateNews :: News -> m (),
---   takeUsers :: m Users,
---   takeNews :: m [News],
---   takeCategories :: m CategoryDictionary,
---   updateCategories :: CategoryDictionary -> m (),
---   findImage :: Int -> m (Maybe Image),
---   logger :: Handlers.Logger.Handle m
 --                        }
 --  User sql=users
 --   name T.Text

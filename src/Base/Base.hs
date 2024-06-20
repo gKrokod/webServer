@@ -9,18 +9,20 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_)
-import Database.Esqueleto.Experimental (getBy, limit, insert, replace, get)
+import Database.Esqueleto.Experimental (getBy, limit, insert, replace, get, fromSqlKey)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel)
+import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage)
 import Data.Time (getCurrentTime)
 import Control.Exception (throwIO)
 
 -- type Name = T.Text
 -- type Login = T.Text
 -- type PasswordUser = T.Text
+-- type Header = T.Text
+-- type Base64 = T.Text
 makeAndFillTables :: ConnectionString -> IO ()
 makeAndFillTables pginfo = makeTables pginfo >> fillTables pginfo
 
@@ -62,6 +64,102 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
+    -- getImage :: NumberImage -> m (Maybe Image),
+    -- putImage :: Header -> Base64 -> m () -- todo
+    --
+    
+getNews' :: ConnectionString -> Int64 -> IO (Maybe News)
+getNews' connString uid = runDataBaseWithLog connString (getNews uid) 
+
+getNews :: MonadIO m => Int64 -> SqlPersistT m (Maybe News)
+getNews n = get (toSqlKey n) 
+
+getUser :: MonadIO m => Int64 -> SqlPersistT m (Maybe User)
+getUser n = get (toSqlKey n) 
+
+allNews :: MonadIO m => SqlPersistT m [Entity News]
+allNews = select $ do
+  news <- from $ table @News
+  pure news
+
+getFullNews :: ConnectionString -> Int64 -> IO (Maybe News, Maybe User, [Entity Category], [Entity Image])
+getFullNews connString uid = runDataBaseWithLog connString $ do
+  news <- getNews uid
+  let userid = maybe 0 (fromSqlKey . newsUserId) news 
+  let catid = maybe 0 (fromSqlKey . newsCategoryId) news 
+  user <- getUser userid 
+  cat <- fetchActionCat catid
+  images <- fetchActionImage uid
+  pure (news, user, cat, images)
+
+
+fetchActionImage :: (MonadIO m) => Int64 -> SqlPersistT m [Entity Image]
+fetchActionImage nuid = select $ do
+  (news :& imagebank :& image) <- 
+    from $ table @News
+     `innerJoin` table @ImageBank
+     `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+     `innerJoin` table @Image
+     `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+  where_ (news ^. NewsId ==. val (toSqlKey nuid))
+  pure $ (image)
+
+fetchActionCat ::  (MonadIO m) => Int64 -> SqlPersistT m [Entity Category]
+fetchActionCat uid = select $ do
+  cte <- withRecursive
+           ( do
+               child <- from $ table @Category
+               where_ (child ^. CategoryId ==. val (toSqlKey uid))
+               pure child)
+           unionAll_
+           (\self -> do
+               child <- from self
+               parent <- from $ table @Category
+               where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
+               pure parent)
+  from cte
+
+fetchNewsUser :: ConnectionString -> Int64 -> IO [Entity News]
+fetchNewsUser connString uid = runDataBaseWithLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m [Entity News]
+    fetchAction = select $ do
+      news <- from $ table @News
+      where_ (news ^. NewsUserId ==. val (toSqlKey uid))
+      pure news
+
+
+------------------------------------------------------------------------------------------------------------
+putImage :: ConnectionString -> Header -> Base64 -> IO () 
+putImage pginfo header base64 = do
+  runDataBaseWithOutLog pginfo $ do
+  -- runDataBaseWithLog pginfo $ do
+    insert $ Image header base64
+    pure ()
+
+  --for api news
+getImage :: ConnectionString -> NumberImage -> IO (Maybe Image) 
+-- getImage :: ConnectionString -> Int64 -> IO (Maybe Image) 
+getImage connString uid = runDataBaseWithOutLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
+    fetchAction = get (toSqlKey uid)
+
+-- ishet vse kartinki novosti
+-- fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
+-- fetchImageBank connString uid = runDataBaseWithOutLog connString fetchAction
+-- -- fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
+--   where
+--     fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
+--     fetchAction = select $ do
+--       (news :& imagebank :& image) <- 
+--         from $ table @News
+--          `innerJoin` table @ImageBank
+--          `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+--          `innerJoin` table @Image
+--          `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+--       where_ (news ^. NewsId ==. val (toSqlKey uid))
+--       pure $ (image)
 ------------------------------------------------------------------------------------------------------------
 putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
 putUser pginfo name login pwd time admin publish  = do
@@ -185,28 +283,3 @@ getBranchCategories connString l label = runDataBaseWithOutLog connString fetchA
 --       from cte
 
 ------------------------------------------------------------------------------------------------------------
-  --for api news
-getImage :: ConnectionString -> Int64 -> IO (Maybe Image) 
-getImage connString uid = runDataBaseWithOutLog connString fetchAction
-  where
-    fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
-    fetchAction = get (toSqlKey uid)
-
-
-fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
-fetchImageBank connString uid = runDataBaseWithOutLog connString fetchAction
--- fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
-  where
-    fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
-    fetchAction = select $ do
-      (news :& imagebank :& image) <- 
-        from $ table @News
-         `innerJoin` table @ImageBank
-         `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
-         `innerJoin` table @Image
-         `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
-      where_ (news ^. NewsId ==. val (toSqlKey uid))
-      pure $ (image)
-
-
-

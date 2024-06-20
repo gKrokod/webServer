@@ -49,3 +49,19 @@
   print "Categories vetka"
   allcategories <- Handlers.Base.getBranchCategories baseHandle "Witch"
   mapM_ print allcategories
+
+-- proverka insert and read image
+  print "Image "
+  a <- BB.fetchImageBank pginfo 1
+  mapM_ print a
+  print "getOne and Two"
+  a <- Handlers.Base.getImage baseHandle 1
+  b <- Handlers.Base.getImage baseHandle 2
+  mapM_ print [a,b]
+  -- pure
+  print "insert 4 and 5"
+  Handlers.Base.putImage baseHandle "4444" "Base64 4444"
+  Handlers.Base.putImage baseHandle "header 5" "base64 5555"
+  a <- Handlers.Base.getImage baseHandle 4
+  b <- Handlers.Base.getImage baseHandle 5
+  mapM_ print [a,b]
