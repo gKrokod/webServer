@@ -57,6 +57,10 @@ data Handle m = Handle
 --   UniqueNews title
 --   deriving Eq Show
 
+updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> Maybe [Image] -> Maybe Bool -> m (Either T.Text Success)
+updateNews h = undefined
+-- upd
+         
 createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
 createNews h title login label content images ispublish = do 
   logMessage (logger h) Debug ("Check news by title for create: " <> title)
@@ -65,6 +69,8 @@ createNews h title login label content images ispublish = do
   existUser <- findUserByLogin h login 
   logMessage (logger h) Debug ("Check category by label for create: " <> label)
   existCategory <- findCategoryByLabel h label 
+  -- esli kartinki yze est, ne nado ix vstavlyat
+  -- todo poisk kartinok po uniue sochetaniu
   case (existTitle, existUser, existCategory) of
     (Nothing, Just user, Just category) -> do
       logMessage (logger h) Debug ("Create news with title, login and label: " <> title <> " " <> login <> " " <> label)
