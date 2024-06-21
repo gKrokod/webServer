@@ -39,12 +39,12 @@ data Handle m = Handle
 -- api imagy: getOne
     getImage :: NumberImage -> m (Maybe Image),
     putImage :: Header -> Base64 -> m (), 
-    -- add some func
-    -- putNews :: Title -> UTCTime -> KeyIdUser -> KeyIdCategory -> Content -> [Image] -> Bool -> m (),
+-- api news: create +, getAllNews +. edit -
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
     getAllNews :: m [News],
     findNewsByTitle :: Title -> m (Maybe News) 
     --
+-- add some func
   }
 
 --  News sql=news
@@ -74,7 +74,6 @@ createNews h title login label content images ispublish = do
     _ -> do
       logMessage (logger h) Warning  ("Fail to create news with title, login and label: " <> title <> " " <> login <> " " <> label)
       pure $ Left "fail to create news"
-
 
 
 updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  

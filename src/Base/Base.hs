@@ -9,7 +9,7 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, limit, insert, replace, get, fromSqlKey)
+import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -114,7 +114,7 @@ fetchActionImage nuid = select $ do
      `innerJoin` table @Image
      `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
   where_ (news ^. NewsId ==. val (toSqlKey nuid))
-  pure $ (image)
+  pure (image)
 
 fetchActionCat ::  (MonadIO m) => Int64 -> SqlPersistT m [Entity Category]
 fetchActionCat uid = select $ do
@@ -160,18 +160,14 @@ findNewsByTitle connString title = runDataBaseWithOutLog connString fetchAction
 putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
 putNews pginfo title time login label content images ispublish = 
   runDataBaseWithOutLog pginfo $ do
-    -- keyUser <- maybe (throwIO "User didn't find") id <$> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
     keyUser <- (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
-    -- keyCategory <- maybe (throwIO "Category didn't find") id <$> (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
     keyCategory <- (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
     case (keyUser, keyCategory) of
-      (Just ku, Just kc) -> do
-        keyNews <- insert $ News title time ku kc content ispublish 
+      (Just keyUsr, Just keyCat) -> do
+        keyNews <- insert $ News title time keyUsr keyCat content ispublish 
         keysImages <- insertMany images 
         insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
-      _ -> do
-        throwTo (userError "User or Label didnt' find") 
-        pure ()
+      _ -> pure ()
 
 ------------------------------------------------------------------------------------------------------------
 putImage :: ConnectionString -> Header -> Base64 -> IO () 
@@ -240,12 +236,11 @@ putCategory pginfo label parent = do
   runDataBaseWithOutLog pginfo $ do
   -- runDataBaseWithLog pginfo $ do
     case parent of
-      Nothing -> insert $ Category label Nothing
+      Nothing -> insert_ $ Category label Nothing
       Just labelParent -> do
         parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent 
         -- esli nothing to yze opisano v handlers, ne vuzuvaetsya
-        insert $ Category label parentId 
-    pure ()
+        insert_ $ Category label parentId 
 
 changeCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO () 
 changeCategory pginfo label newLabel parent = do
@@ -253,10 +248,10 @@ changeCategory pginfo label newLabel parent = do
   -- runDataBaseWithLog pginfo $ do
     labelId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel label 
     case (labelId, parent) of
-      (Just id, Nothing) -> replace id $ Category newLabel Nothing
-      (Just id , Just labelParent) -> do
+      (Just iD, Nothing) -> replace iD $ Category newLabel Nothing
+      (Just iD , Just labelParent) -> do
         parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent
-        replace id $ Category newLabel parentId
+        replace iD $ Category newLabel parentId
       _ -> pure ()  -- label don't exist
     pure ()
 

@@ -54,6 +54,7 @@ logic cfg = do
 --------------------------------
 ------------------------------ news 
           Handlers.Base.putNews = BB.putNews pginfo,
+          Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
           Handlers.Base.getAllNews = BB.getAllNews pginfo (cLimitData cfg)
 
       }
@@ -66,19 +67,4 @@ logic cfg = do
   a <- Handlers.Base.getAllNews baseHandle
   mapM print a
 
-  print "\nAdd News"
-  -- a <- Handlers.Base.putNews baseHandle "ADD NEWS 5" t "login1" "Woman" "article about 5 news5" [(Image "headerNew5" "bodyNew5"),(Image "headerNew6" "bodyNew6")] True 
-
-  print "\nGet All News "
-  a <- Handlers.Base.getAllNews baseHandle
-  mapM print a
-
-  print "\nAdd News"
-  -- a <- Handlers.Base.putNews baseHandle "ADD NEWS 6" t "login1" "Man" "article about 6 news6" [] True 
-
-  print "\nGet All News "
-  a <- Handlers.Base.getAllNews baseHandle
-  mapM print a
-
--- putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
   pure ()

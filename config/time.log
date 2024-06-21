@@ -483,3 +483,49 @@
 2024-06-21 12:28:14.506842069 UTC
 2024-06-21 12:58:21.861589217 UTC
 2024-06-21 13:00:20.997722324 UTC
+2024-06-21 20:01:04.573702282 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+2024-06-21 20:01:50.509146361 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Man
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Man
+2024-06-21 20:03:20.747824004 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login10
+[Debug] Check category by label for create: Man
+[Warning] Fail to create news with title, login and label: ADD NEWS 6 login10 Man
+2024-06-21 20:04:00.157989546 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login10
+[Debug] Check category by label for create: Man
+[Warning] Fail to create news with title, login and label: ADD NEWS 6 login10 Man
+2024-06-21 20:06:10.392984913 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Warning] Fail to create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login10
+[Debug] Check category by label for create: Man
+[Warning] Fail to create news with title, login and label: ADD NEWS 6 login10 Man
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Login
+[Warning] Fail to create news with title, login and label: ADD NEWS 6 login1 Login
