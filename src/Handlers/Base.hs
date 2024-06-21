@@ -16,6 +16,10 @@ type NewLabel = T.Text
 type NumberImage = Int64
 type Header = T.Text
 type Base64 = T.Text
+type Title = T.Text
+type Content = T.Text
+type KeyIdUser = Int64
+type KeyIdCategory = Int64
 
 data Handle m = Handle 
   {
@@ -36,27 +40,42 @@ data Handle m = Handle
     getImage :: NumberImage -> m (Maybe Image),
     putImage :: Header -> Base64 -> m (), 
     -- add some func
-    putNews :: m (),
-    getAllNews :: m [News]
+    -- putNews :: Title -> UTCTime -> KeyIdUser -> KeyIdCategory -> Content -> [Image] -> Bool -> m (),
+    putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
+    getAllNews :: m [News],
+    findNewsByTitle :: Title -> m (Maybe News) 
     --
   }
--- при сохранении новости! картинки надо учесть в какую новость она ложится и учесть таблицу связей новостей и картинок еще.
---
--- createImage :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
--- createImage h name login pwd admin publish = do
---   logMessage (logger h) Debug ("check user By login for  create: " <> login)
---   exist <- findUserByLogin h login
---   case exist of
---     Just _ -> do
---                 logMessage (logger h) Warning ("Login arleady taken: " <> login)
---                 pure $ Left "Login arleady taken"
---     Nothing-> do
---                 logMessage (logger h) Debug ("Create user...")
---                 -- makeHashPassword pwd
---                 let pwd' = pwd
---                 time <- getTime h
---                 putUser h name login pwd' time admin publish 
---                 pure $ Right Put 
+
+--  News sql=news
+--   title T.Text
+--   created UTCTime
+--   userId UserId
+--   categoryId CategoryId
+--   content T.Text
+--   isPublish Bool
+--   UniqueNews title
+--   deriving Eq Show
+
+createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
+createNews h title login label content images ispublish = do 
+  logMessage (logger h) Debug ("Check news by title for create: " <> title)
+  existTitle <- findNewsByTitle h title 
+  logMessage (logger h) Debug ("Check user by login for create: " <> login)
+  existUser <- findUserByLogin h login 
+  logMessage (logger h) Debug ("Check category by label for create: " <> label)
+  existCategory <- findCategoryByLabel h label 
+  case (existTitle, existUser, existCategory) of
+    (Nothing, Just user, Just category) -> do
+      logMessage (logger h) Debug ("Create news with title, login and label: " <> title <> " " <> login <> " " <> label)
+      time <- getTime h
+      putNews h title time login label content images ispublish
+      pure $ Right Put
+    _ -> do
+      logMessage (logger h) Warning  ("Fail to create news with title, login and label: " <> title <> " " <> login <> " " <> label)
+      pure $ Left "fail to create news"
+
+
 
 updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
 updateCategory h label newlabel parent = do

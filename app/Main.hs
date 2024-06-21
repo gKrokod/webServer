@@ -50,32 +50,35 @@ logic cfg = do
 --------------------------------
 ------------------------------ image end points
           Handlers.Base.getImage = BB.getImage pginfo,
-          Handlers.Base.putImage = BB.putImage pginfo
+          Handlers.Base.putImage = BB.putImage pginfo,
+--------------------------------
+------------------------------ news 
+          Handlers.Base.putNews = BB.putNews pginfo,
+          Handlers.Base.getAllNews = BB.getAllNews pginfo (cLimitData cfg)
+
       }
   print "#########################################################################################"
   print "#########################################################################################"
   print "*******************************************************************************************************"
   print "****************************************************************************************************************"
 
-  print "Get News 1 "
-  a <- BB.getNews' pginfo 1
-  print a
+  print "Get All News "
+  a <- Handlers.Base.getAllNews baseHandle
+  mapM print a
 
-  print "Get Full News 1 "
-  a <- BB.getFullNews pginfo 1
-  print a
-  -- a <- BB.fetchImageBank pginfo 1
-  -- mapM_ print a
-  -- print "getOne and Two"
-  -- a <- Handlers.Base.getImage baseHandle 1
-  -- b <- Handlers.Base.getImage baseHandle 2
-  -- mapM_ print [a,b]
-  -- -- pure
-  -- print "insert 4 and 5"
-  -- Handlers.Base.putImage baseHandle "4444" "Base64 4444"
-  -- Handlers.Base.putImage baseHandle "header 5" "base64 5555"
-  -- a <- Handlers.Base.getImage baseHandle 4
-  -- b <- Handlers.Base.getImage baseHandle 5
-  -- mapM_ print [a,b]
+  print "\nAdd News"
+  -- a <- Handlers.Base.putNews baseHandle "ADD NEWS 5" t "login1" "Woman" "article about 5 news5" [(Image "headerNew5" "bodyNew5"),(Image "headerNew6" "bodyNew6")] True 
 
+  print "\nGet All News "
+  a <- Handlers.Base.getAllNews baseHandle
+  mapM print a
+
+  print "\nAdd News"
+  -- a <- Handlers.Base.putNews baseHandle "ADD NEWS 6" t "login1" "Man" "article about 6 news6" [] True 
+
+  print "\nGet All News "
+  a <- Handlers.Base.getAllNews baseHandle
+  mapM print a
+
+-- putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
   pure ()

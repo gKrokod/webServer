@@ -8,13 +8,14 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 -- import Database.Persist.Postgresql  (getBy)
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
-import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_)
+import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, limit, insert, replace, get, fromSqlKey)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage)
+import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title)
+import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
 import Control.Exception (throwIO)
 
@@ -68,6 +69,17 @@ dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories
     -- putImage :: Header -> Base64 -> m () -- todo
     --
     
+getAllNews :: ConnectionString -> LimitData -> IO [News]
+getAllNews connString l = runDataBaseWithOutLog connString fetchAction
+-- getAllUsers connString l = runDataBaseWithLog connString fetchAction
+  where
+    fetchAction ::  (MonadIO m) => SqlPersistT m [News]
+    fetchAction = (fmap . fmap) entityVal 
+                  (select $ do
+                  news <- from $ table @News
+                  limit (fromIntegral l)
+                  pure (news))
+
 getNews' :: ConnectionString -> Int64 -> IO (Maybe News)
 getNews' connString uid = runDataBaseWithLog connString (getNews uid) 
 
@@ -128,6 +140,38 @@ fetchNewsUser connString uid = runDataBaseWithLog connString fetchAction
       where_ (news ^. NewsUserId ==. val (toSqlKey uid))
       pure news
 
+
+-- putNews :: ConnectionString -> Title -> UTCTime -> KeyIdUser -> KeyIdCategory -> Content -> [Image] -> Bool -> IO () 
+-- -- putNews :: ConnectionString -> Title -> UTCTime -> Int64 -> Int64 -> Content -> [Image] -> Bool -> IO () 
+-- -- тип надо вот таким сделать, чтобы не проверять наличие юзера и категории. А эту проверку вынести наверх.
+-- putNews pginfo title time keyUser keyCategory content images ispublish = 
+--   runDataBaseWithOutLog pginfo $ do
+--     keyNews <- insert $ News title time (toSqlKey keyUser) (toSqlKey keyCategory) content ispublish 
+--     keysImages <- insertMany images 
+--     insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+
+findNewsByTitle :: ConnectionString -> Title -> IO (Maybe News) 
+-- findUserByLogin connString login = runDataBaseWithLog connString fetchAction
+findNewsByTitle connString title = runDataBaseWithOutLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
+    fetchAction = (fmap . fmap) entityVal (getBy $ UniqueNews title)
+
+putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
+putNews pginfo title time login label content images ispublish = 
+  runDataBaseWithOutLog pginfo $ do
+    -- keyUser <- maybe (throwIO "User didn't find") id <$> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
+    keyUser <- (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
+    -- keyCategory <- maybe (throwIO "Category didn't find") id <$> (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
+    keyCategory <- (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
+    case (keyUser, keyCategory) of
+      (Just ku, Just kc) -> do
+        keyNews <- insert $ News title time ku kc content ispublish 
+        keysImages <- insertMany images 
+        insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+      _ -> do
+        throwTo (userError "User or Label didnt' find") 
+        pure ()
 
 ------------------------------------------------------------------------------------------------------------
 putImage :: ConnectionString -> Header -> Base64 -> IO () 
@@ -223,10 +267,6 @@ findCategoryByLabel connString label = runDataBaseWithOutLog connString fetchAct
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Category)
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueCategoryLabel label)
 
-    -- putCategory :: Label -> Maybe Label -> m (), 
-    -- changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
-    -- getAllCategories :: m [Category],
-    -- findCategoryByLabel :: Label -> m (Maybe Category)
 
 getAllCategories :: ConnectionString -> LimitData -> IO [Category]
 -- getAllCategories connString l = runDataBaseWithLog connString fetchAction
@@ -240,8 +280,6 @@ getAllCategories connString l = runDataBaseWithOutLog connString fetchAction
                   limit (fromIntegral l)
                   pure (categories))
 
-    -- getBranchCategories :: Label -> m [Category],
-    --
 getBranchCategories :: ConnectionString -> LimitData -> Label -> IO [Category]
 getBranchCategories connString l label = runDataBaseWithOutLog connString fetchAction 
   where
