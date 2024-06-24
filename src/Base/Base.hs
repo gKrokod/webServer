@@ -158,35 +158,28 @@ findNewsByTitle connString title = runDataBaseWithOutLog connString fetchAction
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueNews title)
 
 editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO ()
+-- todo IMAGES!!!! insert and del
 editNews pginfo title time newTitle  newLogin newLabel newContent newImages newPublish = 
   runDataBaseWithOutLog pginfo $ do
     oldNews <- getBy $ UniqueNews title
-    
-    -- Just (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
-    -- Just (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
-    newKeyUser <- case newLogin of
-                 Just login -> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
-                 _ -> pure Nothing
-    newKeyCategory <- case newLabel of
-                 Just label -> (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
-                 _ -> pure Nothing
-    let newNews = News (replaceField oldTitle newTitle) 
-                       time 
-                       (replaceField oldKeyUser newKeyUser) 
-                       (replaceField oldKeyCategory newKeyCategory) 
-                       (replaceField oldContent newContent) 
-                       (replaceField oldPublish newPublish)
-    undefined
-    replace id
---     keyUser <- (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
---     keyCategory <- (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
---     case (keyUser, keyCategory) of
---       (Just keyUsr, Just keyCat) -> do
---         keyNews <- insert $ News title time keyUsr keyCat content ispublish 
---         keysImages <- insertMany images 
---         insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
---       _ -> pure ()
-
+    case oldNews of
+      Nothing -> pure ()
+      Just oldNews' -> do
+        let (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) = entityVal oldNews' 
+        let keyNews = entityKey oldNews' 
+        newKeyUser <- case newLogin of
+                     Just login -> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
+                     _ -> pure Nothing
+        newKeyCategory <- case newLabel of
+                     Just label -> (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
+                     _ -> pure Nothing
+        let newNews = News (replaceField oldTitle newTitle) 
+                           time 
+                           (replaceField oldKeyUser newKeyUser) 
+                           (replaceField oldKeyCategory newKeyCategory) 
+                           (replaceField oldContent newContent) 
+                           (replaceField oldPublish newPublish)
+        replace keyNews newNews
 
 putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
 putNews pginfo title time login label content images ispublish = 
