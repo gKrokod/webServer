@@ -9,13 +9,13 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey)
+import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title)
-import Handlers.Base (KeyIdUser, KeyIdCategory)
+import Handlers.Base (KeyIdUser, KeyIdCategory, replaceField)
 import Data.Time (getCurrentTime)
 import Control.Exception (throwIO)
 
@@ -157,6 +157,37 @@ findNewsByTitle connString title = runDataBaseWithOutLog connString fetchAction
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueNews title)
 
+editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO ()
+editNews pginfo title time newTitle  newLogin newLabel newContent newImages newPublish = 
+  runDataBaseWithOutLog pginfo $ do
+    oldNews <- getBy $ UniqueNews title
+    
+    -- Just (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
+    -- Just (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
+    newKeyUser <- case newLogin of
+                 Just login -> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
+                 _ -> pure Nothing
+    newKeyCategory <- case newLabel of
+                 Just label -> (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
+                 _ -> pure Nothing
+    let newNews = News (replaceField oldTitle newTitle) 
+                       time 
+                       (replaceField oldKeyUser newKeyUser) 
+                       (replaceField oldKeyCategory newKeyCategory) 
+                       (replaceField oldContent newContent) 
+                       (replaceField oldPublish newPublish)
+    undefined
+    replace id
+--     keyUser <- (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
+--     keyCategory <- (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
+--     case (keyUser, keyCategory) of
+--       (Just keyUsr, Just keyCat) -> do
+--         keyNews <- insert $ News title time keyUsr keyCat content ispublish 
+--         keysImages <- insertMany images 
+--         insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+--       _ -> pure ()
+
+
 putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
 putNews pginfo title time login label content images ispublish = 
   runDataBaseWithOutLog pginfo $ do
@@ -185,21 +216,20 @@ getImage connString uid = runDataBaseWithOutLog connString fetchAction
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
     fetchAction = get (toSqlKey uid)
 
--- ishet vse kartinki novosti
--- fetchImageBank :: ConnectionString -> Int64 -> IO [Entity Image]
--- fetchImageBank connString uid = runDataBaseWithOutLog connString fetchAction
--- -- fetchImageBank connString uid = runDataBaseWithLog connString fetchAction
---   where
---     fetchAction :: (MonadIO m) => SqlPersistT m [Entity Image]
---     fetchAction = select $ do
---       (news :& imagebank :& image) <- 
---         from $ table @News
---          `innerJoin` table @ImageBank
---          `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
---          `innerJoin` table @Image
---          `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
---       where_ (news ^. NewsId ==. val (toSqlKey uid))
---       pure $ (image)
+deleteImagesFromBank :: ConnectionString -> Title -> IO () 
+deleteImagesFromBank connString title = runDataBaseWithOutLog connString fetchAction
+-- deleteImagesFromBank connString title = runDataBaseWithLog connString fetchAction
+  where
+    fetchAction :: (MonadIO m) => SqlPersistT m ()
+    fetchAction = do 
+      keyNews <- (fmap . fmap) entityKey (getBy $ UniqueNews title)
+      case keyNews of
+        Just keyNews' -> 
+          delete $ do
+            imageBank <- from $ table @ImageBank
+            where_ (imageBank ^. ImageBankNewsId ==. val keyNews')
+        _ -> pure ()    
+
 ------------------------------------------------------------------------------------------------------------
 putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
 putUser pginfo name login pwd time admin publish  = do

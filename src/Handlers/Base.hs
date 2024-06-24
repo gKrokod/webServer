@@ -38,14 +38,20 @@ data Handle m = Handle
     findCategoryByLabel :: Label -> m (Maybe Category),
 -- api imagy: getOne
     getImage :: NumberImage -> m (Maybe Image),
+    deleteImagesFromBank :: Title -> m (),
     putImage :: Header -> Base64 -> m (), 
 -- api news: create +, getAllNews +. edit -
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
+    editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
     getAllNews :: m [News],
     findNewsByTitle :: Title -> m (Maybe News) 
     --
 -- add some func
   }
+
+replaceField :: a -> Maybe a -> a
+replaceField _ (Just a) = a
+replaceField a _ = a
 
 --  News sql=news
 --   title T.Text
@@ -56,9 +62,14 @@ data Handle m = Handle
 --   isPublish Bool
 --   UniqueNews title
 --   deriving Eq Show
-
-updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> Maybe [Image] -> Maybe Bool -> m (Either T.Text Success)
-updateNews h = undefined
+--
+-- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
+-- updateNews h title login label content [] ispublish = undefined
+-- updateNews h title login label content xs ispublish = do
+--   logMessage (logger h) Debug ("Clear ImageBank for news : " <> title)
+--   deleteImagesFromBank title
+--   
+-- todo delete from imageBase link on images
 -- upd
          
 createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 

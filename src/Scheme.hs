@@ -56,7 +56,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
  Image sql=images
   header T.Text
   base64 T.Text
-  UniqueImage header base64
+  -- UniqueImage header base64
   deriving Eq Show
  ImageBank sql=images_bank -- for tests.
   newsId NewsId

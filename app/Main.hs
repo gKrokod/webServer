@@ -51,6 +51,7 @@ logic cfg = do
 ------------------------------ image end points
           Handlers.Base.getImage = BB.getImage pginfo,
           Handlers.Base.putImage = BB.putImage pginfo,
+          Handlers.Base.deleteImagesFromBank = BB.deleteImagesFromBank pginfo,
 --------------------------------
 ------------------------------ news 
           Handlers.Base.putNews = BB.putNews pginfo,
@@ -67,12 +68,20 @@ logic cfg = do
   a <- Handlers.Base.getAllNews baseHandle
   mapM print a
 
-  print "\nAdd News"
+  putStrLn "\nAdd News"
   a <- Handlers.Base.createNews baseHandle "ADD NEWS 5" "login1" "Woman" "article about 5 news5" [(Image "headerNew5" "bodyNew5"),(Image "headerNew6" "bodyNew6")] True 
-  b <- Handlers.Base.createNews baseHandle "ADD NEWS 6" "login1" "Woman" "article about 6 news6" [(Image "headerNew5" "bodyNew5"),(Image "headerNew6" "bodyNew6")] True 
+  b <- Handlers.Base.createNews baseHandle "ADD NEWS 6" "login1" "Woman" "article about 6 news6" [] True 
 
+  putStrLn "\nGet All News "
+  a <- Handlers.Base.getAllNews baseHandle
+  mapM print a
 
-  print "\nGet All News "
+  putStrLn "\nDelete News 5"
+  Handlers.Base.deleteImagesFromBank baseHandle "ADD NEWS 5"
+  Handlers.Base.deleteImagesFromBank baseHandle "News 1 about Witch from user 1"
+  -- b <- Handlers.Base.createNews baseHandle "ADD NEWS 6" "login1" "Woman" "article about 6 news6" [(Image "headerNew5" "bodyNew5"),(Image "headerNew6" "bodyNew6")] True 
+  putStrLn "\nGet All News "
   a <- Handlers.Base.getAllNews baseHandle
   mapM print a
   pure ()
+
