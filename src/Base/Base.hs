@@ -15,7 +15,7 @@ import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title)
-import Handlers.Base (KeyIdUser, KeyIdCategory, replaceField)
+import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
 import Control.Exception (throwIO)
 
@@ -158,7 +158,6 @@ findNewsByTitle connString title = runDataBaseWithOutLog connString fetchAction
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueNews title)
 
 editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO ()
--- todo IMAGES!!!! insert and del
 editNews pginfo title time newTitle  newLogin newLabel newContent newImages newPublish = 
   runDataBaseWithOutLog pginfo $ do
     oldNews <- getBy $ UniqueNews title
@@ -180,6 +179,15 @@ editNews pginfo title time newTitle  newLogin newLabel newContent newImages newP
                            (replaceField oldContent newContent) 
                            (replaceField oldPublish newPublish)
         replace keyNews newNews
+        deleteImagesFromBankByNews keyNews
+        keysImages <- insertMany newImages
+        insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+
+deleteImagesFromBankByNews :: (MonadIO m) => Key News -> SqlPersistT m ()
+deleteImagesFromBankByNews key =  
+      delete $ do
+        imageBank <- from $ table @ImageBank
+        where_ (imageBank ^. ImageBankNewsId ==. val key)
 
 putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
 putNews pginfo title time login label content images ispublish = 
@@ -209,19 +217,19 @@ getImage connString uid = runDataBaseWithOutLog connString fetchAction
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
     fetchAction = get (toSqlKey uid)
 
-deleteImagesFromBank :: ConnectionString -> Title -> IO () 
-deleteImagesFromBank connString title = runDataBaseWithOutLog connString fetchAction
--- deleteImagesFromBank connString title = runDataBaseWithLog connString fetchAction
-  where
-    fetchAction :: (MonadIO m) => SqlPersistT m ()
-    fetchAction = do 
-      keyNews <- (fmap . fmap) entityKey (getBy $ UniqueNews title)
-      case keyNews of
-        Just keyNews' -> 
-          delete $ do
-            imageBank <- from $ table @ImageBank
-            where_ (imageBank ^. ImageBankNewsId ==. val keyNews')
-        _ -> pure ()    
+-- deleteImagesFromBank :: ConnectionString -> Title -> IO () 
+-- deleteImagesFromBank connString title = runDataBaseWithOutLog connString fetchAction
+-- -- deleteImagesFromBank connString title = runDataBaseWithLog connString fetchAction
+--   where
+--     fetchAction :: (MonadIO m) => SqlPersistT m ()
+--     fetchAction = do 
+--       keyNews <- (fmap . fmap) entityKey (getBy $ UniqueNews title)
+--       case keyNews of
+--         Just keyNews' -> 
+--           delete $ do
+--             imageBank <- from $ table @ImageBank
+--             where_ (imageBank ^. ImageBankNewsId ==. val keyNews')
+--         _ -> pure ()    
 
 ------------------------------------------------------------------------------------------------------------
 putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
@@ -338,4 +346,7 @@ getBranchCategories connString l label = runDataBaseWithOutLog connString fetchA
 --       -- limit 1
 --       from cte
 
+replaceField :: a -> Maybe a -> a
+replaceField _ (Just a) = a
+replaceField a _ = a
 ------------------------------------------------------------------------------------------------------------

@@ -678,3 +678,30 @@
 [Debug] Check user by login for create: login1
 [Debug] Check category by label for create: Woman
 [Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+2024-06-25 08:00:47.17017181 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+2024-06-25 08:02:23.743209871 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+2024-06-25 08:02:54.02866474 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman

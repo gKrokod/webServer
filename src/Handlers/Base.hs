@@ -1,5 +1,11 @@
+-- {-# LANGUAGE ScopedTypeVariables #-}
+-- {-# LANGUAGE ExplicitForAll #-}
+-- {-# LANGUAGE RankNTypes #-}
+-- {-# LANGUAGE ExistentialQuantification #-}
+
 module Handlers.Base where
 
+import Data.List (intercalate)
 import Scheme
 import Handlers.Logger (Log(..), logMessage) 
 import qualified Handlers.Logger 
@@ -38,7 +44,7 @@ data Handle m = Handle
     findCategoryByLabel :: Label -> m (Maybe Category),
 -- api imagy: getOne
     getImage :: NumberImage -> m (Maybe Image),
-    deleteImagesFromBank :: Title -> m (),
+    -- deleteImagesFromBank :: Title -> m (),
     putImage :: Header -> Base64 -> m (), 
 -- api news: create +, getAllNews +. edit -
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
@@ -49,9 +55,6 @@ data Handle m = Handle
 -- add some func
   }
 
-replaceField :: a -> Maybe a -> a
-replaceField _ (Just a) = a
-replaceField a _ = a
 
 --  News sql=news
 --   title T.Text
@@ -63,14 +66,64 @@ replaceField a _ = a
 --   UniqueNews title
 --   deriving Eq Show
 --
--- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
--- updateNews h title login label content [] ispublish = undefined
--- updateNews h title login label content xs ispublish = do
---   logMessage (logger h) Debug ("Clear ImageBank for news : " <> title)
---   deleteImagesFromBank title
+updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
+updateNews h title newTitle  newLogin newLabel newContent newImages newPublish = do
+  logMessage (logger h) Debug ("Checks attributes for update news with title " <> title)
+  existTitle <- maybe (Left "news don't exist") (\_ -> Right Change) <$> findNewsByTitle h title
+  existNewTitle <- checkNews newTitle 
+  existUser <- checkUser newLogin
+  existCategory <- checkCategory newLabel
+  case sequence_ [existTitle, existNewTitle, existUser, existCategory] of
+    Left e -> do --todo   title : "News 5" \n newtitle: "Just News 51" so on
+      logMessage (logger h) Warning  ("Fail to update news with attributes: " 
+        <> (T.pack . show) title <> " " 
+        <> (T.pack . show) newTitle <> " "  
+        <> (T.pack . show) newLogin <> " "  
+        <> (T.pack . show) newLabel <> " " ) 
+      logMessage (logger h) Warning  e
+      pure $ Left "fail to update news"
+    Right _-> do
+      logMessage (logger h) Debug  ("Ok. Updates news")
+      t <- getTime h
+      editNews h title t newTitle newLogin newLabel newContent newImages newPublish
+      pure $ Right Change
+  where
+    -- checkUser :: (Monad m) => Maybe Login -> m (Either T.Text Success) -- todo WHY m1 not m ?
+    checkUser Nothing = pure (Right Change)
+    checkUser (Just login) = do
+      user <- findUserByLogin h login
+      case user of
+        Nothing -> do
+          logMessage (logger h) Warning  ("Fail update news. User don't exist! : " <> login)
+          pure $ Left "Fail update news. User don't exist!"
+        Just _ -> do
+          logMessage (logger h) Debug  ("Ok. User exist! go ahead : " <> login)
+          pure $ Right Change
+      
+    checkCategory Nothing = pure (Right Change)
+    checkCategory (Just label) = do
+      category <- findCategoryByLabel h label
+      case category of
+        Nothing -> do
+          logMessage (logger h) Warning  ("Fail update news. Category don't exist! : " <> label)
+          pure $ Left "Fail update news. Category don't exist!"
+        Just _ -> do
+          logMessage (logger h) Debug  ("Ok. Category exist! go ahead : " <> label)
+          pure $ Right Change
+
+    checkNews Nothing = pure (Right Change)
+    checkNews (Just title) = do
+      news <- findNewsByTitle h title
+      case news of
+        Nothing -> do
+          logMessage (logger h) Debug  ("Ok. News don't exist! go ahead : " <> title)
+          pure $ Right Change
+        Just _ -> do
+          logMessage (logger h) Warning  ("Fail update news. News with your title is existed! : " <> title)
+          pure $ Left "Fail update news. News already exist!"
+
+  
 --   
--- todo delete from imageBase link on images
--- upd
          
 createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
 createNews h title login label content images ispublish = do 
@@ -83,7 +136,7 @@ createNews h title login label content images ispublish = do
   -- esli kartinki yze est, ne nado ix vstavlyat
   -- todo poisk kartinok po uniue sochetaniu
   case (existTitle, existUser, existCategory) of
-    (Nothing, Just user, Just category) -> do
+    (Nothing, Just _user, Just _category) -> do
       logMessage (logger h) Debug ("Create news with title, login and label: " <> title <> " " <> login <> " " <> label)
       time <- getTime h
       putNews h title time login label content images ispublish

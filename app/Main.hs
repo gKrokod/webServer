@@ -51,7 +51,7 @@ logic cfg = do
 ------------------------------ image end points
           Handlers.Base.getImage = BB.getImage pginfo,
           Handlers.Base.putImage = BB.putImage pginfo,
-          Handlers.Base.deleteImagesFromBank = BB.deleteImagesFromBank pginfo,
+          -- Handlers.Base.deleteImagesFromBank = BB.deleteImagesFromBank pginfo,
 --------------------------------
 ------------------------------ news 
           Handlers.Base.putNews = BB.putNews pginfo,
@@ -70,18 +70,13 @@ logic cfg = do
 
 -- editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO ()
   putStrLn "\nAdd News"
-  a <- Handlers.Base.createNews baseHandle "ADD NEWS 5" "login1" "Woman" "article about 5 news5" [(Image "headerNew5" "bodyNew5"),(Image "headerNew6" "bodyNew6")] True 
+  a <- Handlers.Base.createNews baseHandle "ADD NEWS 5" "login1" "Woman" "article about 5 news5" [(Image "headerNew5" "bodyNew5"),(Image "header2New5" "body2New5")] True 
   b <- Handlers.Base.createNews baseHandle "ADD NEWS 6" "login1" "Woman" "article about 6 news6" [] True 
   putStrLn "\nGet All News "
   a <- Handlers.Base.getAllNews baseHandle
   mapM print a
   putStrLn "\n Edit News6"
-  BB.editNews pginfo "ADD NEWSd 6" t (Just "EDIT NEWS 6") (Nothing) (Just "Man") Nothing [] (Just False )
-  -- putStrLn "\nDelete News 5"
-  -- Handlers.Base.deleteImagesFromBank baseHandle "ADD NEWS 5"
-  -- Handlers.Base.deleteImagesFromBank baseHandle "News 1 about Witch from user 1"
-  -- -- b <- Handlers.Base.createNews baseHandle "ADD NEWS 6" "login1" "Woman" "article about 6 news6" [(Image "headerNew5" "bodyNew5"),(Image "headerNew6" "bodyNew6")] True 
-  -- Handlers.Base.deleteImagesFromBank baseHandle "ADD NEWS 5"
+  BB.editNews pginfo "ADD NEWS 5" t (Just "EDIT NEWS 5") (Nothing) (Just "Man") Nothing [(Image "editheaderNew5" "editbodyNew5"),(Image "editheaderNew6" "editbodyNew6")] (Just False )
   putStrLn "\nGet All News "
   a <- Handlers.Base.getAllNews baseHandle
   mapM print a
