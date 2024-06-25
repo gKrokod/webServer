@@ -705,3 +705,133 @@
 [Debug] Check user by login for create: login1
 [Debug] Check category by label for create: Woman
 [Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+2024-06-25 12:44:31.40311287 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+[Debug] Checks attributes for update news with title ADD NEWS 5
+[Debug] Ok. News don't exist! go ahead : EDIT NEWS 5
+[Debug] Ok. Category exist! go ahead : Man
+[Debug] Ok. Updates news
+2024-06-25 12:46:30.793970198 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+2024-06-25 12:47:11.559449721 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+[Debug] Checks attributes for update news with title ADD NEWS 5
+[Debug] Ok. News don't exist! go ahead : EDIT NEWS 5
+[Debug] Ok. Category exist! go ahead : Man
+[Debug] Ok. Updates news
+2024-06-25 12:49:39.952540824 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+[Debug] Checks attributes for update news with title ADD NEWS 5
+[Debug] Ok. News don't exist! go ahead : EDIT NEWS 5
+[Debug] Ok. Category exist! go ahead : Man
+[Debug] Ok. Updates news
+2024-06-25 12:51:04.522894287 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+[Debug] Checks attributes for update news with title ADD NEWS 5
+[Debug] Ok. News don't exist! go ahead : EDIT NEWS 5
+[Debug] Ok. Category exist! go ahead : Man
+[Debug] Ok. Updates news
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Warning] Fail update news. News with your title is existed! : ADD NEWS 6
+[Debug] Ok. Category exist! go ahead : Man
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "ADD NEWS 6" Nothing Just "Man" 
+[Warning] Fail update news. News already exist!
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Warning] Fail update news. News with your title is existed! : EDIT NEWS 5
+[Warning] Fail update news. User don't exist! : no autor
+[Debug] Ok. Category exist! go ahead : Man
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "EDIT NEWS 5" Just "no autor" Just "Man" 
+[Warning] Fail update news. News already exist!
+2024-06-25 12:51:42.082576452 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+[Debug] Checks attributes for update news with title ADD NEWS 5
+[Debug] Ok. News don't exist! go ahead : EDIT NEWS 5
+[Debug] Ok. Category exist! go ahead : Man
+[Debug] Ok. Updates news
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Warning] Fail update news. News with your title is existed! : ADD NEWS 6
+[Debug] Ok. Category exist! go ahead : Man
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "ADD NEWS 6" Nothing Just "Man" 
+[Warning] Fail update news. News already exist!
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Warning] Fail update news. News with your title is existed! : EDIT NEWS 5
+[Warning] Fail update news. User don't exist! : no autor
+[Debug] Ok. Category exist! go ahead : Man
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "EDIT NEWS 5" Just "no autor" Just "Man" 
+[Warning] Fail update news. News already exist!
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Debug] Ok. News don't exist! go ahead : eedit NEWS 6
+[Warning] Fail update news. Category don't exist! : TOtal
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "eedit NEWS 6" Nothing Just "TOtal" 
+[Warning] Fail update news. Category don't exist!
+2024-06-25 13:01:54.316555379 UTC
+[Debug] Check news by title for create: ADD NEWS 5
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 5 login1 Woman
+[Debug] Check news by title for create: ADD NEWS 6
+[Debug] Check user by login for create: login1
+[Debug] Check category by label for create: Woman
+[Debug] Create news with title, login and label: ADD NEWS 6 login1 Woman
+[Debug] Checks attributes for update news with title ADD NEWS 5
+[Debug] Ok. News don't exist! go ahead : EDIT NEWS 5
+[Debug] Ok. Category exist! go ahead : Man
+[Debug] Ok. Updates news
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Warning] Fail update news. News with your title is existed! : ADD NEWS 6
+[Debug] Ok. Category exist! go ahead : Man
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "ADD NEWS 6" Nothing Just "Man" 
+[Warning] Fail update news. News already exist!
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Warning] Fail update news. News with your title is existed! : EDIT NEWS 5
+[Warning] Fail update news. User don't exist! : no autor
+[Debug] Ok. Category exist! go ahead : Man
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "EDIT NEWS 5" Just "no autor" Just "Man" 
+[Warning] Fail update news. News already exist!
+[Debug] Checks attributes for update news with title EDIT NEWS 5
+[Debug] Ok. News don't exist! go ahead : eedit NEWS 6
+[Warning] Fail update news. Category don't exist! : TOtal
+[Warning] Fail to update news with attributes: "EDIT NEWS 5" Just "eedit NEWS 6" Nothing Just "TOtal" 
+[Warning] Fail update news. Category don't exist!

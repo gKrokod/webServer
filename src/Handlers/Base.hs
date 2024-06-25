@@ -24,9 +24,10 @@ type Header = T.Text
 type Base64 = T.Text
 type Title = T.Text
 type Content = T.Text
-type KeyIdUser = Int64
-type KeyIdCategory = Int64
-
+type URI_Image = T.Text
+-- type KeyIdUser = Int64
+-- type KeyIdCategory = Int64
+type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
 data Handle m = Handle 
   {
     logger :: Handlers.Logger.Handle m,
@@ -44,17 +45,17 @@ data Handle m = Handle
     findCategoryByLabel :: Label -> m (Maybe Category),
 -- api imagy: getOne
     getImage :: NumberImage -> m (Maybe Image),
-    -- deleteImagesFromBank :: Title -> m (),
     putImage :: Header -> Base64 -> m (), 
--- api news: create +, getAllNews +. edit -
+-- api news: create +, getAllNews +. edit +
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
     editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
-    getAllNews :: m [News],
+    getAllNews :: m [NewsOut],
+    -- getFullNews :: m (Maybe (News, User, [Category], [Image])),
     findNewsByTitle :: Title -> m (Maybe News) 
+-- getFullNews :: ConnectionString -> Int64 -> IO (Maybe News, Maybe User, [Entity Category], [Entity Image])
     --
 -- add some func
   }
-
 
 --  News sql=news
 --   title T.Text
@@ -66,6 +67,19 @@ data Handle m = Handle
 --   UniqueNews title
 --   deriving Eq Show
 --
+--
+-- getFullNews :: (Monad m) => Handle m -> Title -> m (Maybe (News, User, [Category], [Image])
+-- getFullNews title = do
+--   news <- findNewByTitle title
+--   case news of
+--     Nothing -> do
+--       logMessage (logger h) Warning  ("News don't exist! : " <> title)
+--       pure Nothing
+--     Just (News _ _ userId categoryId _ _) -> do
+
+
+
+
 updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
 updateNews h title newTitle  newLogin newLabel newContent newImages newPublish = do
   logMessage (logger h) Debug ("Checks attributes for update news with title " <> title)
@@ -122,7 +136,6 @@ updateNews h title newTitle  newLogin newLabel newContent newImages newPublish =
           logMessage (logger h) Warning  ("Fail update news. News with your title is existed! : " <> title)
           pure $ Left "Fail update news. News already exist!"
 
-  
 --   
          
 createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
@@ -133,8 +146,6 @@ createNews h title login label content images ispublish = do
   existUser <- findUserByLogin h login 
   logMessage (logger h) Debug ("Check category by label for create: " <> label)
   existCategory <- findCategoryByLabel h label 
-  -- esli kartinki yze est, ne nado ix vstavlyat
-  -- todo poisk kartinok po uniue sochetaniu
   case (existTitle, existUser, existCategory) of
     (Nothing, Just _user, Just _category) -> do
       logMessage (logger h) Debug ("Create news with title, login and label: " <> title <> " " <> login <> " " <> label)
@@ -173,7 +184,6 @@ updateCategory h label newlabel parent = do
     _ -> do
           logMessage (logger h) Warning ("Abort. Category don't exist or .... Category: " <> label)
           pure $ Left "Category don't's exist or ..."
-          
 
 createCategory :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
 createCategory h label parent = do
@@ -235,15 +245,3 @@ createUser h name login pwd admin publish = do
 
 --
 --                        }
---  User sql=users
---   name T.Text
---   login T.Text
---   passwordId PasswordId
---   created UTCTime
---   isAdmin Bool
---   isPublisher Bool
---   UniqueUser login
---   deriving Eq Show
---  Password sql=passwords
---    quasiPassword T.Text
---    deriving Eq Show

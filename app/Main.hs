@@ -51,13 +51,12 @@ logic cfg = do
 ------------------------------ image end points
           Handlers.Base.getImage = BB.getImage pginfo,
           Handlers.Base.putImage = BB.putImage pginfo,
-          -- Handlers.Base.deleteImagesFromBank = BB.deleteImagesFromBank pginfo,
 --------------------------------
 ------------------------------ news 
           Handlers.Base.putNews = BB.putNews pginfo,
           Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
-          Handlers.Base.getAllNews = BB.getAllNews pginfo (cLimitData cfg)
-
+          Handlers.Base.getAllNews = BB.getAllNews pginfo (cLimitData cfg),
+          Handlers.Base.editNews = BB.editNews pginfo
       }
   print "#########################################################################################"
   print "#########################################################################################"
@@ -76,7 +75,16 @@ logic cfg = do
   a <- Handlers.Base.getAllNews baseHandle
   mapM print a
   putStrLn "\n Edit News6"
-  BB.editNews pginfo "ADD NEWS 5" t (Just "EDIT NEWS 5") (Nothing) (Just "Man") Nothing [(Image "editheaderNew5" "editbodyNew5"),(Image "editheaderNew6" "editbodyNew6")] (Just False )
+  -- BB.editNews pginfo "ADD NEWS 5" t (Just "EDIT NEWS 5") (Nothing) (Just "Man") Nothing [(Image "editheaderNew5" "editbodyNew5"),(Image "editheaderNew6" "editbodyNew6")] (Just False )
+-- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
+  a <- Handlers.Base.updateNews baseHandle "ADD NEWS 5" (Just "EDIT NEWS 5") (Nothing) (Just "Man") Nothing [(Image "editheaderNew5" "editbodyNew5"),(Image "editheaderNew6" "editbodyNew6")] (Just False )
+  b <- Handlers.Base.updateNews baseHandle "EDIT NEWS 5" (Just "ADD NEWS 6") (Nothing) (Just "Man") Nothing [(Image "editheaderNew5" "editbodyNew5"),(Image "editheaderNew6" "editbodyNew6")] (Just False )
+  c <- Handlers.Base.updateNews baseHandle "EDIT NEWS 5" (Just "EDIT NEWS 5") (Just "no autor") (Just "Man") Nothing [(Image "editheaderNew5" "editbodyNew5"),(Image "editheaderNew6" "editbodyNew6")] (Just False )
+  d <- Handlers.Base.updateNews baseHandle "EDIT NEWS 5" (Just "eedit NEWS 6") (Nothing) (Just "TOtal") Nothing [(Image "editheaderNew5" "editbodyNew5"),(Image "editheaderNew6" "editbodyNew6")] (Just False )
+  print a
+  print b
+  print c
+  print d
   putStrLn "\nGet All News "
   a <- Handlers.Base.getAllNews baseHandle
   mapM print a
