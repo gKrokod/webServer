@@ -14,7 +14,7 @@ import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title)
+import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title, NewsOut)
 -- import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
 import Control.Exception (throwIO)
@@ -69,8 +69,28 @@ dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories
     -- putImage :: Header -> Base64 -> m () -- todo
     --
 
-getAllNews = undefined
+-- type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
+--
+    -- getAllNews :: m [NewsOut],
+getAllNews :: ConnectionString -> LimitData -> IO [NewsOut]
+getAllNews connString l = runDataBaseWithLog connString fetchAction
+  where 
+    fetchAction :: (MonadIO m) => SqlPersistT m [NewsOut]
+    fetchAction = undefined
 
+
+-- getAllUsers :: ConnectionString -> LimitData -> IO [User]
+-- getAllUsers connString l = runDataBaseWithOutLog connString fetchAction
+-- -- getAllUsers connString l = runDataBaseWithLog connString fetchAction
+--   where
+--     -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
+--     fetchAction ::  (MonadIO m) => SqlPersistT m [User]
+--     fetchAction = (fmap . fmap) entityVal 
+--                   (select $ do
+--                   users <- from $ table @User
+--                   limit (fromIntegral l)
+--                   pure (users))
+--
 -- getAllNews :: ConnectionString -> LimitData -> IO [News]
 -- getAllNews connString l = runDataBaseWithOutLog connString fetchAction
 -- -- getAllUsers connString l = runDataBaseWithLog connString fetchAction
