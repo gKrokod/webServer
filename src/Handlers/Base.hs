@@ -41,7 +41,7 @@ data Handle m = Handle
     putCategory :: Label -> Maybe Label -> m (), 
     changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
     getAllCategories :: m [Category],
-    getBranchCategories :: Label -> m [Category],
+    getBranchCategories :: Label -> m [Category], --todo remove?
     findCategoryByLabel :: Label -> m (Maybe Category),
 -- api imagy: getOne
     getImage :: NumberImage -> m (Maybe Image),

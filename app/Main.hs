@@ -63,12 +63,15 @@ logic cfg = do
   print "*******************************************************************************************************"
   print "****************************************************************************************************************"
 
-  print "Get All News "
-  a <- Handlers.Base.getAllNews baseHandle
+  print "Get SOBR"
+  a <- BB.getSOBR pginfo 10 "News 1 about Witch from user 1"
   mapM print a
 
-  putStrLn "\nGet All News "
-  a <- Handlers.Base.getAllNews baseHandle
+  -- putStrLn "\nGet All News "
+  print "Get SOBR"
+  a <- BB.getSOBR pginfo 10 "News 4 about Evil from user 1"
   mapM print a
+  -- a <- Handlers.Base.getAllNews baseHandle
+  -- mapM print a
   pure ()
 

@@ -9,7 +9,7 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_)
+import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -78,7 +78,70 @@ getAllNews connString l = runDataBaseWithLog connString fetchAction
     fetchAction :: (MonadIO m) => SqlPersistT m [NewsOut]
     fetchAction = undefined
 
+-- fetchLables :: (MonadIO m) => LimitData -> Value Label -> SqlPersistT m [Entity Category]
+-- fetchLables :: (MonadIO m) => LimitData -> Value Label -> SqlPersistT m [Entity Category]
+-- todo выяснить, почему трубется Database.Esqueleto.Internal.Internal.SqlExpr (Value Title)
+fetchLables lim label = 
+      select $ do
+      cte <- withRecursive
+               ( do
+                   child <- from $ table @Category
+                   where_ (child ^. CategoryLabel ==. label)
+                   pure child)
+               unionAll_
+               (\self -> do
+                   child <- from self
+                   parent <- from $ table @Category
+                   where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
+                   pure parent)
+      limit (fromIntegral lim)
+      from cte
 
+fetchTitle :: (MonadIO m) => LimitData -> SqlPersistT m [Value Title]
+fetchTitle lim = 
+      select $ do
+        news <- from $ table @News
+        pure (news ^. NewsTitle)
+
+-- "News 1 about Witch from user 1"
+-- getSOBR :: ConnectionString -> LimitData -> IO [NewsOut]
+getSOBR connString l title = runDataBaseWithOutLog connString $ do
+  ls <- fetchLabel l (val title)
+  us <- fetchUser l (val title)
+  im <- fetchActionImage l (val title)
+  let a = [(ls,us,im)]
+  pure a 
+
+fetchLabel lim title = select $ do
+  (news :& category) <- 
+    from $ table @News
+     `innerJoin` table @Category
+     `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
+  where_ (news ^. NewsTitle ==. title)
+  limit (fromIntegral lim)
+  pure (category ^. CategoryLabel)
+
+fetchUser lim title = select $ do
+  (news :& user) <- 
+    from $ table @News
+     `innerJoin` table @User
+     `on`  (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
+  where_ (news ^. NewsTitle ==. title)
+  limit (fromIntegral lim)
+  pure (user ^. UserName)
+
+-- fetchActionImage :: (MonadIO m) => LimitData -> (Value Title) -> SqlPersistT m [Entity Image]
+fetchActionImage lim title = select $ do
+  (news :& imagebank :& image) <- 
+    from $ table @News
+     `innerJoin` table @ImageBank
+     `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+     `innerJoin` table @Image
+     `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+  where_ (news ^. NewsTitle ==. title)
+  limit (fromIntegral lim)
+  pure (image)
+--
 -- getAllUsers :: ConnectionString -> LimitData -> IO [User]
 -- getAllUsers connString l = runDataBaseWithOutLog connString fetchAction
 -- -- getAllUsers connString l = runDataBaseWithLog connString fetchAction
