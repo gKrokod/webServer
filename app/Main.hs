@@ -69,7 +69,7 @@ logic cfg = do
 
   -- putStrLn "\nGet All News "
   print "Get SOBR"
-  a <- BB.getSOBR pginfo 10 "News 4 about Evil from user 1"
+  a <- BB.getSOBR pginfo 4 "News 4 about Evil from user 1"
   mapM print a
   -- a <- Handlers.Base.getAllNews baseHandle
   -- mapM print a
