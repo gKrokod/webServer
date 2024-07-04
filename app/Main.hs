@@ -70,4 +70,8 @@ logic cfg = do
 
   a <- Handlers.Base.getFullNews baseHandle "News 1 about Witch from user 1"
   print a
+
+  print "Get ALl Full news"
+  a <- Handlers.Base.getAllNews baseHandle
+  mapM print a
   pure ()
