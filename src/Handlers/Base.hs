@@ -50,9 +50,8 @@ data Handle m = Handle
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
     editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
     getAllNews :: m [NewsOut],
-    -- getFullNews :: m (Maybe (News, User, [Category], [Image])),
+    getFullNews :: Title -> m NewsOut,
     findNewsByTitle :: Title -> m (Maybe News) 
--- getFullNews :: ConnectionString -> Int64 -> IO (Maybe News, Maybe User, [Entity Category], [Entity Image])
     --
 -- add some func
   }

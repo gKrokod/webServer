@@ -78,7 +78,12 @@ getAllNews :: ConnectionString -> LimitData -> IO [NewsOut]
 getAllNews connString l = runDataBaseWithLog connString fetchAction
   where 
     fetchAction :: (MonadIO m) => SqlPersistT m [NewsOut]
-    fetchAction = undefined
+    fetchAction = select $ do
+      news <- from $ table @News
+        
+      where_ (news ^. NewsTitle ==. (val title))
+      limit (fromIntegral l)
+      pure user
 
 fetchLables :: (MonadIO m) => LimitData -> Label -> SqlPersistT m [Entity Category]
 -- todo выяснить, почему трубется Database.Esqueleto.Internal.Internal.SqlExpr (Value Title)
@@ -98,67 +103,140 @@ fetchLables lim label =
       limit (fromIntegral lim)
       from cte
 
+getFullNews :: ConnectionString -> LimitData -> Title -> IO NewsOut
+getFullNews connString l title = runDataBaseWithOutLog connString fetchAction 
+  where 
+    fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m NewsOut
+    fetchAction = do
+      (label : _) <- (fmap . fmap) entityVal fetchLabel
+      lables <- fetchLables (categoryLabel label)
+      (user : _) <- (fmap . fmap) entityVal fetchUser
+      images <- fetchActionImage
+      (Just partNews) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
+      let a = (title,
+                newsCreated partNews,
+                userName user, 
+                workerCategory lables, 
+                newsContent partNews,
+                workerImage images,
+                newsIsPublish partNews)
+      pure a 
 
+    fetchLabel :: (MonadIO m) => SqlPersistT m [Entity Category]
+    fetchLabel = select $ do
+      (news :& category) <- 
+        from $ table @News
+         `innerJoin` table @Category
+         `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
+      where_ (news ^. NewsTitle ==. (val title))
+      limit (fromIntegral l)
+      pure (category)
 
--- "News 1 about Witch from user 1"
-getSOBR :: ConnectionString -> LimitData -> Title -> IO [NewsOut]
-getSOBR connString l title = runDataBaseWithOutLog connString $ do
-  (label : _) <- (fmap . fmap ) entityVal (fetchLabel l title)
-  lables <- fetchLables l (categoryLabel label)
-  (user : _) <- (fmap . fmap ) entityVal (fetchUser l title)
-  images <- fetchActionImage l title
-  (Just partNews) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
-  -- let a = [(categoryLabel label, userName user, workerImage images)]
-  let a = [(newsTitle partNews,
-            newsCreated partNews,
-            userName user, 
-            workerCategory lables, 
-            newsContent partNews,
-            workerImage images,
-            newsIsPublish partNews)]
-  pure a 
+    fetchUser :: (MonadIO m) => SqlPersistT m [Entity User]
+    fetchUser = select $ do
+      (news :& user) <- 
+        from $ table @News
+         `innerJoin` table @User
+         `on`  (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
+      where_ (news ^. NewsTitle ==. (val title))
+      limit (fromIntegral l)
+      pure user
 
-workerImage :: [Entity Image] -> [URI_Image]
-workerImage = map (\(Entity key _value) -> ("/images?id=" <> (T.pack $ show $ fromSqlKey key)))
+    fetchLables :: (MonadIO m) => Label -> SqlPersistT m [Entity Category]
+    fetchLables label = 
+          select $ do
+          cte <- withRecursive
+                   ( do
+                       child <- from $ table @Category
+                       where_ (child ^. CategoryLabel ==. val label)
+                       pure child)
+                   unionAll_
+                   (\self -> do
+                       child <- from self
+                       parent <- from $ table @Category
+                       where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
+                       pure parent)
+          limit (fromIntegral l)
+          from cte
 
-workerCategory :: [Entity Category] -> [Label]
-workerCategory = map (\(Entity _key value) -> categoryLabel value) 
+    fetchActionImage :: (MonadIO m) => SqlPersistT m [Entity Image]
+    fetchActionImage = select $ do
+      (news :& imagebank :& image) <- 
+        from $ table @News
+         `innerJoin` table @ImageBank
+         `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+         `innerJoin` table @Image
+         `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+      where_ (news ^. NewsTitle ==. (val title))
+      limit (fromIntegral l)
+      pure (image)
 
-fetchLabel :: (MonadIO m) => LimitData -> Title -> SqlPersistT m [Entity Category]
-fetchLabel lim title = select $ do
-  (news :& category) <- 
-    from $ table @News
-     `innerJoin` table @Category
-     `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
-  where_ (news ^. NewsTitle ==. (val title))
-  limit (fromIntegral lim)
-  -- pure (category ^. CategoryLabel)
-  pure (category)
+    workerImage :: [Entity Image] -> [URI_Image]
+    workerImage = map (\(Entity key _value) -> ("/images?id=" <> (T.pack $ show $ fromSqlKey key)))
 
-fetchUser :: (MonadIO m) => LimitData -> Title -> SqlPersistT m [Entity User]
-fetchUser lim title = select $ do
-  (news :& user) <- 
-    from $ table @News
-     `innerJoin` table @User
-     `on`  (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
-  where_ (news ^. NewsTitle ==. (val title))
-  limit (fromIntegral lim)
-  -- pure (user ^. UserName)
-  pure user
+    workerCategory :: [Entity Category] -> [Label]
+    workerCategory = map (\(Entity _key value) -> categoryLabel value) 
 
-
-fetchActionImage :: (MonadIO m) => LimitData -> Title -> SqlPersistT m [Entity Image]
--- fetchActionImage :: (MonadIO m) => LimitData -> Value T.Text -> SqlPersistT m [Entity Image]
-fetchActionImage lim title = select $ do
-  (news :& imagebank :& image) <- 
-    from $ table @News
-     `innerJoin` table @ImageBank
-     `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
-     `innerJoin` table @Image
-     `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
-  where_ (news ^. NewsTitle ==. (val title))
-  limit (fromIntegral lim)
-  pure (image)
+-- -- "News 1 about Witch from user 1"
+-- getSOBR :: ConnectionString -> LimitData -> Title -> IO [NewsOut]
+-- getSOBR connString l title = runDataBaseWithOutLog connString $ do
+--   (label : _) <- (fmap . fmap ) entityVal (fetchLabel l title)
+--   lables <- fetchLables l (categoryLabel label)
+--   (user : _) <- (fmap . fmap ) entityVal (fetchUser l title)
+--   images <- fetchActionImage l title
+--   (Just partNews) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
+--   -- let a = [(categoryLabel label, userName user, workerImage images)]
+--   -- let a = [(newsTitle partNews,
+--   let a = [(title,
+--             newsCreated partNews,
+--             userName user, 
+--             workerCategory lables, 
+--             newsContent partNews,
+--             workerImage images,
+--             newsIsPublish partNews)]
+--   pure a 
+--
+-- workerImage :: [Entity Image] -> [URI_Image]
+-- workerImage = map (\(Entity key _value) -> ("/images?id=" <> (T.pack $ show $ fromSqlKey key)))
+--
+-- workerCategory :: [Entity Category] -> [Label]
+-- workerCategory = map (\(Entity _key value) -> categoryLabel value) 
+--
+-- fetchLabel :: (MonadIO m) => LimitData -> Title -> SqlPersistT m [Entity Category]
+-- fetchLabel lim title = select $ do
+--   (news :& category) <- 
+--     from $ table @News
+--      `innerJoin` table @Category
+--      `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
+--   where_ (news ^. NewsTitle ==. (val title))
+--   limit (fromIntegral lim)
+--   -- pure (category ^. CategoryLabel)
+--   pure (category)
+--
+-- fetchUser :: (MonadIO m) => LimitData -> Title -> SqlPersistT m [Entity User]
+-- fetchUser lim title = select $ do
+--   (news :& user) <- 
+--     from $ table @News
+--      `innerJoin` table @User
+--      `on`  (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
+--   where_ (news ^. NewsTitle ==. (val title))
+--   limit (fromIntegral lim)
+--   -- pure (user ^. UserName)
+--   pure user
+--
+--
+-- fetchActionImage :: (MonadIO m) => LimitData -> Title -> SqlPersistT m [Entity Image]
+-- -- fetchActionImage :: (MonadIO m) => LimitData -> Value T.Text -> SqlPersistT m [Entity Image]
+-- fetchActionImage lim title = select $ do
+--   (news :& imagebank :& image) <- 
+--     from $ table @News
+--      `innerJoin` table @ImageBank
+--      `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+--      `innerJoin` table @Image
+--      `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+--   where_ (news ^. NewsTitle ==. (val title))
+--   limit (fromIntegral lim)
+--   pure (image)
 --
 -- getAllUsers :: ConnectionString -> LimitData -> IO [User]
 -- getAllUsers connString l = runDataBaseWithOutLog connString fetchAction

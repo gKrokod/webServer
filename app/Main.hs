@@ -56,6 +56,7 @@ logic cfg = do
           Handlers.Base.putNews = BB.putNews pginfo,
           Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
           Handlers.Base.getAllNews = BB.getAllNews pginfo (cLimitData cfg),
+          Handlers.Base.getFullNews = BB.getFullNews pginfo (cLimitData cfg),
           Handlers.Base.editNews = BB.editNews pginfo
       }
   print "#########################################################################################"
@@ -63,15 +64,10 @@ logic cfg = do
   print "*******************************************************************************************************"
   print "****************************************************************************************************************"
 
-  print "Get SOBR"
-  a <- BB.getSOBR pginfo 10 "News 1 about Witch from user 1"
-  mapM print a
+  print "Get Full news"
+  a <- Handlers.Base.getFullNews baseHandle "News 4 about Evil from user 1"
+  print a
 
-  -- putStrLn "\nGet All News "
-  print "Get SOBR"
-  a <- BB.getSOBR pginfo 4 "News 4 about Evil from user 1"
-  mapM print a
-  -- a <- Handlers.Base.getAllNews baseHandle
-  -- mapM print a
+  a <- Handlers.Base.getFullNews baseHandle "News 1 about Witch from user 1"
+  print a
   pure ()
-
