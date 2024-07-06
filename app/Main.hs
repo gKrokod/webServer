@@ -28,8 +28,8 @@ main = do
   Logger.writeLog "HEEEEREEE WE STAAAART MAINNNN"
   config <- loadConfig
 -- make Tables and Fill its if need
-  -- whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
-  --                         >> BB.makeAndFillTables (connectionString config)
+  whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
+                          >> BB.makeAndFillTables (connectionString config)
   serverSetup <- makeSetup config
   run 4221 (app serverSetup) 
 
@@ -64,13 +64,13 @@ makeSetup cfg = do
           Handlers.Base.putUser = BB.putUser pginfo,
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
           Handlers.Base.getTime = getCurrentTime,
-          Handlers.Base.getAllUsers = BB.getAllUsers pginfo (cLimitData cfg),
+          Handlers.Base.pullAllUsers = BB.pullAllUsers pginfo (cLimitData cfg),
           Handlers.Base.findCategoryByLabel = BB.findCategoryByLabel pginfo,
           Handlers.Base.putCategory = BB.putCategory pginfo,
           Handlers.Base.changeCategory = BB.changeCategory pginfo,
           Handlers.Base.getBranchCategories = BB.getBranchCategories pginfo (cLimitData cfg),
           Handlers.Base.getAllCategories = BB.getAllCategories pginfo (cLimitData cfg),
-          Handlers.Base.getImage = BB.getImage pginfo,
+          Handlers.Base.pullImage = BB.pullImage pginfo,
           Handlers.Base.putImage = BB.putImage pginfo,
           Handlers.Base.putNews = BB.putNews pginfo,
           Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
@@ -84,5 +84,6 @@ makeSetup cfg = do
           Handlers.WebLogic.response404 = WW.response404,
           Handlers.WebLogic.response200 = WW.response200,
           Handlers.WebLogic.mkGoodResponse = WW.mkGoodResponse,
+          Handlers.WebLogic.mkResponseForImage = WW.mkResponseForImage,
           Handlers.WebLogic.getBody = WW.getBody}
   pure handle

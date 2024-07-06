@@ -8,6 +8,7 @@ import qualified Handlers.Logger
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Data.Int (Int64)
+import Control.Exception (SomeException)
 type Name = T.Text
 type Login = T.Text
 type Time = UTCTime
@@ -28,11 +29,11 @@ data Handle m = Handle
   {
     logger :: Handlers.Logger.Handle m,
     panigate :: Int,
--- api user: create +, getall (getAllUsers) +
+-- api user (2): getAllUsers, createUser
     putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
     findUserByLogin :: Login -> m (Maybe User), 
     getTime :: m (UTCTime),
-    getAllUsers :: m [User],
+    pullAllUsers :: m (Either SomeException [User]),
     -- getAllUsersOut :: m [UserOut], api
 -- api category: create +, getall (getAllCategories) +, edit +      add getBranchCategories for news api
     putCategory :: Label -> Maybe Label -> m (), 
@@ -40,8 +41,8 @@ data Handle m = Handle
     getAllCategories :: m [Category],
     getBranchCategories :: Label -> m [Category], --todo remove?
     findCategoryByLabel :: Label -> m (Maybe Category),
--- api imagy: getOne
-    getImage :: NumberImage -> m (Maybe Image),
+-- api image (1): getImage
+    pullImage :: NumberImage -> m (Either SomeException (Maybe Image)),
     putImage :: Header -> Base64 -> m (), 
 -- api news: create +, getAllNews +. edit +
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
@@ -73,7 +74,32 @@ data Handle m = Handle
 --       pure Nothing
 --     Just (News _ _ userId categoryId _ _) -> do
 
+getAllUsers :: (Monad m) => Handle m -> m (Either T.Text [User])
+getAllUsers h = do
+  logMessage (logger h) Debug ("Try to get all users from database")
+  users <- pullAllUsers h
+  case users of
+    Left e -> do 
+      let e' = T.pack . show $ e
+      logMessage (logger h) Handlers.Logger.Error e'  
+      pure $ Left e' 
+    Right users' -> pure $ Right users' 
 
+getImage :: (Monad m) => Handle m -> NumberImage -> m (Either T.Text Image)
+getImage h uid = do
+  logMessage (logger h) Debug ("Try to get image from database " <> (T.pack . show $ uid))
+  image <- pullImage h uid 
+  case image of
+    Left e -> do 
+      let e' = T.pack . show $ e
+      logMessage (logger h) Handlers.Logger.Error e'  
+      pure $ Left e' 
+    Right Nothing -> do
+      logMessage (logger h) Debug ("Image was not found in database")
+      pure $ Left "Image was not found in database"
+    Right (Just image) -> do
+      logMessage (logger h) Debug ("Image was found in database")
+      pure $ Right image 
 
 updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
 updateNews h title newTitle  newLogin newLabel newContent newImages newPublish = do

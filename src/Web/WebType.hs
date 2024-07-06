@@ -3,7 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme (User(..))
+import Scheme (User(..), Image(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
 import GHC.Generics (Generic)

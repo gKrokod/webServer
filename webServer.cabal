@@ -35,6 +35,7 @@ library
       Logger
       Scheme
       Web.WebLogic
+      Web.WebType
   other-modules:
       Paths_webServer
   autogen-modules:

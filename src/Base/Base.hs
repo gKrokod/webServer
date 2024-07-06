@@ -18,7 +18,7 @@ import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, H
 import Handlers.Base (URI_Image)
 -- import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
-import Control.Exception (throwIO)
+import Control.Exception (try, SomeException, throwIO, Exception)
 -- import Data.Aeson.Key (toText)
 
 -- type Name = T.Text
@@ -234,9 +234,10 @@ putImage pginfo header base64 = do
     pure ()
 
   --for api news
-getImage :: ConnectionString -> NumberImage -> IO (Maybe Image) 
+pullImage :: ConnectionString -> NumberImage -> IO (Either SomeException (Maybe Image)) 
 -- getImage :: ConnectionString -> Int64 -> IO (Maybe Image) 
-getImage connString uid = runDataBaseWithOutLog connString fetchAction
+pullImage connString uid = do
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
     fetchAction = get (toSqlKey uid)
@@ -273,17 +274,20 @@ findUserByLogin connString login = runDataBaseWithOutLog connString fetchAction
 
 type LimitData = Int
 
-getAllUsers :: ConnectionString -> LimitData -> IO [User]
-getAllUsers connString l = runDataBaseWithOutLog connString fetchAction
+pullAllUsers :: ConnectionString -> LimitData -> IO (Either SomeException [User])
+pullAllUsers connString l = do
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
+  -- e <- try @SomeException (runDataBaseWithOutLog connString fetchAction)
+  -- pure $ either (\x -> []) (id) e
 -- getAllUsers connString l = runDataBaseWithLog connString fetchAction
-  where
-    -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
-    fetchAction ::  (MonadIO m) => SqlPersistT m [User]
-    fetchAction = (fmap . fmap) entityVal 
-                  (select $ do
-                  users <- from $ table @User
-                  limit (fromIntegral l)
-                  pure (users))
+    where
+      -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
+      fetchAction ::  (MonadIO m) => SqlPersistT m [User]
+      fetchAction = (fmap . fmap) entityVal 
+                    (select $ do
+                    users <- from $ table @User
+                    limit (fromIntegral l)
+                    pure (users))
 ------------------------------------------------------------------------------------------------------------
  
 putCategory :: ConnectionString -> Label -> Maybe Label -> IO () 
