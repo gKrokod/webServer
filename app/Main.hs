@@ -8,25 +8,53 @@ import qualified Handlers.Logger
 import Handlers.Logger (Log(Debug))
 import qualified Handlers.Base
 import qualified Base.Base as BB 
+import qualified Handlers.WebLogic
+import qualified Web.WebLogic as WW 
+
 import qualified Logger
 import Database.Persist.Postgresql  (keyValueEntityToJSON, ConnectionString, runMigration, entityIdToJSON)
 import Data.Time (getCurrentTime)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 
+import Network.Wai.Handler.Warp (run)
+import Network.Wai (Application, responseBuilder)
+-- import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
+import Control.Exception (bracket_)
+
+
 main :: IO ()
 main = do 
-  putStrLn "HEEEEREEE WE STAAAART MAINNNN"
+  Logger.writeLog "HEEEEREEE WE STAAAART MAINNNN"
   config <- loadConfig
 -- make Tables and Fill its if need
-  whenMakeTables config $ putStrLn "Make and fill Tables" 
+  whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
                           >> BB.makeAndFillTables (connectionString config)
-  logic config
+  serverSetup <- makeSetup config
+  run 4221 (app serverSetup) 
 
-logic :: ConfigDataBase -> IO () 
-logic cfg = do
+
+-- old  type Application = Request -> ResourceT IO Response
+--
+-- last type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived -- passing style?
+-- type Application :: Request -> Respond -> IO ResponseReceived
+-- type Respond = Response -> IO ResponseReceived
+
+-- check user will do in another application later
+--
+type ServerSetup m = Handlers.WebLogic.Handle m 
+--
+app :: ServerSetup IO -> Application
+app h req f =
+  bracket_
+   (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "Open app" )
+   (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "Close app")
+   (Handlers.WebLogic.doLogic h req >>= f)
+
+makeSetup :: ConfigDataBase -> IO (ServerSetup IO) 
+makeSetup cfg = do
+  Logger.writeLog "MAKE SETUP"
   let pginfo = connectionString cfg
-  putStrLn "Do Logic"
   t <- getCurrentTime
   Logger.writeLog ( T.pack $ show t )
   let logHandle = Handlers.Logger.Handle
@@ -35,43 +63,27 @@ logic cfg = do
         }
   let baseHandle = Handlers.Base.Handle
         { Handlers.Base.logger = logHandle,
------------------------------- user end point
           Handlers.Base.putUser = BB.putUser pginfo,
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
           Handlers.Base.getTime = getCurrentTime,
           Handlers.Base.getAllUsers = BB.getAllUsers pginfo (cLimitData cfg),
---------------------------------
------------------------------- category end point
           Handlers.Base.findCategoryByLabel = BB.findCategoryByLabel pginfo,
           Handlers.Base.putCategory = BB.putCategory pginfo,
           Handlers.Base.changeCategory = BB.changeCategory pginfo,
           Handlers.Base.getBranchCategories = BB.getBranchCategories pginfo (cLimitData cfg),
           Handlers.Base.getAllCategories = BB.getAllCategories pginfo (cLimitData cfg),
---------------------------------
------------------------------- image end points
           Handlers.Base.getImage = BB.getImage pginfo,
           Handlers.Base.putImage = BB.putImage pginfo,
---------------------------------
------------------------------- news 
           Handlers.Base.putNews = BB.putNews pginfo,
           Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
           Handlers.Base.getAllNews = BB.getAllNews pginfo (cLimitData cfg),
           Handlers.Base.getFullNews = BB.getFullNews pginfo (cLimitData cfg),
           Handlers.Base.editNews = BB.editNews pginfo
       }
-  print "#########################################################################################"
-  print "#########################################################################################"
-  print "*******************************************************************************************************"
-  print "****************************************************************************************************************"
-
-  print "Get Full news"
-  a <- Handlers.Base.getFullNews baseHandle "News 4 about Evil from user 1"
-  print a
-
-  a <- Handlers.Base.getFullNews baseHandle "News 1 about Witch from user 1"
-  print a
-
-  print "Get ALl Full news"
-  a <- Handlers.Base.getAllNews baseHandle
-  mapM print a
-  pure ()
+  let handle = Handlers.WebLogic.Handle { 
+          Handlers.WebLogic.logger = logHandle, 
+          Handlers.WebLogic.base = baseHandle,
+          Handlers.WebLogic.response404 = WW.response404,
+          Handlers.WebLogic.response200 = WW.response200,
+          Handlers.WebLogic.getBody = WW.getBody}
+  pure handle

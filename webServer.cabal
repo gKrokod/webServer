@@ -31,6 +31,7 @@ library
       Config
       Handlers.Base
       Handlers.Logger
+      Handlers.WebLogic
       Logger
       Scheme
   other-modules:
@@ -44,18 +45,21 @@ library
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  ghc-options: -Werror
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base64
     , bytestring
     , esqueleto
+    , http-types
     , monad-logger
     , persistent
     , persistent-postgresql
     , template-haskell
     , text
     , time
+    , wai
   default-language: Haskell2010
 
 executable webServer-exe
@@ -71,9 +75,11 @@ executable webServer-exe
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , wai
+    , warp
     , webServer
   default-language: Haskell2010
 
@@ -91,7 +97,7 @@ test-suite webServer-test
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , webServer
