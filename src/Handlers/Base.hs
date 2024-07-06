@@ -1,7 +1,3 @@
--- {-# LANGUAGE ScopedTypeVariables #-}
--- {-# LANGUAGE ExplicitForAll #-}
--- {-# LANGUAGE RankNTypes #-}
--- {-# LANGUAGE ExistentialQuantification #-}
 
 module Handlers.Base where
 
@@ -37,6 +33,7 @@ data Handle m = Handle
     findUserByLogin :: Login -> m (Maybe User), 
     getTime :: m (UTCTime),
     getAllUsers :: m [User],
+    -- getAllUsersOut :: m [UserOut], api
 -- api category: create +, getall (getAllCategories) +, edit +      add getBranchCategories for news api
     putCategory :: Label -> Maybe Label -> m (), 
     changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
@@ -75,7 +72,6 @@ data Handle m = Handle
 --       logMessage (logger h) Warning  ("News don't exist! : " <> title)
 --       pure Nothing
 --     Just (News _ _ userId categoryId _ _) -> do
-
 
 
 

@@ -24,6 +24,9 @@ import qualified Database.Persist.TH as PTH
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
+import Data.Binary.Builder (Builder, fromLazyByteString)
+
+-- import Data.Binary.Builder (fromByteString, Builder, fromLazyByteString, putStringUtf8)
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
  User sql=users
@@ -34,7 +37,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   isAdmin Bool
   isPublisher Bool
   UniqueUserLogin login
-  deriving Eq Show
+  deriving Eq Show Generic ToJSON
  Password sql=passwords
    quasiPassword T.Text
    deriving Eq Show
@@ -65,3 +68,5 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   deriving Eq Show
 |] 
 
+usersToBuilder :: [User] -> Builder
+usersToBuilder = fromLazyByteString . encode @[User]

@@ -1,7 +1,10 @@
 module Handlers.WebLogic where
 
-import Scheme
+import Scheme (usersToBuilder)
+import Scheme (User(..))
+import Web.WebType (UserToWeb(..), UserFromWeb(..), userToWeb, webToUser)
 import qualified Handlers.Logger
+import qualified Handlers.Base
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
 import Network.Wai (Request, Response, rawPathInfo)
@@ -12,7 +15,7 @@ import Network.HTTP.Types (notFound404, status200)
 -- import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
 import qualified Data.Text.Encoding as E
 import Data.Binary.Builder(Builder(..), fromLazyByteString)
-import Data.Aeson (ToJSON, encode)
+-- import Data.Aeson (ToJSON, encode)
 -- import Data.Binary.Builder as BU (fromByteString, Builder, fromLazyByteString, putStringUtf8)
 
 -- import Network.HTTP.Types.Header (hContentType)
@@ -30,7 +33,9 @@ import Data.Aeson (ToJSON, encode)
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
+   -- logMessage 
     base :: Handlers.Base.Handle m,
+    -- updateNews, createNews, updateCategory, createGategory , createUser
     getBody :: Request -> m (B.ByteString),
     response404 :: Response,
     response200 :: Response,
@@ -43,8 +48,6 @@ data Handle m = Handle
 -- type Application :: Request -> Respond -> IO ResponseReceived
 -- type Respond = Response -> IO ResponseReceived
 --
--- mkJSON :: (ToJSON a) =>  [a] -> L.ByteString
--- mkJSON xs = mconcat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]
 
 doLogic :: (Monad m) => Handle m -> Request -> m (Response) 
 doLogic h req = do
@@ -64,8 +67,8 @@ endPointUsers h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Users"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    path | B.isPrefixOf "/users/create" path  -> undefined --createUser h req -- создание пользователя 
-         | B.isPrefixOf "/users" path  -> existingUsers h req  -- получение списка всех 
+    path | "/users/create" == path  -> createUser h req -- создание пользователя 
+         | "/users" == path  -> existingUsers h req  -- получение списка всех 
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point Users not found"  
             pure (response404 h) -- todo. replace 404 for another error
@@ -75,17 +78,26 @@ existingUsers :: (Monad m) => Handle m -> Request -> m (Response)
 existingUsers h req = do
   let logHandle = logger h 
   let baseHandle = base h 
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give users"
-          -- Handlers.Base.getAllUsers = BB.getAllUsers pginfo (cLimitData cfg),
-  users <- Handlers.Base.getAllUsers baseHandle
-  pure undefined
-  -- pure $ mkGoodResponse h (concat (map (pure . userToBuilder) users))
-  -- pure $ mkGoodResponse h ((fromLazyByteString . mkJSON) users)
-  -- let body = mkJSON users
-  -- -- let body = mkJSON (Handlers.Base.bank baseHandle)
-  -- pure $ responseBuilder status200 [] ("All ok. User list:\n" <> B.fromLazyByteString body)
-
--- mkJSON :: (ToJSON a) =>  [a] -> L.ByteString
--- mkJSON xs = mconcat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]  -- let body = mkJSON users
-mkJSON xs = mconcat ["{\"answer\":[", "lazy\n]}"]  -- let body = mkJSON users
--- defaultResponse = \h ->  responseBuilder status200 [] "default Response\n"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All users"
+  mkGoodResponse h <$> userToWeb <$> Handlers.Base.getAllUsers baseHandle
+  
+createUser :: (Monad m) => Handle m -> Request -> m (Response)
+createUser h req = do
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "create User WEB"
+  body <- webToUser <$> getBody h req -- :: (Either String UserFromWeb)
+  case body of
+    Left e -> do 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User WEB"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
+      pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
+    Right (UserFromWeb name login password admin publisher) -> do
+      tryCreateUser <- Handlers.Base.createUser baseHandle name login password admin publisher
+      case tryCreateUser of
+        Left e -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning e  
+          pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
+        Right _ -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create User success WEB"
+          pure (response200 h)

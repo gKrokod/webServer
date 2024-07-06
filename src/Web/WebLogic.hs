@@ -18,17 +18,5 @@ response404 = responseBuilder notFound404 [] "Not ok. status 404\n"
 response200 :: Response
 response200 = responseBuilder status200 [] "All ok. status 200\n" 
 
-mkGoodResponse = undefined
--- mkGoodResponse :: Builder -> Response
--- mkGoodResponse xs = responseBuilder status200 [] ("All ok. User list:\n" <> xs)
---   where body = mkJSON xs
---
--- mkJSON :: (ToJSON a) =>  [a] -> L.ByteString
--- mkJSON xs = mconcat ["{\"answer\":[",L.intercalate "," (Prelude.map encode xs),"]}"]  -- let body = mkJSON users
---
-
-userToBuilder :: User -> Builder
-userToBuilder = undefined
-  -- -- let body = mkJSON (Handlers.Base.bank baseHandle)
-  -- pure $ responseBuilder status200 [] ("All ok. User list:\n" <> B.fromLazyByteString body)
-
+mkGoodResponse :: Builder -> Response
+mkGoodResponse = responseBuilder status200 []
