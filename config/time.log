@@ -889,3 +889,11 @@ HEEEEREEE WE STAAAART MAINNNN
 MAKE AND FILL TABLES
 MAKE SETUP
 2024-07-06 09:21:37.713809744 UTC
+HEEEEREEE WE STAAAART MAINNNN
+MAKE AND FILL TABLES
+MAKE SETUP
+2024-07-06 09:35:42.648919172 UTC
+[Debug] Open app
+[Debug] get request
+[Debug] Request {requestMethod = "GET", httpVersion = HTTP/1.1, rawPathInfo = "/users", rawQueryString = "", requestHeaders = [("Host","127.0.0.1:4221"),("User-Agent","curl/7.68.0"),("Accept","*/*")], isSecure = False, remoteHost = 127.0.0.1:44692, pathInfo = ["users"], queryString = [], requestBody = <IO ByteString>, vault = <Vault>, requestBodyLength = KnownLength 0, requestHeaderHost = Just "127.0.0.1:4221", requestHeaderRange = Nothing}
+[Debug] Close app

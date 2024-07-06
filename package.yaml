@@ -54,6 +54,7 @@ library:
     - wai
     - http-types
     - base64
+    - binary
     
 
 

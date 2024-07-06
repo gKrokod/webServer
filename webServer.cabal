@@ -34,6 +34,7 @@ library
       Handlers.WebLogic
       Logger
       Scheme
+      Web.WebLogic
   other-modules:
       Paths_webServer
   autogen-modules:
@@ -50,6 +51,7 @@ library
       aeson
     , base >=4.7 && <5
     , base64
+    , binary
     , bytestring
     , esqueleto
     , http-types

@@ -38,8 +38,6 @@ main = do
 --
 -- last type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived -- passing style?
 -- type Application :: Request -> Respond -> IO ResponseReceived
--- type Respond = Response -> IO ResponseReceived
-
 -- check user will do in another application later
 --
 type ServerSetup m = Handlers.WebLogic.Handle m 
@@ -85,5 +83,6 @@ makeSetup cfg = do
           Handlers.WebLogic.base = baseHandle,
           Handlers.WebLogic.response404 = WW.response404,
           Handlers.WebLogic.response200 = WW.response200,
+          Handlers.WebLogic.mkGoodResponse = WW.mkGoodResponse,
           Handlers.WebLogic.getBody = WW.getBody}
   pure handle
