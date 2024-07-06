@@ -1,5 +1,10 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Main (main) where
 
+
+import GHC.Generics (Generic)
 import Config (loadConfig, ConfigDataBase, connectionString, whenMakeTables, cLimitData)
 import Scheme
 -- import Database.Persist.Postgresql (ConnectionString)
@@ -13,6 +18,12 @@ import Database.Persist.Postgresql  (keyValueEntityToJSON, ConnectionString, run
 import Data.Time (getCurrentTime)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import Data.Aeson
+
+data MyType = MyType T.Text 
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass ToJSON
+
 
 main :: IO ()
 main = do 
@@ -22,6 +33,8 @@ main = do
   whenMakeTables config $ putStrLn "Make and fill Tables" 
                           >> BB.makeAndFillTables (connectionString config)
   logic config
+
+-- instance ToJSON [User]
 
 logic :: ConfigDataBase -> IO () 
 logic cfg = do
@@ -63,15 +76,27 @@ logic cfg = do
   print "#########################################################################################"
   print "*******************************************************************************************************"
   print "****************************************************************************************************************"
-
-  print "Get Full news"
-  a <- Handlers.Base.getFullNews baseHandle "News 4 about Evil from user 1"
-  print a
-
-  a <- Handlers.Base.getFullNews baseHandle "News 1 about Witch from user 1"
-  print a
-
-  print "Get ALl Full news"
-  a <- Handlers.Base.getAllNews baseHandle
-  mapM print a
+  -- print "Get Full news"
+  -- a <- Handlers.Base.getFullNews baseHandle "News 4 about Evil from user 1"
+  -- print a
+  --
+  -- a <- Handlers.Base.getFullNews baseHandle "News 1 about Witch from user 1"
+  -- print a
+  --
+  -- print "Get ALl Full news"
+  -- a <- Handlers.Base.getAllNews baseHandle
+  -- mapM print a
+  print "get all users and convert to builder"
+  users <- Handlers.Base.getAllUsers baseHandle
+  mapM print users 
+  print "convert all users to JSON"
+  let aa = encode @MyType (MyType "HOHO")
+  let baa = encode @[MyType] ([MyType "HOHO", MyType "NENE", MyType "3"])
+  print aa
+  print baa
+  -- let usersjson = mconcat $ map (encode @User) users
+  -- let usersjson = (encode @User) users
+  -- print usersjson 
   pure ()
+
+helper xs = mconcat $ map (encode @User) xs

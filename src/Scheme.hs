@@ -34,7 +34,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   isAdmin Bool
   isPublisher Bool
   UniqueUserLogin login
-  deriving Eq Show
+  deriving Eq Show Generic ToJSON
  Password sql=passwords
    quasiPassword T.Text
    deriving Eq Show
