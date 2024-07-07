@@ -3,7 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme (User(..), Image(..), Category(..))
+import Scheme --(User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
@@ -11,6 +11,7 @@ import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON, FromJSON)
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import qualified Data.ByteString as B 
   
+
 data UserToWeb = UserToWeb {name :: T.Text, login :: T.Text, created :: UTCTime, isAdmin :: Bool,
   isPublisher :: Bool}
   deriving stock (Eq, Show, Generic)
@@ -29,7 +30,7 @@ userToWeb = fromLazyByteString . encode @[UserToWeb] . map convertToWeb
 webToUser :: B.ByteString -> Either String UserFromWeb
 webToUser = eitherDecodeStrict @UserFromWeb 
 
-data CategoryToWeb = CategoryToWeb {label :: T.Text}
+newtype CategoryToWeb = CategoryToWeb {label :: T.Text}
   deriving stock (Show, Generic)
   deriving anyclass (ToJSON)
 
@@ -52,6 +53,39 @@ webToCategory = eitherDecodeStrict @CategoryFromWeb
 webToEditCategory :: B.ByteString -> Either String EditCategoryFromWeb 
 webToEditCategory = eitherDecodeStrict @EditCategoryFromWeb
 
+data NewsFromWeb = NewsFromWeb {title :: T.Text, login :: T.Text, label :: T.Text, content :: T.Text,
+                                images :: [Image], isPublish :: Bool }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+webToNews :: B.ByteString -> Either String NewsFromWeb 
+webToNews = eitherDecodeStrict @NewsFromWeb
+
+data EditNewsFromWeb = EditNewsFromWeb {title :: T.Text, newTitle :: Maybe T.Text, 
+  newLogin :: Maybe T.Text, newLabel :: Maybe T.Text, 
+  newContent :: Maybe T.Text,
+  images :: Maybe [Image], newIsPublish :: Maybe Bool }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+webToEditNews :: B.ByteString -> Either String EditNewsFromWeb 
+webToEditNews = eitherDecodeStrict @EditNewsFromWeb
+
+data NewsToWeb = NewsToWeb {title :: T.Text, created :: UTCTime, login :: T.Text, 
+                            labels :: [T.Text], content :: T.Text, images :: [T.Text], 
+                            isPublisher :: Bool}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON)
+--
+
+newsToWeb :: [NewsOut] -> Builder
+newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
+  where convertToWeb :: NewsOut -> NewsToWeb
+        convertToWeb (t, d, l, ls, c, im, b) = NewsToWeb t d l ls c im b 
+
+-- type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
+-- type URI_Image = T.Text
+--
 -- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
 --  User sql=users
 --   name T.Text

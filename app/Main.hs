@@ -74,7 +74,7 @@ makeSetup cfg = do
           Handlers.Base.putImage = BB.putImage pginfo,
           Handlers.Base.putNews = BB.putNews pginfo,
           Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
-          Handlers.Base.getAllNews = BB.getAllNews pginfo (cLimitData cfg),
+          Handlers.Base.pullAllNews = BB.pullAllNews pginfo (cLimitData cfg),
           Handlers.Base.getFullNews = BB.getFullNews pginfo (cLimitData cfg),
           Handlers.Base.editNews = BB.editNews pginfo
       }

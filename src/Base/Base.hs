@@ -14,8 +14,8 @@ import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title, NewsOut)
-import Handlers.Base (URI_Image)
+-- import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title, NewsOut)
+-- import Handlers.Base (URI_Image)
 -- import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
 import Control.Exception (try, SomeException, throwIO, Exception)
@@ -67,19 +67,23 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
+-- pullAllUsers :: ConnectionString -> LimitData -> IO (Either SomeException [User])
+-- pullAllUsers connString l = do
+--   try @SomeException (runDataBaseWithOutLog connString fetchAction)
 
-getAllNews :: ConnectionString -> LimitData -> IO [NewsOut]
+pullAllNews :: ConnectionString -> LimitData -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
-getAllNews connString l = runDataBaseWithOutLog connString fetchAction
-  where 
-    fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
-    fetchAction = do
-      titles <- (fmap . fmap) unValue
-                (select $ do
-                   news <- from $ table @News
-                   limit (fromIntegral l)
-                   pure (news ^. NewsTitle))
-      mapM (fetchFullNews l) titles 
+pullAllNews connString l = do
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
+    where 
+      fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
+      fetchAction = do
+        titles <- (fmap . fmap) unValue
+                  (select $ do
+                     news <- from $ table @News
+                     limit (fromIntegral l)
+                     pure (news ^. NewsTitle))
+        mapM (fetchFullNews l) titles 
 
     
 fetchLables :: (MonadIO m) => LimitData -> Label -> SqlPersistT m [Entity Category]

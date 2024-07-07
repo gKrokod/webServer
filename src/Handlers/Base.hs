@@ -9,22 +9,22 @@ import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Data.Int (Int64)
 import Control.Exception (SomeException)
-type Name = T.Text
-type Login = T.Text
-type Time = UTCTime
-type PasswordUser = T.Text
 data Success = Put | Change | Get deriving Show
-type Label = T.Text
-type NewLabel = T.Text
-type NumberImage = Int64
-type Header = T.Text
-type Base64 = T.Text
-type Title = T.Text
-type Content = T.Text
-type URI_Image = T.Text
+-- type Name = T.Text
+-- type Login = T.Text
+-- type Time = UTCTime
+-- type PasswordUser = T.Text
+-- type Label = T.Text
+-- type NewLabel = T.Text
+-- type NumberImage = Int64
+-- type Header = T.Text
+-- type Base64 = T.Text
+-- type Title = T.Text
+-- type Content = T.Text
+-- type URI_Image = T.Text
+-- type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
 -- type KeyIdUser = Int64
 -- type KeyIdCategory = Int64
-type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
 data Handle m = Handle 
   {
     logger :: Handlers.Logger.Handle m,
@@ -48,32 +48,24 @@ data Handle m = Handle
 -- api news: create +, getAllNews +. edit +
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
     editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
-    getAllNews :: m [NewsOut],
+    pullAllNews :: m (Either SomeException [NewsOut]),
     getFullNews :: Title -> m NewsOut,
     findNewsByTitle :: Title -> m (Maybe News) 
     --
 -- add some func
   }
 
---  News sql=news
---   title T.Text
---   created UTCTime
---   userId UserId
---   categoryId CategoryId
---   content T.Text
---   isPublish Bool
---   UniqueNews title
---   deriving Eq Show
---
---
--- getFullNews :: (Monad m) => Handle m -> Title -> m (Maybe (News, User, [Category], [Image])
--- getFullNews title = do
---   news <- findNewByTitle title
---   case news of
---     Nothing -> do
---       logMessage (logger h) Warning  ("News don't exist! : " <> title)
---       pure Nothing
---     Just (News _ _ userId categoryId _ _) -> do
+
+getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
+getAllNews h = do
+  logMessage (logger h) Debug ("Try to get all news from database")
+  news <- pullAllNews h
+  case news of
+    Left e -> do 
+      let e' = T.pack . show $ e
+      logMessage (logger h) Handlers.Logger.Error e'  
+      pure $ Left e' 
+    Right news' -> pure $ Right news' 
 
 getAllUsers :: (Monad m) => Handle m -> m (Either T.Text [User])
 getAllUsers h = do
@@ -114,7 +106,7 @@ getImage h uid = do
       pure $ Right image 
 
 updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
-updateNews h title newTitle  newLogin newLabel newContent newImages newPublish = do
+updateNews h title newTitle newLogin newLabel newContent newImages newPublish = do
   logMessage (logger h) Debug ("Checks attributes for update news with title " <> title)
   existTitle <- maybe (Left "news don't exist") (\_ -> Right Change) <$> findNewsByTitle h title
   existNewTitle <- checkNews newTitle 

@@ -25,6 +25,7 @@ import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
 import Data.Binary.Builder (Builder, fromLazyByteString)
+import Data.Int (Int64)
 
 -- import Data.Binary.Builder (fromByteString, Builder, fromLazyByteString, putStringUtf8)
 
@@ -37,7 +38,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   isAdmin Bool
   isPublisher Bool
   UniqueUserLogin login
-  deriving Eq Show Generic ToJSON
+  deriving Eq Show
  Password sql=passwords
    quasiPassword T.Text
    deriving Eq Show
@@ -46,7 +47,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   parent CategoryId Maybe
   UniqueCategoryLabel label
   -- deriving Generic
-  deriving Eq Show Generic ToJSON
+  deriving Eq Show 
  News sql=news
   title T.Text
   created UTCTime
@@ -60,7 +61,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   header T.Text
   base64 T.Text
   -- UniqueImage header base64
-  deriving Eq Show
+  deriving Eq Show Generic FromJSON ToJSON
  ImageBank sql=images_bank -- for tests.
   newsId NewsId
   imageId ImageId
@@ -68,5 +69,16 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   deriving Eq Show
 |] 
 
-usersToBuilder :: [User] -> Builder
-usersToBuilder = fromLazyByteString . encode @[User]
+type Name = T.Text
+type Login = T.Text
+type Time = UTCTime
+type PasswordUser = T.Text
+type Label = T.Text
+type NewLabel = T.Text
+type NumberImage = Int64
+type Header = T.Text
+type Base64 = T.Text
+type Title = T.Text
+type Content = T.Text
+type URI_Image = T.Text
+type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)

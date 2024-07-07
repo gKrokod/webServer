@@ -1,9 +1,8 @@
 module Handlers.WebLogic where
 
-import Scheme (usersToBuilder)
 import Scheme (User(..), Image)
-import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..))
-import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory)
+import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..))
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 import qualified Handlers.Base
@@ -56,7 +55,7 @@ doLogic h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get request"  
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show req)
   case rawPathInfo req of
-    path | B.isPrefixOf "/news" path  ->       pure $ response200 h --endPointNews h req
+    path | B.isPrefixOf "/news" path  ->    endPointNews h req
          | B.isPrefixOf "/users" path  ->  endPointUsers h req --endPointUsers h req   -- +
          | B.isPrefixOf "/categories" path  -> endPointCategories h req
          | B.isPrefixOf "/images" path  ->  endPointImages h req
@@ -228,18 +227,76 @@ updateCategory h req = do
           pure $ response200 h
         Left _ -> pure $ response404 h -- "Not ok. 
 
-  
-  -- -- failResponse h
-  -- case queryEditCategory of
-  --   [("name", Just name), ("newname", Just newname), ("parent", Just parent)] -> do
-  --     let [name',newname',parent'] = map E.decodeUtf8 [name, newname, parent]
-  --     categories <- Handlers.Base.takeCategories baseHandle
-  --     let categories' = CategoryDictionary 
-  --                       $ renameRose name' newname' 
-  --                       $ changeRose name' parent' 
-  --                       $ categoryDictionaryTree categories
-  --     Handlers.Base.updateCategories baseHandle categories'
-  --     existingCategories h req
-  --   _ -> do
-  --     Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request edit category"  
-  --     failResponse h
+endPointNews :: (Monad m) => Handle m -> Request -> m (Response) 
+endPointNews h req = do
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point News"
+  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ B.unpack $ rawPathInfo req)
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
+  case rawPathInfo req of
+    "/news/create" -> createNews h req -- создание новости
+    "/news/edit" -> updateNews h req -- редактирование новости
+    "/news" -> existingNews h req -- получение новости
+    _ -> do
+           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+           pure $ response404 h 
+    -- _ -> error "rawPathInfo req /= /news"
+    --
+createNews :: (Monad m) => Handle m -> Request -> m (Response)
+createNews h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create News WEB"
+  body <- webToNews <$> getBody h req -- :: (Either String NewsFromWeb)
+  case body of
+    Left e -> do 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode News WEB"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
+      pure (response404 h) -- "Not ok. 
+-- data NewsFromWeb = NewsFromWeb {title :: T.Text, login :: T.Text, label :: T.Text, content :: T.Text,
+    Right (NewsFromWeb title login label content images publish) -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"
+      tryCreateNews <- Handlers.Base.createNews baseHandle title login label content images publish
+      case tryCreateNews of
+        Right _ -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create News success WEB"
+          pure $ response200 h
+        Left _ -> pure $ response404 h -- "Not ok. 
+ 
+-- data NewsFromWeb = NewsFromWeb {title :: T.Text, login :: T.Text, label :: T.Text, content :: T.Text,
+                                -- images :: [Image], isPublish :: Bool }
+-- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
+-- data EditNewsFromWeb = EditNewsFromWeb {title :: T.Text, newTitle :: Maybe T.Text, 
+--   newLogin :: Maybe T.Text, newLabel :: Maybe T.Text, 
+--   newContent :: Maybe T.Text,
+--   images :: Maybe [Image], newIsPublish :: Maybe Bool }
+updateNews :: (Monad m) => Handle m -> Request -> m (Response)
+updateNews h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News WEB"
+  body <- webToEditNews <$> getBody h req -- :: (Either String EditNewsFromWeb)
+  case body of
+    Left e -> do 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit News WEB"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
+      pure (response404 h) -- "Not ok. 
+    Right (EditNewsFromWeb title newTitle newLogin newLabel newContent newImages newIsPublish) -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit news "
+      tryEditNews <- Handlers.Base.updateNews baseHandle 
+        title newTitle newLogin
+        newLabel newContent (maybe [] id newImages) newIsPublish
+      case tryEditNews of
+        Right _ -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
+          pure $ response200 h
+        Left _ -> pure $ response404 h -- "Not ok. 
+
+existingNews :: (Monad m) => Handle m -> Request -> m (Response)
+existingNews h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All news Web"
+  news <- Handlers.Base.getAllNews baseHandle
+  case news of
+    Left e -> pure $ response404 h -- 
+    Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 
