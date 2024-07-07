@@ -3,7 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme (User(..), Image(..))
+import Scheme (User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
@@ -28,6 +28,15 @@ userToWeb = fromLazyByteString . encode @[UserToWeb] . map convertToWeb
 
 webToUser :: B.ByteString -> Either String UserFromWeb
 webToUser = eitherDecodeStrict @UserFromWeb 
+
+data CategoryToWeb = CategoryToWeb {label :: T.Text}
+  deriving stock (Show, Generic)
+  deriving anyclass (ToJSON)
+
+categoryToWeb :: [Category] -> Builder
+categoryToWeb = fromLazyByteString . encode @[CategoryToWeb] . map convertToWeb
+  where convertToWeb :: Category -> CategoryToWeb
+        convertToWeb (Category l p) = CategoryToWeb l
 
 -- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
 --  User sql=users

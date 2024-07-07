@@ -38,7 +38,8 @@ data Handle m = Handle
 -- api category: create +, getall (getAllCategories) +, edit +      add getBranchCategories for news api
     putCategory :: Label -> Maybe Label -> m (), 
     changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
-    getAllCategories :: m [Category],
+    -- getAllCategories :: m [Category],
+    pullAllCategories :: m (Either SomeException [Category]),
     getBranchCategories :: Label -> m [Category], --todo remove?
     findCategoryByLabel :: Label -> m (Maybe Category),
 -- api image (1): getImage
@@ -84,6 +85,17 @@ getAllUsers h = do
       logMessage (logger h) Handlers.Logger.Error e'  
       pure $ Left e' 
     Right users' -> pure $ Right users' 
+
+getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])
+getAllCategories h = do
+  logMessage (logger h) Debug ("Try to get all categories from database")
+  categories <- pullAllCategories h
+  case categories of
+    Left e -> do 
+      let e' = T.pack . show $ e
+      logMessage (logger h) Handlers.Logger.Error e'  
+      pure $ Left e' 
+    Right categories' -> pure $ Right categories' 
 
 getImage :: (Monad m) => Handle m -> NumberImage -> m (Either T.Text Image)
 getImage h uid = do

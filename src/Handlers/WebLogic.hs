@@ -2,7 +2,8 @@ module Handlers.WebLogic where
 
 import Scheme (usersToBuilder)
 import Scheme (User(..), Image)
-import Web.WebType (UserToWeb(..), UserFromWeb(..), userToWeb, webToUser)
+import Web.WebType (UserToWeb(..), UserFromWeb(..), userToWeb, webToUser, categoryToWeb)
+-- import Web.WebType (userToWeb, webToUser, categoryToWeb)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 import qualified Handlers.Base
@@ -57,8 +58,8 @@ doLogic h req = do
   case rawPathInfo req of
     path | B.isPrefixOf "/news" path  ->       pure $ response200 h --endPointNews h req
          | B.isPrefixOf "/users" path  ->  endPointUsers h req --endPointUsers h req   -- +
-         | B.isPrefixOf "/categories" path  -> pure $ response200 h--endPointCategories h req -- +
-         | B.isPrefixOf "/images" path  ->  endPointImages h req -- +
+         | B.isPrefixOf "/categories" path  -> endPointCategories h req
+         | B.isPrefixOf "/images" path  ->  endPointImages h req
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
             pure (response404 h) -- todo. replace 404 for another error
@@ -111,7 +112,10 @@ endPointImages h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Images"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    path | B.isPrefixOf "/images" path  -> existingImages h req -- получение одной картинки 
+    -- path | B.isPrefixOf "/images" path  -> existingImages h req -- получение одной картинки 
+    path | "/images" == path  -> existingImages h req -- получение одной картинки 
+    -- todo check fail /images/vovo?id=1
+    -- and replace if. == "/images"
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
             pure (response404 h)
@@ -126,13 +130,38 @@ existingImages h req = do
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryImage)
   -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawQueryString req) 
   case queryImage of
-    [("id", Just n)] -> do
+    [("id", Just n)] | idImage > 0 -> do -- todo maxBound int64 and maxBound (fst . readInt n) ?
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Good request image"  
-      let idImage = maybe (-1) (fromIntegral . fst) (BC.readInt n)  -- todo
       eImage <- Handlers.Base.getImage baseHandle idImage
-      case eImage of
-        Left e -> pure (response404 h)
-        Right img -> pure $ mkResponseForImage h img
+      pure $ case eImage of
+        Left e -> response404 h
+        Right img -> mkResponseForImage h img
+      where idImage = maybe (-1) (fromIntegral . fst) (BC.readInt n)  
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request image"  
       pure (response404 h)
+
+endPointCategories :: (Monad m) => Handle m -> Request -> m (Response) 
+endPointCategories h req = do
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Categories"
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
+  case rawPathInfo req of
+    path | B.isPrefixOf "/categories/create" path  -> undefined --createCategory h req -- создание категории 
+         | B.isPrefixOf "/categories/edit" path  -> undefined --editCategory h req -- редактирование категории (названия и смена родительской)
+         -- | B.isPrefixOf "/categories" path  -> existingCategories h req -- получение списка всех 
+         | "/categories" == path  -> existingCategories h req -- получение списка всех 
+         | otherwise -> do
+            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+            pure $ response404 h
+    -- _ -> error "rawPathInfo req /= /categories"
+    --
+    --
+existingCategories :: (Monad m) => Handle m -> Request -> m (Response)
+existingCategories h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All categories Web"
+  categories <- Handlers.Base.getAllCategories baseHandle
+  case categories of
+    Left e -> pure $ response404 h -- 
+    Right c -> pure . mkGoodResponse h . categoryToWeb $ c

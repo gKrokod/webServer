@@ -288,6 +288,7 @@ pullAllUsers connString l = do
                     users <- from $ table @User
                     limit (fromIntegral l)
                     pure (users))
+
 ------------------------------------------------------------------------------------------------------------
  
 putCategory :: ConnectionString -> Label -> Maybe Label -> IO () 
@@ -322,17 +323,17 @@ findCategoryByLabel connString label = runDataBaseWithOutLog connString fetchAct
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueCategoryLabel label)
 
 
-getAllCategories :: ConnectionString -> LimitData -> IO [Category]
--- getAllCategories connString l = runDataBaseWithLog connString fetchAction
-getAllCategories connString l = runDataBaseWithOutLog connString fetchAction
-  where
-    -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
-    fetchAction ::  (MonadIO m) => SqlPersistT m [Category]
-    fetchAction = (fmap . fmap) entityVal 
-                  (select $ do
-                  categories <- from $ table @Category
-                  limit (fromIntegral l)
-                  pure (categories))
+pullAllCategories :: ConnectionString -> LimitData -> IO (Either SomeException [Category])
+-- pullAllCategories connString l = runDataBaseWithLog connString fetchAction
+pullAllCategories connString l = do
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
+    where
+      fetchAction ::  (MonadIO m) => SqlPersistT m [Category]
+      fetchAction = (fmap . fmap) entityVal 
+                    (select $ do
+                    categories <- from $ table @Category
+                    limit (fromIntegral l)
+                    pure (categories))
 
 getBranchCategories :: ConnectionString -> LimitData -> Label -> IO [Category]
 getBranchCategories connString l label = runDataBaseWithOutLog connString fetchAction 
