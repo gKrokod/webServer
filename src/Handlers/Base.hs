@@ -191,6 +191,8 @@ createNews h title login label content images ispublish = do
 
 
 updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
+-- todo
+-- updateCategory :: (Monad m) => Handle m -> Label -> Maybe NewLabel -> Maybe Label -> m (Either T.Text Success)  
 updateCategory h label newlabel parent = do
   logMessage (logger h) Debug ("Check category for label for update: " <> label <> " " <> newlabel)
   exist <- findCategoryByLabel h label

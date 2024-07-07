@@ -28,4 +28,4 @@ mkResponseForImage :: Image -> Response
 mkResponseForImage (Image header base) = responseBuilder status200 [(hContentType, contentType)] content
   where 
     contentType = E.encodeUtf8 header
-    content = fromByteString $ B64.decodeBase64Lenient $ E.encodeUtf8 base 
+    content = fromByteString . B64.decodeBase64Lenient . E.encodeUtf8 $ base 

@@ -2,8 +2,8 @@ module Handlers.WebLogic where
 
 import Scheme (usersToBuilder)
 import Scheme (User(..), Image)
-import Web.WebType (UserToWeb(..), UserFromWeb(..), userToWeb, webToUser, categoryToWeb)
--- import Web.WebType (userToWeb, webToUser, categoryToWeb)
+import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..))
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 import qualified Handlers.Base
@@ -69,12 +69,17 @@ endPointUsers h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Users"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    path | "/users/create" == path  -> createUser h req -- создание пользователя tolko for admin todo
-    -- path | "/users/create" == path  -> createUser h PROXY ADMIN req -- создание пользователя tolko for admin todo
-         | "/users" == path  -> existingUsers h req  -- получение списка всех 
-         | otherwise -> do
-            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point Users not found"  
-            pure (response404 h) -- todo. replace 404 for another error
+    "/users/create" -> createUser h req -- создание пользователя tolko for admin todo
+    "/users" -> existingUsers h req  -- получение списка всех 
+    _ -> do
+           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point Users not found"  
+           pure (response404 h) -- todo. replace 404 for another error
+    -- path | "/users/create" == path  -> createUser h req -- создание пользователя tolko for admin todo
+    -- -- path | "/users/create" == path  -> createUser h PROXY ADMIN req -- создание пользователя tolko for admin todo
+    --      | "/users" == path  -> existingUsers h req  -- получение списка всех 
+    --      | otherwise -> do
+    --         Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point Users not found"  
+    --         pure (response404 h) -- todo. replace 404 for another error
     -- _ -> error "rawPathInfo req /= /users"
     --
 existingUsers :: (Monad m) => Handle m -> Request -> m (Response) -- for ALl
@@ -102,23 +107,24 @@ createUser h req = do
     Right (UserFromWeb name login password admin publisher) -> do
       tryCreateUser <- Handlers.Base.createUser baseHandle name login password admin publisher
       case tryCreateUser of
-        Left e -> pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create User success WEB"
           pure (response200 h)
+        Left _ -> pure $ response404 h -- "Not ok. 
 
 endPointImages :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointImages h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Images"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    -- path | B.isPrefixOf "/images" path  -> existingImages h req -- получение одной картинки 
-    path | "/images" == path  -> existingImages h req -- получение одной картинки 
-    -- todo check fail /images/vovo?id=1
-    -- and replace if. == "/images"
-         | otherwise -> do
-            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure (response404 h)
+    "/images" -> existingImages h req -- получение одной картинки 
+    _ -> do
+           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+           pure (response404 h)
+    -- path | "/images" == path  -> existingImages h req -- получение одной картинки 
+    --      | otherwise -> do
+    --         Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+    --         pure (response404 h)
     -- _ -> error "rawPathInfo req /= /images"
 
 existingImages :: (Monad m) => Handle m -> Request -> m (Response)
@@ -146,13 +152,18 @@ endPointCategories h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Categories"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    path | B.isPrefixOf "/categories/create" path  -> undefined --createCategory h req -- создание категории 
-         | B.isPrefixOf "/categories/edit" path  -> undefined --editCategory h req -- редактирование категории (названия и смена родительской)
-         -- | B.isPrefixOf "/categories" path  -> existingCategories h req -- получение списка всех 
-         | "/categories" == path  -> existingCategories h req -- получение списка всех 
-         | otherwise -> do
-            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure $ response404 h
+    "/categories/create"-> createCategory h req -- создание категории 
+    "/categories/edit" -> updateCategory h req -- редактирование категории (названия и смена родительской)
+    "/categories" -> existingCategories h req -- получение списка всех 
+    _ -> do
+           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+           pure $ response404 h
+    -- path | "/categories/create" == path  -> createCategory h req -- создание категории 
+    --      | B.isPrefixOf "/categories/edit" path  -> undefined --editCategory h req -- редактирование категории (названия и смена родительской)
+    --      | "/categories" == path -> existingCategories h req -- получение списка всех 
+    --      | otherwise -> do
+    --         Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+    --         pure $ response404 h
     -- _ -> error "rawPathInfo req /= /categories"
     --
     --
@@ -165,3 +176,70 @@ existingCategories h req = do
   case categories of
     Left e -> pure $ response404 h -- 
     Right c -> pure . mkGoodResponse h . categoryToWeb $ c
+
+createCategory :: (Monad m) => Handle m -> Request -> m (Response)
+createCategory h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category WEB"
+  body <- webToCategory <$> getBody h req -- :: (Either String CategoryFromWeb)
+  case body of
+    Left e -> do 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Category WEB"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
+      pure (response404 h) -- "Not ok. 
+    Right (CategoryFromWeb label parent) -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create category"
+      tryCreateCategory <- Handlers.Base.createCategory baseHandle label parent
+      case tryCreateCategory of
+        Right _ -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category success WEB"
+          pure $ response200 h
+        Left _ -> pure $ response404 h -- "Not ok. 
+
+updateCategory :: (Monad m) => Handle m -> Request -> m (Response)
+--todo move from Right Right to LVL DataBase edit category New label
+updateCategory h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  -- let queryEditCategory = queryString req
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category WEB"
+  -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryEditCategory)
+  body <- webToEditCategory <$> getBody h req -- :: (Either String EditCategoryFromWeb)
+  case body of
+    Left e -> do 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit Category WEB"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
+      pure (response404 h) -- "Not ok. 
+    Right (EditCategoryFromWeb label (Just newlabel) newparent) -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category Just newlabel parent"
+      tryEditCategory <- Handlers.Base.updateCategory baseHandle label newlabel newparent
+      case tryEditCategory of
+        Right _ -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
+          pure $ response200 h
+        Left _ -> pure $ response404 h -- "Not ok. 
+    Right (EditCategoryFromWeb label Nothing newparent) -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category without new label"
+      tryEditCategory <- Handlers.Base.updateCategory baseHandle label label newparent
+      case tryEditCategory of
+        Right _ -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
+          pure $ response200 h
+        Left _ -> pure $ response404 h -- "Not ok. 
+
+  
+  -- -- failResponse h
+  -- case queryEditCategory of
+  --   [("name", Just name), ("newname", Just newname), ("parent", Just parent)] -> do
+  --     let [name',newname',parent'] = map E.decodeUtf8 [name, newname, parent]
+  --     categories <- Handlers.Base.takeCategories baseHandle
+  --     let categories' = CategoryDictionary 
+  --                       $ renameRose name' newname' 
+  --                       $ changeRose name' parent' 
+  --                       $ categoryDictionaryTree categories
+  --     Handlers.Base.updateCategories baseHandle categories'
+  --     existingCategories h req
+  --   _ -> do
+  --     Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request edit category"  
+  --     failResponse h
