@@ -28,8 +28,8 @@ main = do
   Logger.writeLog "HEEEEREEE WE STAAAART MAINNNN"
   config <- loadConfig
 -- make Tables and Fill its if need
-  whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
-                          >> BB.makeAndFillTables (connectionString config)
+  -- whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
+  --                         >> BB.makeAndFillTables (connectionString config)
   serverSetup <- makeSetup config
   run 4221 (app serverSetup) 
 
@@ -67,15 +67,12 @@ makeSetup cfg = do
           Handlers.Base.pullAllUsers = BB.pullAllUsers pginfo (cLimitData cfg),
           Handlers.Base.findCategoryByLabel = BB.findCategoryByLabel pginfo,
           Handlers.Base.putCategory = BB.putCategory pginfo,
-          Handlers.Base.changeCategory = BB.changeCategory pginfo,
-          Handlers.Base.getBranchCategories = BB.getBranchCategories pginfo (cLimitData cfg),
+          Handlers.Base.editCategory = BB.editCategory pginfo,
           Handlers.Base.pullAllCategories = BB.pullAllCategories pginfo (cLimitData cfg),
           Handlers.Base.pullImage = BB.pullImage pginfo,
-          Handlers.Base.putImage = BB.putImage pginfo,
           Handlers.Base.putNews = BB.putNews pginfo,
           Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
           Handlers.Base.pullAllNews = BB.pullAllNews pginfo (cLimitData cfg),
-          Handlers.Base.getFullNews = BB.getFullNews pginfo (cLimitData cfg),
           Handlers.Base.editNews = BB.editNews pginfo
       }
   let handle = Handlers.WebLogic.Handle { 

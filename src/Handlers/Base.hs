@@ -1,4 +1,3 @@
-
 module Handlers.Base where
 
 import Data.List (intercalate)
@@ -8,7 +7,10 @@ import qualified Handlers.Logger
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Data.Int (Int64)
-import Control.Exception (SomeException)
+-- import Control.Exception (SomeException)
+import Control.Exception (SomeException, displayException)
+import Control.Monad (when)
+import Data.Either (isLeft)
 
 data Success = Put | Change | Get deriving Show
 type Name = T.Text
@@ -28,67 +30,60 @@ type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
 -- type KeyIdCategory = Int64
 data Handle m = Handle 
   {
+--API
     logger :: Handlers.Logger.Handle m,
     panigate :: Int,
--- api user (2): getAllUsers, createUser
-    putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (), 
-    findUserByLogin :: Login -> m (Maybe User), 
     getTime :: m (UTCTime),
+
     pullAllUsers :: m (Either SomeException [User]),
-    -- getAllUsersOut :: m [UserOut], api
--- api category: create +, getall (getAllCategories) +, edit +      add getBranchCategories for news api
-    putCategory :: Label -> Maybe Label -> m (), 
-    changeCategory :: Label -> NewLabel -> Maybe Label -> m (), 
-    -- getAllCategories :: m [Category],
-    pullAllCategories :: m (Either SomeException [Category]),
-    getBranchCategories :: Label -> m [Category], --todo remove?
-    findCategoryByLabel :: Label -> m (Maybe Category),
--- api image (1): getImage
-    pullImage :: NumberImage -> m (Either SomeException (Maybe Image)),
-    putImage :: Header -> Base64 -> m (), 
--- api news: create +, getAllNews +. edit +
-    putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
-    editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
+-- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
     pullAllNews :: m (Either SomeException [NewsOut]),
-    getFullNews :: Title -> m NewsOut,
-    findNewsByTitle :: Title -> m (Maybe News) 
-    --
--- add some func
+-- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
+    pullAllCategories :: m (Either SomeException [Category]),
+-- getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])
+    pullImage :: NumberImage -> m (Either SomeException (Maybe Image)),
+
+    findUserByLogin :: Login -> m (Maybe User), 
+    findCategoryByLabel :: Label -> m (Maybe Category),
+    findNewsByTitle :: Title -> m (Maybe News), 
+
+    putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (Either SomeException Success), 
+-- createUser :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
+    putCategory :: Label -> Maybe Label -> m (Either SomeException Success), 
+-- createCategory :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
+    -- putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
+    putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (Either SomeException Success),
+-- createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
+
+    editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
+-- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
+    editCategory :: Label -> NewLabel -> Maybe Label -> m ()
+-- updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
   }
 
+                -- when (isLeft tryCreate) (logMessage (logger h) Handlers.Logger.Error "Can't putUser")
+                -- pure $ either (Left . T.pack . displayException) Right tryCreate 
 
 getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
 getAllNews h = do
   logMessage (logger h) Debug ("Try to get all news from database")
   news <- pullAllNews h
-  case news of
-    Left e -> do 
-      let e' = T.pack . show $ e
-      logMessage (logger h) Handlers.Logger.Error e'  
-      pure $ Left e' 
-    Right news' -> pure $ Right news' 
+  when (isLeft news) (logMessage (logger h) Handlers.Logger.Error "function pullAllNews fail")
+  pure $ either (Left . T.pack . displayException) Right news 
 
 getAllUsers :: (Monad m) => Handle m -> m (Either T.Text [User])
 getAllUsers h = do
   logMessage (logger h) Debug ("Try to get all users from database")
   users <- pullAllUsers h
-  case users of
-    Left e -> do 
-      let e' = T.pack . show $ e
-      logMessage (logger h) Handlers.Logger.Error e'  
-      pure $ Left e' 
-    Right users' -> pure $ Right users' 
+  when (isLeft users) (logMessage (logger h) Handlers.Logger.Error "function pullAllUsers fail")
+  pure $ either (Left . T.pack . displayException) Right users 
 
 getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])
 getAllCategories h = do
   logMessage (logger h) Debug ("Try to get all categories from database")
   categories <- pullAllCategories h
-  case categories of
-    Left e -> do 
-      let e' = T.pack . show $ e
-      logMessage (logger h) Handlers.Logger.Error e'  
-      pure $ Left e' 
-    Right categories' -> pure $ Right categories' 
+  when (isLeft categories) (logMessage (logger h) Handlers.Logger.Error "function pullAllCategories fail")
+  pure $ either (Left . T.pack . displayException) Right categories 
 
 getImage :: (Monad m) => Handle m -> NumberImage -> m (Either T.Text Image)
 getImage h uid = do
@@ -164,8 +159,8 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
 
 --   
          
-createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
-createNews h title login label content images ispublish = do 
+createNewsBase :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
+createNewsBase h title login label content images ispublish = do 
   logMessage (logger h) Debug ("Check news by title for create: " <> title)
   existTitle <- findNewsByTitle h title 
   logMessage (logger h) Debug ("Check user by login for create: " <> login)
@@ -176,8 +171,9 @@ createNews h title login label content images ispublish = do
     (Nothing, Just _user, Just _category) -> do
       logMessage (logger h) Debug ("Create news with title, login and label: " <> title <> " " <> login <> " " <> label)
       time <- getTime h
-      putNews h title time login label content images ispublish
-      pure $ Right Put
+      tryPut <- putNews h title time login label content images ispublish
+      when (isLeft tryPut) (logMessage (logger h) Handlers.Logger.Error "Can't putNews")
+      pure $ either (Left . T.pack . displayException) Right tryPut 
     _ -> do
       logMessage (logger h) Warning  ("Fail to create news with title, login and label: " <> title <> " " <> login <> " " <> label)
       pure $ Left "fail to create news"
@@ -195,7 +191,7 @@ updateCategory h label newlabel parent = do
   case (exist, existNew', parent) of
     (Just _, Nothing, Nothing) -> do
                                     logMessage (logger h) Debug ("Create category without parent and label: " <> label)
-                                    changeCategory h label newlabel parent
+                                    editCategory h label newlabel parent
                                     pure $ Right Change 
     (Just _, Nothing, Just labelParent) -> do
                                     logMessage (logger h) Debug ("Update category: " <> label)
@@ -207,14 +203,14 @@ updateCategory h label newlabel parent = do
                                         pure $ Left "Parent dont' exist"
                                       _ -> do
                                         logMessage (logger h) Debug ("Parent exist")
-                                        changeCategory h label newlabel parent
+                                        editCategory h label newlabel parent
                                         pure $ Right Change 
     _ -> do
           logMessage (logger h) Warning ("Abort. Category don't exist or .... Category: " <> label)
           pure $ Left "Category don't's exist or ..."
 
-createCategory :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
-createCategory h label parent = do
+createCategoryBase :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
+createCategoryBase h label parent = do
   logMessage (logger h) Debug ("Check category for label for create: " <> label)
   exist <- findCategoryByLabel h label
   case (exist, parent) of
@@ -223,8 +219,9 @@ createCategory h label parent = do
                 pure $ Left "Category arleady taken"
     (Nothing, Nothing) -> do
                 logMessage (logger h) Debug ("Create category without parent and label: " <> label)
-                putCategory h label parent
-                pure $ Right Put 
+                tryPut <- putCategory h label parent
+                when (isLeft tryPut) (logMessage (logger h) Handlers.Logger.Error "Can't putCategory")
+                pure $ either (Left . T.pack . displayException) Right tryPut 
     (Nothing, Just labelParent) -> do
                 logMessage (logger h) Debug ("Create category with parent and label: " <> labelParent <> " " <> label)
                 logMessage (logger h) Debug ("Check parent: " <> labelParent)
@@ -235,8 +232,9 @@ createCategory h label parent = do
                     pure $ Left "Parent dont' exist"
                   _ -> do
                     logMessage (logger h) Debug ("Parent exist")
-                    putCategory h label parent 
-                    pure $ Right Put 
+                    tryPut <- putCategory h label parent
+                    when (isLeft tryPut) (logMessage (logger h) Handlers.Logger.Error "Can't putCategory")
+                    pure $ either (Left . T.pack . displayException) Right tryPut 
     _ -> do
                 logMessage (logger h) Warning ("fail for createCategory: ")
                 pure $ Left "fail for create Category "
@@ -245,10 +243,11 @@ createCategory h label parent = do
 -- cat1 = Category {categoryLabel = "Abstract", categoryParent = Nothing }
 -- cat3 = Category "Woman" (Just $ toSqlKey 1)
 --
-createUser :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
-createUser h name login pwd admin publish = do
+createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
+createUserBase h name login pwd admin publish = do
   logMessage (logger h) Debug ("check user By login for  create: " <> login)
-  exist <- findUserByLogin h login
+  exist <- findUserByLogin h login -- todo
+  -- exist <- (pure Nothing ) -- findUserByLogin h login
   case exist of
     Just _ -> do
                 logMessage (logger h) Warning ("Login arleady taken: " <> login)
@@ -256,11 +255,11 @@ createUser h name login pwd admin publish = do
     Nothing-> do
                 logMessage (logger h) Debug ("Create user...")
                 -- makeHashPassword pwd
-                let pwd' = pwd
+                let pwd' = pwd --for make QuasiPassowrd
                 time <- getTime h
-                putUser h name login pwd' time admin publish 
-                pure $ Right Put 
-
+                tryCreate <- putUser h name login pwd' time admin publish 
+                when (isLeft tryCreate) (logMessage (logger h) Handlers.Logger.Error "Can't putUser")
+                pure $ either (Left . T.pack . displayException) Right tryCreate 
 
 -- checkPassword :: (Monad m) => Handle m -> Login -> PasswordUser -> m (Bool)
 -- checkPassword h login pass = do

@@ -5,31 +5,16 @@ import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCa
 import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb)
 import qualified Handlers.Logger
 import qualified Handlers.Base
-import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
 import Network.Wai (Request, Response, rawPathInfo, queryString)
 import qualified Data.ByteString as B 
+import Data.ByteString.Char8 as BC (readInt)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as L 
 import Network.HTTP.Types (notFound404, status200)
 -- import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
 import qualified Data.Text.Encoding as E
-import Data.Binary.Builder(Builder(..), fromLazyByteString)
-import Data.ByteString.Char8 as BC (readInt)
--- import Data.Aeson (ToJSON, encode)
--- import Data.Binary.Builder as BU (fromByteString, Builder, fromLazyByteString, putStringUtf8)
-
--- import Network.HTTP.Types.Header (hContentType)
--- import Data.Binary.Builder as B (fromByteString, Builder, fromLazyByteString, putStringUtf8)
--- import qualified Data.ByteString.Lazy as L 
--- import Users
--- import Images
--- import News
--- import Category
--- import Data.Tree
--- import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON)
--- import Data.ByteString.Base64 as B64
--- import Data.List (sort)
+import Data.Binary.Builder(Builder(..))
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
@@ -73,13 +58,6 @@ endPointUsers h req = do
     _ -> do
            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point Users not found"  
            pure (response404 h) -- todo. replace 404 for another error
-    -- path | "/users/create" == path  -> createUser h req -- создание пользователя tolko for admin todo
-    -- -- path | "/users/create" == path  -> createUser h PROXY ADMIN req -- создание пользователя tolko for admin todo
-    --      | "/users" == path  -> existingUsers h req  -- получение списка всех 
-    --      | otherwise -> do
-    --         Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point Users not found"  
-    --         pure (response404 h) -- todo. replace 404 for another error
-    -- _ -> error "rawPathInfo req /= /users"
     --
 existingUsers :: (Monad m) => Handle m -> Request -> m (Response) -- for ALl
 existingUsers h req = do
@@ -88,7 +66,9 @@ existingUsers h req = do
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All users"
   getUsers <- Handlers.Base.getAllUsers baseHandle
   case getUsers of
-    Left e -> pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
+    Left e -> do
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+      pure $ response404 h -- "Not ok. 
     Right users -> pure . mkGoodResponse h . userToWeb $ users
   
 createUser :: (Monad m) => Handle m -> Request -> m (Response) -- for Admin
@@ -104,12 +84,15 @@ createUser h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
     Right (UserFromWeb name login password admin publisher) -> do
-      tryCreateUser <- Handlers.Base.createUser baseHandle name login password admin publisher
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"
+      tryCreateUser <- Handlers.Base.createUserBase baseHandle name login password admin publisher
       case tryCreateUser of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create User success WEB"
           pure (response200 h)
-        Left _ -> pure $ response404 h -- "Not ok. 
+        Left e -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+          pure $ response404 h -- "Not ok. 
 
 endPointImages :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointImages h req = do
@@ -120,11 +103,6 @@ endPointImages h req = do
     _ -> do
            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
            pure (response404 h)
-    -- path | "/images" == path  -> existingImages h req -- получение одной картинки 
-    --      | otherwise -> do
-    --         Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-    --         pure (response404 h)
-    -- _ -> error "rawPathInfo req /= /images"
 
 existingImages :: (Monad m) => Handle m -> Request -> m (Response)
 existingImages h req = do
@@ -157,15 +135,7 @@ endPointCategories h req = do
     _ -> do
            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
            pure $ response404 h
-    -- path | "/categories/create" == path  -> createCategory h req -- создание категории 
-    --      | B.isPrefixOf "/categories/edit" path  -> undefined --editCategory h req -- редактирование категории (названия и смена родительской)
-    --      | "/categories" == path -> existingCategories h req -- получение списка всех 
-    --      | otherwise -> do
-    --         Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-    --         pure $ response404 h
-    -- _ -> error "rawPathInfo req /= /categories"
-    --
-    --
+
 existingCategories :: (Monad m) => Handle m -> Request -> m (Response)
 existingCategories h req = do 
   let logHandle = logger h 
@@ -173,7 +143,9 @@ existingCategories h req = do
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All categories Web"
   categories <- Handlers.Base.getAllCategories baseHandle
   case categories of
-    Left e -> pure $ response404 h -- 
+    Left e -> do
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+      pure $ response404 h -- "Not ok. 
     Right c -> pure . mkGoodResponse h . categoryToWeb $ c
 
 createCategory :: (Monad m) => Handle m -> Request -> m (Response)
@@ -189,12 +161,14 @@ createCategory h req = do
       pure (response404 h) -- "Not ok. 
     Right (CategoryFromWeb label parent) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create category"
-      tryCreateCategory <- Handlers.Base.createCategory baseHandle label parent
+      tryCreateCategory <- Handlers.Base.createCategoryBase baseHandle label parent
       case tryCreateCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category success WEB"
           pure $ response200 h
-        Left _ -> pure $ response404 h -- "Not ok. 
+        Left e -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+          pure $ response404 h -- "Not ok. 
 
 updateCategory :: (Monad m) => Handle m -> Request -> m (Response)
 --todo move from Right Right to LVL DataBase edit category New label
@@ -255,20 +229,15 @@ createNews h req = do
 -- data NewsFromWeb = NewsFromWeb {title :: T.Text, login :: T.Text, label :: T.Text, content :: T.Text,
     Right (NewsFromWeb title login label content images publish) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"
-      tryCreateNews <- Handlers.Base.createNews baseHandle title login label content images publish
+      tryCreateNews <- Handlers.Base.createNewsBase baseHandle title login label content images publish
       case tryCreateNews of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create News success WEB"
           pure $ response200 h
-        Left _ -> pure $ response404 h -- "Not ok. 
+        Left e -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+          pure $ response404 h -- "Not ok. 
  
--- data NewsFromWeb = NewsFromWeb {title :: T.Text, login :: T.Text, label :: T.Text, content :: T.Text,
-                                -- images :: [Image], isPublish :: Bool }
--- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
--- data EditNewsFromWeb = EditNewsFromWeb {title :: T.Text, newTitle :: Maybe T.Text, 
---   newLogin :: Maybe T.Text, newLabel :: Maybe T.Text, 
---   newContent :: Maybe T.Text,
---   images :: Maybe [Image], newIsPublish :: Maybe Bool }
 updateNews :: (Monad m) => Handle m -> Request -> m (Response)
 updateNews h req = do 
   let logHandle = logger h 
@@ -298,5 +267,7 @@ existingNews h req = do
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All news Web"
   news <- Handlers.Base.getAllNews baseHandle
   case news of
-    Left e -> pure $ response404 h -- 
+    Left e -> do
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+      pure $ response404 h -- "Not ok. 
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 

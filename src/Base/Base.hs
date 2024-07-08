@@ -5,27 +5,16 @@ import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn)
 import Control.Monad.Logger (runNoLoggingT, runStderrLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
 import Control.Monad.IO.Class (MonadIO)
 import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,ConnectionString, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
--- import Database.Persist.Postgresql  (getBy)
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
--- import Database.Esqueleto.Experimental 
--- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
 import Handlers.Base (NumberImage, URI_Image)
--- import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
-import Control.Exception (try, SomeException, throwIO, Exception)
--- import Data.Aeson.Key (toText)
-
--- type Name = T.Text
--- type Login = T.Text
--- type PasswordUser = T.Text
--- type Header = T.Text
--- type Base64 = T.Text
+import Control.Exception (try, SomeException, throwIO, Exception, throw)
 --
 makeAndFillTables :: ConnectionString -> IO ()
 makeAndFillTables pginfo = makeTables pginfo >> fillTables pginfo
@@ -53,7 +42,6 @@ fillTables pginfo = do
     insertMany_ [imageBank1, imageBank2, imageBank3, imageBank4, imageBank5] 
   pure ()
 
-
 runDataBaseWithLog :: ConnectionString -> SqlPersistT (LoggingT IO) a -> IO a
 -- runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
 runDataBaseWithLog pginfo a = runStdoutLoggingT $ withPostgresqlConn pginfo $ \backend -> runSqlConn a backend 
@@ -68,9 +56,6 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
--- pullAllUsers :: ConnectionString -> LimitData -> IO (Either SomeException [User])
--- pullAllUsers connString l = do
---   try @SomeException (runDataBaseWithOutLog connString fetchAction)
 
 pullAllNews :: ConnectionString -> LimitData -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
@@ -104,9 +89,6 @@ fetchLables lim label =
                    pure parent)
       limit (fromIntegral lim)
       from cte
-
-getFullNews :: ConnectionString -> LimitData -> Title -> IO NewsOut
-getFullNews connString l title = runDataBaseWithOutLog connString (fetchFullNews l title) 
 
 fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Title -> SqlPersistT m NewsOut
 fetchFullNews l title = do
@@ -218,9 +200,9 @@ deleteImagesFromBankByNews key =
         imageBank <- from $ table @ImageBank
         where_ (imageBank ^. ImageBankNewsId ==. val key)
 
-putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO () 
+putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO (Either SomeException Success) 
 putNews pginfo title time login label content images ispublish = 
-  runDataBaseWithOutLog pginfo $ do
+  try @SomeException (runDataBaseWithOutLog pginfo $ do
     keyUser <- (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
     keyCategory <- (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
     case (keyUser, keyCategory) of
@@ -228,15 +210,10 @@ putNews pginfo title time login label content images ispublish =
         keyNews <- insert $ News title time keyUsr keyCat content ispublish 
         keysImages <- insertMany images 
         insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
-      _ -> pure ()
+        pure Put
+      _ -> throw $ userError "function putNews fail")
 
 ------------------------------------------------------------------------------------------------------------
-putImage :: ConnectionString -> Header -> Base64 -> IO () 
-putImage pginfo header base64 = do
-  runDataBaseWithOutLog pginfo $ do
-  -- runDataBaseWithLog pginfo $ do
-    insert $ Image header base64
-    pure ()
 
   --for api news
 pullImage :: ConnectionString -> NumberImage -> IO (Either SomeException (Maybe Image)) 
@@ -262,13 +239,14 @@ pullImage connString uid = do
 --         _ -> pure ()    
 
 ------------------------------------------------------------------------------------------------------------
-putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
+putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO (Either SomeException Success) 
+-- putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
 putUser pginfo name login pwd time admin publish  = do
-  runDataBaseWithOutLog pginfo $ do
+  try @SomeException (runDataBaseWithOutLog pginfo $ do
   -- runDataBaseWithLog pginfo $ do
     pId <- insert $ Password pwd 
     insert $ User name login pId time admin publish
-    pure ()
+    pure Put)
 
 findUserByLogin :: ConnectionString -> Login -> IO (Maybe User) 
 -- findUserByLogin connString login = runDataBaseWithLog connString fetchAction
@@ -296,19 +274,21 @@ pullAllUsers connString l = do
 
 ------------------------------------------------------------------------------------------------------------
  
-putCategory :: ConnectionString -> Label -> Maybe Label -> IO () 
-putCategory pginfo label parent = do
-  runDataBaseWithOutLog pginfo $ do
+putCategory :: ConnectionString -> Label -> Maybe Label -> IO (Either SomeException Success) 
+putCategory pginfo label parent = 
+  try @SomeException (runDataBaseWithOutLog pginfo $ do
   -- runDataBaseWithLog pginfo $ do
     case parent of
-      Nothing -> insert_ $ Category label Nothing
+      Nothing -> do
+        insert_ $ Category label Nothing  
+        pure Put
       Just labelParent -> do
         parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent 
-        -- esli nothing to yze opisano v handlers, ne vuzuvaetsya
-        insert_ $ Category label parentId 
-
-changeCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO () 
-changeCategory pginfo label newLabel parent = do
+        insert_ $ Category label parentId
+        pure Put)
+--
+editCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO () 
+editCategory pginfo label newLabel parent = do
   runDataBaseWithOutLog pginfo $ do
   -- runDataBaseWithLog pginfo $ do
     labelId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel label 
@@ -339,26 +319,6 @@ pullAllCategories connString l = do
                     categories <- from $ table @Category
                     limit (fromIntegral l)
                     pure (categories))
-
-getBranchCategories :: ConnectionString -> LimitData -> Label -> IO [Category]
-getBranchCategories connString l label = runDataBaseWithOutLog connString fetchAction 
-  where
-    fetchAction ::  (MonadIO m) => SqlPersistT m [Category]
-    fetchAction = (fmap . fmap) entityVal 
-      (select $ do
-      cte <- withRecursive
-               ( do
-                   child <- from $ table @Category
-                   where_ (child ^. CategoryLabel ==. val (label))
-                   pure child)
-               unionAll_
-               (\self -> do
-                   child <- from self
-                   parent <- from $ table @Category
-                   where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
-                   pure parent)
-      limit (fromIntegral l)
-      from cte)
 
 
 replaceField :: a -> Maybe a -> a
