@@ -3,7 +3,8 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme --(User(..), Image(..), Category(..))
+import Scheme (User(..), Image(..), Category(..))
+-- import Scheme hiding (NewsOut) --(User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
@@ -78,12 +79,14 @@ data NewsToWeb = NewsToWeb {title :: T.Text, created :: UTCTime, login :: T.Text
   deriving anyclass (ToJSON)
 --
 
+-- type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
+type NewsOut = (T.Text, UTCTime, T.Text, [T.Text], T.Text, [T.Text], Bool)
+--
 newsToWeb :: [NewsOut] -> Builder
 newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
   where convertToWeb :: NewsOut -> NewsToWeb
         convertToWeb (t, d, l, ls, c, im, b) = NewsToWeb t d l ls c im b 
 
--- type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
 -- type URI_Image = T.Text
 --
 -- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|

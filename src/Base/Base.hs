@@ -14,8 +14,8 @@ import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
 import Data.Time (UTCTime)
--- import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64, NumberImage, Content, Title, NewsOut)
--- import Handlers.Base (URI_Image)
+import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
+import Handlers.Base (NumberImage, URI_Image)
 -- import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
 import Control.Exception (try, SomeException, throwIO, Exception)
@@ -26,6 +26,7 @@ import Control.Exception (try, SomeException, throwIO, Exception)
 -- type PasswordUser = T.Text
 -- type Header = T.Text
 -- type Base64 = T.Text
+--
 makeAndFillTables :: ConnectionString -> IO ()
 makeAndFillTables pginfo = makeTables pginfo >> fillTables pginfo
 

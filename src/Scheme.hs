@@ -69,16 +69,16 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   deriving Eq Show
 |] 
 
-type Name = T.Text
-type Login = T.Text
-type Time = UTCTime
-type PasswordUser = T.Text
-type Label = T.Text
-type NewLabel = T.Text
-type NumberImage = Int64
-type Header = T.Text
-type Base64 = T.Text
-type Title = T.Text
-type Content = T.Text
-type URI_Image = T.Text
-type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
+-- type Name = T.Text
+-- type Login = T.Text
+-- type Time = UTCTime
+-- type PasswordUser = T.Text
+-- type Label = T.Text
+-- type NewLabel = T.Text
+-- type NumberImage = Int64
+-- type Header = T.Text
+-- type Base64 = T.Text
+-- type Title = T.Text
+-- type Content = T.Text
+-- type URI_Image = T.Text
+-- type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
