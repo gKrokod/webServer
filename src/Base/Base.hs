@@ -161,9 +161,10 @@ fetchFullNews l title = do
       workerCategory :: [Entity Category] -> [Label]
       workerCategory = map (\(Entity _key value) -> categoryLabel value) 
 
-findNewsByTitle :: ConnectionString -> Title -> IO (Maybe News) 
+findNewsByTitle :: ConnectionString -> Title -> IO (Either SomeException (Maybe News) )
+-- findNewsByTitle :: ConnectionString -> Title -> IO (Maybe News) 
 -- findUserByLogin connString login = runDataBaseWithLog connString fetchAction
-findNewsByTitle connString title = runDataBaseWithOutLog connString fetchAction
+findNewsByTitle connString title = try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueNews title)
@@ -248,9 +249,9 @@ putUser pginfo name login pwd time admin publish  = do
     insert $ User name login pId time admin publish
     pure Put)
 
-findUserByLogin :: ConnectionString -> Login -> IO (Maybe User) 
+findUserByLogin :: ConnectionString -> Login -> IO (Either SomeException (Maybe User)) 
 -- findUserByLogin connString login = runDataBaseWithLog connString fetchAction
-findUserByLogin connString login = runDataBaseWithOutLog connString fetchAction
+findUserByLogin connString login = try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe User)
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueUserLogin login)
@@ -300,8 +301,8 @@ editCategory pginfo label newLabel parent = do
       _ -> throw $ userError "function editCategory fail (can't find category)"  -- label don't exist
     pure Change)
 
-findCategoryByLabel :: ConnectionString -> Label -> IO (Maybe Category) 
-findCategoryByLabel connString label = runDataBaseWithOutLog connString fetchAction
+findCategoryByLabel :: ConnectionString -> Label -> IO (Either SomeException (Maybe Category)) 
+findCategoryByLabel connString label = try @SomeException (runDataBaseWithOutLog connString fetchAction)
 -- findCategoryByLabel connString label = runDataBaseWithLog connString fetchAction
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Category)

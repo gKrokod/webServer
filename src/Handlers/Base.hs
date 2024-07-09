@@ -43,9 +43,9 @@ data Handle m = Handle
 -- getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])
     pullImage :: NumberImage -> m (Either SomeException (Maybe Image)),
 
-    findUserByLogin :: Login -> m (Maybe User), 
-    findCategoryByLabel :: Label -> m (Maybe Category),
-    findNewsByTitle :: Title -> m (Maybe News), 
+    findUserByLogin :: Login -> m (Either SomeException (Maybe User)), 
+    findCategoryByLabel :: Label -> m (Either SomeException (Maybe Category)),
+    findNewsByTitle :: Title -> m (Either SomeException (Maybe News)), 
 
     putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (Either SomeException Success), 
 -- createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
@@ -104,7 +104,8 @@ getImage h uid = do
 updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
 updateNews h title newTitle newLogin newLabel newContent newImages newPublish = do
   logMessage (logger h) Debug ("Checks attributes for update news with title " <> title)
-  existTitle <- maybe (Left "news don't exist") (\_ -> Right Change) <$> findNewsByTitle h title
+  -- existTitle <- maybe (Left "news don't exist") (\_ -> Right Change) <$> findNewsByTitle h title
+  existTitle <- undefined -- todo
   existNewTitle <- checkNews newTitle 
   existUser <- checkUser newLogin
   existCategory <- checkCategory newLabel
@@ -125,51 +126,49 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
       pure $ either (Left . T.pack . displayException) Right tryEdit
   where
     -- checkUser :: (Monad m) => Maybe Login -> m (Either T.Text Success) -- todo WHY m1 not m ?
-    checkUser Nothing = pure (Right Change)
+    checkUser Nothing = pure $ Right Change
     checkUser (Just login) = do
-      user <- findUserByLogin h login
-      case user of
-        Nothing -> do
-          logMessage (logger h) Warning  ("Fail update news. User don't exist! : " <> login)
-          pure $ Left "Fail update news. User don't exist!"
-        Just _ -> do
-          logMessage (logger h) Debug  ("Ok. User exist! go ahead : " <> login)
-          pure $ Right Change
-      
+      tryFindUser <- findUserByLogin h login
+      when (isLeft tryFindUser) (logMessage (logger h) Error  ("function findUserByLogin fail"))
+      pure (either (Left . T.pack . displayException)
+           (maybe  (Left "Fail update news. User don't exist!") (\_ -> Right Change)) 
+           tryFindUser )
+      --
     checkCategory Nothing = pure (Right Change)
     checkCategory (Just label) = do
-      category <- findCategoryByLabel h label
-      case category of
-        Nothing -> do
-          logMessage (logger h) Warning  ("Fail update news. Category don't exist! : " <> label)
-          pure $ Left "Fail update news. Category don't exist!"
-        Just _ -> do
-          logMessage (logger h) Debug  ("Ok. Category exist! go ahead : " <> label)
-          pure $ Right Change
+      tryFindCategory <- findCategoryByLabel h label
+      when (isLeft tryFindCategory) (logMessage (logger h) Error  ("function findCategoryByLabel fail"))
+      pure (either (Left . T.pack . displayException)
+           (maybe  (Left "Fail update news. Category don't exist!") (\_ -> Right Change)) 
+           tryFindCategory )
 
     checkNews Nothing = pure (Right Change)
     checkNews (Just title) = do
-      news <- findNewsByTitle h title
-      case news of
-        Nothing -> do
-          logMessage (logger h) Debug  ("Ok. News don't exist! go ahead : " <> title)
-          pure $ Right Change
-        Just _ -> do
-          logMessage (logger h) Warning  ("Fail update news. News with your title is existed! : " <> title)
-          pure $ Left "Fail update news. News already exist!"
-
+      tryFindNews <- findNewsByTitle h title
+      when (isLeft tryFindNews) (logMessage (logger h) Error  ("function findNewsByTitle fail"))
+      pure (either (Left . T.pack . displayException)
+           (maybe  (Right Change)  (\_ -> Left $ "Fail update news. News with your title is existed! : " <> title))
+           tryFindNews )
 --   
          
+      -- tryFindUser <- findUserByLogin h login
+      -- when (isLeft tryFindUser) (logMessage (logger h) Error  ("function findUserByLogin fail"))
+      -- pure (either (Left . T.pack . displayException)
+      --      (maybe  (Left "Fail update news. User don't exist!") (\_ -> Right Change)) 
+      --      tryFindUser )
+
 createNewsBase :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
 createNewsBase h title login label content images ispublish = do 
   logMessage (logger h) Debug ("Check news by title for create: " <> title)
   existTitle <- findNewsByTitle h title 
+  -- todo pro Left findsUse
   logMessage (logger h) Debug ("Check user by login for create: " <> login)
   existUser <- findUserByLogin h login 
+  -- todo pro Left findsUse
   logMessage (logger h) Debug ("Check category by label for create: " <> label)
   existCategory <- findCategoryByLabel h label 
   case (existTitle, existUser, existCategory) of
-    (Nothing, Just _user, Just _category) -> do
+    (Right Nothing, Right (Just _user), Right (Just _category)) -> do
       logMessage (logger h) Debug ("Create news with title, login and label: " <> title <> " " <> login <> " " <> label)
       time <- getTime h
       tryPut <- putNews h title time login label content images ispublish
@@ -179,6 +178,11 @@ createNewsBase h title login label content images ispublish = do
       logMessage (logger h) Warning  ("Fail to create news with title, login and label: " <> title <> " " <> login <> " " <> label)
       pure $ Left "fail to create news"
 
+      -- tryFindUser <- findUserByLogin h login
+      -- when (isLeft tryFindUser) (logMessage (logger h) Error  ("function findUserByLogin fail"))
+      -- pure (either (Left . T.pack . displayException)
+      --      (maybe  (Left "Fail update news. User don't exist!") (\_ -> Right Change)) 
+      --      tryFindUser )
 
 updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
 -- todo
@@ -188,26 +192,33 @@ updateCategory h label newlabel parent = do
   exist <- findCategoryByLabel h label
   existNew <- findCategoryByLabel h newlabel
   -- let flag = label == newlabel
-  let existNew' = if (label == newlabel) then Nothing else existNew
-  case (exist, existNew', parent) of
-    (Just _, Nothing, Nothing) -> do
+  let existNew' = if (label == newlabel) then Right Nothing else existNew
+  case (sequence [exist, existNew'], parent) of
+    (Left e, _) -> do
+          let e' = T.pack . displayException $ e
+          logMessage (logger h) Error e' 
+          pure $ Left e'
+    (Right [Just _, Nothing] , Nothing) -> do
                                     logMessage (logger h) Debug ("Create category without parent and label: " <> label)
                                     tryEdit <- editCategory h label newlabel parent
                                     when (isLeft tryEdit) (logMessage (logger h) Handlers.Logger.Error "Can't editCategory")
                                     pure $ either (Left . T.pack . displayException) Right tryEdit
-    (Just _, Nothing, Just labelParent) -> do
+    (Right [Just _, Nothing], Just labelParent) -> do
                                     logMessage (logger h) Debug ("Update category: " <> label)
                                     logMessage (logger h) Debug ("Check parent for category. Parent: " <> labelParent)
                                     exist <- findCategoryByLabel h labelParent
                                     case exist of
-                                      Nothing -> do
+                                      Right Nothing -> do
                                         logMessage (logger h) Warning ("Abort. Parent don't exist: " <> labelParent)
                                         pure $ Left "Parent dont' exist"
-                                      _ -> do
+                                      Right (Just _) -> do
                                         logMessage (logger h) Debug ("Parent exist")
                                         tryEdit <- editCategory h label newlabel parent
                                         when (isLeft tryEdit) (logMessage (logger h) Handlers.Logger.Error "Can't editCategory")
                                         pure $ either (Left . T.pack . displayException) Right tryEdit
+                                      Left e -> do
+                                        logMessage (logger h) Error (T.pack . displayException $ e) 
+                                        pure $ Left "function fundCategoryByLabel fail"
     _ -> do
           logMessage (logger h) Warning ("Abort. Category don't exist or .... Category: " <> label)
           pure $ Left "Category don't's exist or ..."
@@ -217,20 +228,28 @@ createCategoryBase h label parent = do
   logMessage (logger h) Debug ("Check category for label for create: " <> label)
   exist <- findCategoryByLabel h label
   case (exist, parent) of
-    (Just _, _) -> do
+    (Left e, _) -> do
+                let e' = T.pack . displayException $ e
+                logMessage (logger h) Error e' 
+                pure $ Left e'
+    (Right (Just _), _) -> do
                 logMessage (logger h) Warning ("Category arleady taken: " <> label)
                 pure $ Left "Category arleady taken"
-    (Nothing, Nothing) -> do
+    (Right Nothing, Nothing) -> do
                 logMessage (logger h) Debug ("Create category without parent and label: " <> label)
                 tryPut <- putCategory h label parent
                 when (isLeft tryPut) (logMessage (logger h) Handlers.Logger.Error "Can't putCategory")
                 pure $ either (Left . T.pack . displayException) Right tryPut 
-    (Nothing, Just labelParent) -> do
+    (Right Nothing, Just labelParent) -> do
                 logMessage (logger h) Debug ("Create category with parent and label: " <> labelParent <> " " <> label)
                 logMessage (logger h) Debug ("Check parent: " <> labelParent)
                 exist <- findCategoryByLabel h labelParent
                 case exist of
-                  Nothing -> do
+                  Left e -> do
+                      let e' = T.pack . displayException $ e
+                      logMessage (logger h) Error e' 
+                      pure $ Left e'
+                  Right Nothing -> do
                     logMessage (logger h) Warning ("Abort. Parent dont' exist: " <> labelParent)
                     pure $ Left "Parent dont' exist"
                   _ -> do
@@ -249,13 +268,15 @@ createCategoryBase h label parent = do
 createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
 createUserBase h name login pwd admin publish = do
   logMessage (logger h) Debug ("check user By login for  create: " <> login)
-  exist <- findUserByLogin h login -- todo
-  -- exist <- (pure Nothing ) -- findUserByLogin h login
-  case exist of
-    Just _ -> do
+  tryFind <- findUserByLogin h login -- todo
+  case tryFind of
+    Left e -> do
+                logMessage (logger h) Error ("Can't findUserByLogin")
+                pure . Left . T.pack . displayException $ e 
+    Right (Just _) -> do
                 logMessage (logger h) Warning ("Login arleady taken: " <> login)
-                pure $ Left "Login arleady taken"
-    Nothing-> do
+                pure . Left $ "Login arleady taken"
+    Right Nothing-> do
                 logMessage (logger h) Debug ("Create user...")
                 -- makeHashPassword pwd
                 let pwd' = pwd --for make QuasiPassowrd
