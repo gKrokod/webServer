@@ -168,31 +168,33 @@ findNewsByTitle connString title = runDataBaseWithOutLog connString fetchAction
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueNews title)
 
-editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO ()
-editNews pginfo title time newTitle  newLogin newLabel newContent newImages newPublish = 
-  runDataBaseWithOutLog pginfo $ do
-    oldNews <- getBy $ UniqueNews title
-    case oldNews of
-      Nothing -> pure ()
-      Just oldNews' -> do
-        let (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) = entityVal oldNews' 
-        let keyNews = entityKey oldNews' 
-        newKeyUser <- case newLogin of
-                     Just login -> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
-                     _ -> pure Nothing
-        newKeyCategory <- case newLabel of
-                     Just label -> (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
-                     _ -> pure Nothing
-        let newNews = News (replaceField oldTitle newTitle) 
-                           time 
-                           (replaceField oldKeyUser newKeyUser) 
-                           (replaceField oldKeyCategory newKeyCategory) 
-                           (replaceField oldContent newContent) 
-                           (replaceField oldPublish newPublish)
-        replace keyNews newNews
-        deleteImagesFromBankByNews keyNews
-        keysImages <- insertMany newImages
-        insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO (Either SomeException Success)
+-- editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO ()
+editNews = undefined
+-- editNews pginfo title time newTitle  newLogin newLabel newContent newImages newPublish = 
+--   runDataBaseWithOutLog pginfo $ do
+--     oldNews <- getBy $ UniqueNews title
+--     case oldNews of
+--       Nothing -> pure ()
+--       Just oldNews' -> do
+--         let (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) = entityVal oldNews' 
+--         let keyNews = entityKey oldNews' 
+--         newKeyUser <- case newLogin of
+--                      Just login -> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
+--                      _ -> pure Nothing
+--         newKeyCategory <- case newLabel of
+--                      Just label -> (fmap . fmap) entityKey (getBy $ UniqueCategoryLabel label)
+--                      _ -> pure Nothing
+--         let newNews = News (replaceField oldTitle newTitle) 
+--                            time 
+--                            (replaceField oldKeyUser newKeyUser) 
+--                            (replaceField oldKeyCategory newKeyCategory) 
+--                            (replaceField oldContent newContent) 
+--                            (replaceField oldPublish newPublish)
+--         replace keyNews newNews
+--         deleteImagesFromBankByNews keyNews
+--         keysImages <- insertMany newImages
+--         insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
 
 deleteImagesFromBankByNews :: (MonadIO m) => Key News -> SqlPersistT m ()
 deleteImagesFromBankByNews key =  
@@ -287,18 +289,20 @@ putCategory pginfo label parent =
         insert_ $ Category label parentId
         pure Put)
 --
-editCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO () 
-editCategory pginfo label newLabel parent = do
-  runDataBaseWithOutLog pginfo $ do
-  -- runDataBaseWithLog pginfo $ do
-    labelId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel label 
-    case (labelId, parent) of
-      (Just iD, Nothing) -> replace iD $ Category newLabel Nothing
-      (Just iD , Just labelParent) -> do
-        parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent
-        replace iD $ Category newLabel parentId
-      _ -> pure ()  -- label don't exist
-    pure ()
+editCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO (Either SomeException Success) 
+editCategory = undefined 
+-- editCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO () 
+-- editCategory pginfo label newLabel parent = do
+--   runDataBaseWithOutLog pginfo $ do
+--   -- runDataBaseWithLog pginfo $ do
+--     labelId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel label 
+--     case (labelId, parent) of
+--       (Just iD, Nothing) -> replace iD $ Category newLabel Nothing
+--       (Just iD , Just labelParent) -> do
+--         parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent
+--         replace iD $ Category newLabel parentId
+--       _ -> pure ()  -- label don't exist
+--     pure ()
 
 findCategoryByLabel :: ConnectionString -> Label -> IO (Maybe Category) 
 findCategoryByLabel connString label = runDataBaseWithOutLog connString fetchAction

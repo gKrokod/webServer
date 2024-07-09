@@ -48,16 +48,18 @@ data Handle m = Handle
     findNewsByTitle :: Title -> m (Maybe News), 
 
     putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (Either SomeException Success), 
--- createUser :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
+-- createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
     putCategory :: Label -> Maybe Label -> m (Either SomeException Success), 
--- createCategory :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
+-- createCategoryBase :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
     -- putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (),
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (Either SomeException Success),
--- createNews :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
+-- createNewsBase :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success) 
 
-    editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
+    editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either SomeException Success), 
+    -- editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (), 
 -- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
-    editCategory :: Label -> NewLabel -> Maybe Label -> m ()
+    -- editCategory :: Label -> NewLabel -> Maybe Label -> m ()
+    editCategory :: Label -> NewLabel -> Maybe Label -> m (Either SomeException Success)
 -- updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
   }
 
@@ -118,10 +120,11 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
       logMessage (logger h) Warning  e
       pure $ Left "fail to update news"
     Right _-> do
-      logMessage (logger h) Debug  ("Ok. Updates news")
+      logMessage (logger h) Debug  ("Ok. Updates news...")
       t <- getTime h
-      editNews h title t newTitle newLogin newLabel newContent newImages newPublish
-      pure $ Right Change
+      tryEdit <- editNews h title t newTitle newLogin newLabel newContent newImages newPublish
+      when (isLeft tryEdit) (logMessage (logger h) Handlers.Logger.Error "Can't editNews")
+      pure $ either (Left . T.pack . displayException) Right tryEdit
   where
     -- checkUser :: (Monad m) => Maybe Login -> m (Either T.Text Success) -- todo WHY m1 not m ?
     checkUser Nothing = pure (Right Change)
@@ -191,8 +194,9 @@ updateCategory h label newlabel parent = do
   case (exist, existNew', parent) of
     (Just _, Nothing, Nothing) -> do
                                     logMessage (logger h) Debug ("Create category without parent and label: " <> label)
-                                    editCategory h label newlabel parent
-                                    pure $ Right Change 
+                                    tryEdit <- editCategory h label newlabel parent
+                                    when (isLeft tryEdit) (logMessage (logger h) Handlers.Logger.Error "Can't editCategory")
+                                    pure $ either (Left . T.pack . displayException) Right tryEdit
     (Just _, Nothing, Just labelParent) -> do
                                     logMessage (logger h) Debug ("Update category: " <> label)
                                     logMessage (logger h) Debug ("Check parent for category. Parent: " <> labelParent)
@@ -203,8 +207,9 @@ updateCategory h label newlabel parent = do
                                         pure $ Left "Parent dont' exist"
                                       _ -> do
                                         logMessage (logger h) Debug ("Parent exist")
-                                        editCategory h label newlabel parent
-                                        pure $ Right Change 
+                                        tryEdit <- editCategory h label newlabel parent
+                                        when (isLeft tryEdit) (logMessage (logger h) Handlers.Logger.Error "Can't editCategory")
+                                        pure $ either (Left . T.pack . displayException) Right tryEdit
     _ -> do
           logMessage (logger h) Warning ("Abort. Category don't exist or .... Category: " <> label)
           pure $ Left "Category don't's exist or ..."
