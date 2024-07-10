@@ -28,8 +28,8 @@ main = do
   Logger.writeLog "HEEEEREEE WE STAAAART MAINNNN"
   config <- loadConfig
 -- make Tables and Fill its if need
-  -- whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
-  --                         >> BB.makeAndFillTables (connectionString config)
+  whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
+                          >> BB.makeAndFillTables (connectionString config)
   serverSetup <- makeSetup config
   run 4221 (app serverSetup) 
 

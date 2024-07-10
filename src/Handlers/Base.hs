@@ -24,19 +24,23 @@ type Base64 = T.Text
 type Title = T.Text
 type Content = T.Text
 type URI_Image = T.Text
+type Offset = Int
+type Limit = Int
 type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
 data Handle m = Handle 
   {
 --API
     logger :: Handlers.Logger.Handle m,
-    panigate :: Int,
+    userOffset :: Int,
+    userLimit :: Int,
     getTime :: m (UTCTime),
+-- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User])
 
-    pullAllUsers :: m (Either SomeException [User]),
+    pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
-    pullAllNews :: m (Either SomeException [NewsOut]),
+    pullAllNews :: Offset -> Limit -> m (Either SomeException [NewsOut]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
-    pullAllCategories :: m (Either SomeException [Category]),
+    pullAllCategories :: Offset -> Limit -> m (Either SomeException [Category]),
 -- getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])
     pullImage :: NumberImage -> m (Either SomeException (Maybe Image)),
 
@@ -64,21 +68,21 @@ data Handle m = Handle
 getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
 getAllNews h = do
   logMessage (logger h) Debug ("Try to get all news from database")
-  news <- pullAllNews h
+  news <- pullAllNews h (userOffset h) (userLimit h)
   when (isLeft news) (logMessage (logger h) Handlers.Logger.Error "function pullAllNews fail")
   pure $ either (Left . T.pack . displayException) Right news 
 
 getAllUsers :: (Monad m) => Handle m -> m (Either T.Text [User])
 getAllUsers h = do
   logMessage (logger h) Debug ("Try to get all users from database")
-  users <- pullAllUsers h
+  users <- pullAllUsers h (userOffset h) (userLimit h)
   when (isLeft users) (logMessage (logger h) Handlers.Logger.Error "function pullAllUsers fail")
   pure $ either (Left . T.pack . displayException) Right users 
 
 getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])
 getAllCategories h = do
   logMessage (logger h) Debug ("Try to get all categories from database")
-  categories <- pullAllCategories h
+  categories <- pullAllCategories h (userOffset h) (userLimit h)
   when (isLeft categories) (logMessage (logger h) Handlers.Logger.Error "function pullAllCategories fail")
   pure $ either (Left . T.pack . displayException) Right categories 
 

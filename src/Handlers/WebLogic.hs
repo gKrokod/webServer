@@ -8,10 +8,10 @@ import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
 import Network.Wai (Request, Response, rawPathInfo, queryString)
 import qualified Data.ByteString as B 
-import Data.ByteString.Char8 as BC (readInt)
+import Data.ByteString.Char8 as BC (readInt, empty, null)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as L 
-import Network.HTTP.Types (notFound404, status200)
+import Network.HTTP.Types (notFound404, status200, Query)
 -- import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
 import qualified Data.Text.Encoding as E
 import Data.Binary.Builder(Builder(..))
@@ -41,7 +41,7 @@ doLogic h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show req)
   case rawPathInfo req of
     path | B.isPrefixOf "/news" path  ->    endPointNews h req
-         | B.isPrefixOf "/users" path  ->  endPointUsers h req --endPointUsers h req   -- +
+         | B.isPrefixOf "/users" path  ->  endPointUsers h req 
          | B.isPrefixOf "/categories" path  -> endPointCategories h req
          | B.isPrefixOf "/images" path  ->  endPointImages h req
          | otherwise -> do
@@ -50,21 +50,31 @@ doLogic h req = do
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointUsers h req = do
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Users"
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "end Point Users"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
     "/users/create" -> createUser h req -- создание пользователя tolko for admin todo
-    "/users" -> existingUsers h req  -- получение списка всех 
+    "/users" -> do
+      let queryLimit = queryString req
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
+      let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
+      existingUsers (h {base = newBaseHandle}) req
     _ -> do
-           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point Users not found"  
+           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point Users not found"  
            pure (response404 h) -- todo. replace 404 for another error
     --
+    --
+
+  --
 existingUsers :: (Monad m) => Handle m -> Request -> m (Response) -- for ALl
 existingUsers h req = do
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All users"
-  getUsers <- Handlers.Base.getAllUsers baseHandle
+  getUsers <- Handlers.Base.getAllUsers baseHandle --(baseHandle {Handlers.Base.userOffset = 1, Handlers.Base.userLimit = 2})
   case getUsers of
     Left e -> do
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
@@ -126,14 +136,21 @@ existingImages h req = do
 
 endPointCategories :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointCategories h req = do
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Categories"
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "end Point Categories"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
     "/categories/create"-> createCategory h req -- создание категории 
     "/categories/edit" -> updateCategory h req -- редактирование категории (названия и смена родительской)
-    "/categories" -> existingCategories h req -- получение списка всех 
+    "/categories" -> do
+      let queryLimit = queryString req
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
+      let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
+      existingCategories (h {base = newBaseHandle}) req  
     _ -> do
-           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
            pure $ response404 h
 
 existingCategories :: (Monad m) => Handle m -> Request -> m (Response)
@@ -141,7 +158,8 @@ existingCategories h req = do
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All categories Web"
-  categories <- Handlers.Base.getAllCategories baseHandle
+  categories <- Handlers.Base.getAllCategories (baseHandle {Handlers.Base.userOffset = 1, Handlers.Base.userLimit = 2})
+  --proveryaj
   case categories of
     Left e -> do
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
@@ -203,15 +221,22 @@ updateCategory h req = do
 
 endPointNews :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointNews h req = do
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point News"
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "end Point News"
   -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ B.unpack $ rawPathInfo req)
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
     "/news/create" -> createNews h req -- создание новости
     "/news/edit" -> updateNews h req -- редактирование новости
-    "/news" -> existingNews h req -- получение новости
+    "/news" -> do
+      let queryLimit = queryString req
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
+      let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
+      existingNews (h {base = newBaseHandle}) req
     _ -> do
-           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
            pure $ response404 h 
     -- _ -> error "rawPathInfo req /= /news"
     --
@@ -265,9 +290,18 @@ existingNews h req = do
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All news Web"
-  news <- Handlers.Base.getAllNews baseHandle
+  news <- Handlers.Base.getAllNews (baseHandle {Handlers.Base.userOffset = 1, Handlers.Base.userLimit = 2})
   case news of
     Left e -> do
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
       pure $ response404 h -- "Not ok. 
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 
+
+offsetAndLimitFromQuery :: Query -> (Int, Int) -> (Int, Int)
+offsetAndLimitFromQuery [] (o , l) = (o,l)
+offsetAndLimitFromQuery (("limit", Just limit) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt limit) of 
+                                                Just (l',True) -> offsetAndLimitFromQuery xs (o,l')
+                                                _ -> offsetAndLimitFromQuery xs (o, l)
+offsetAndLimitFromQuery (("offset", Just offset) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt offset) of 
+                                                Just (o',True) -> offsetAndLimitFromQuery xs (o',l)
+                                                _ -> offsetAndLimitFromQuery xs (o, l)

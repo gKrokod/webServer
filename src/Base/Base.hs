@@ -8,7 +8,7 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
+import Database.Esqueleto.Experimental (getBy, offset, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
@@ -57,9 +57,9 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
 
-pullAllNews :: ConnectionString -> LimitData -> IO (Either SomeException [NewsOut])
+pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
-pullAllNews connString l = do
+pullAllNews connString configLimit userOffset userLimit = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
     where 
       fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
@@ -67,14 +67,15 @@ pullAllNews connString l = do
         titles <- (fmap . fmap) unValue
                   (select $ do
                      news <- from $ table @News
-                     limit (fromIntegral l)
+                     offset (fromIntegral userOffset)
+                     limit (fromIntegral $ min configLimit userLimit)
                      pure (news ^. NewsTitle))
-        mapM (fetchFullNews l) titles 
+        mapM (fetchFullNews configLimit userOffset userLimit) titles 
 
     
-fetchLables :: (MonadIO m) => LimitData -> Label -> SqlPersistT m [Entity Category]
+fetchLables :: (MonadIO m) => LimitData -> Offset -> Limit -> Label -> SqlPersistT m [Entity Category]
 -- todo выяснить, почему трубется Database.Esqueleto.Internal.Internal.SqlExpr (Value Title)
-fetchLables lim label = 
+fetchLables configLimit userOffset userLimit label = 
       select $ do
       cte <- withRecursive
                ( do
@@ -87,11 +88,12 @@ fetchLables lim label =
                    parent <- from $ table @Category
                    where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
                    pure parent)
-      limit (fromIntegral lim)
+      offset (fromIntegral userOffset)
+      limit (fromIntegral $ min configLimit userLimit)
       from cte
 
-fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Title -> SqlPersistT m NewsOut
-fetchFullNews l title = do
+fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Offset -> Limit -> Title -> SqlPersistT m NewsOut
+fetchFullNews configLimit userOffset userLimit title = do
   (label : _) <- (fmap . fmap) entityVal fetchLabel
   lables <- fetchLables (categoryLabel label)
   (user : _) <- (fmap . fmap) entityVal fetchUser
@@ -113,7 +115,8 @@ fetchFullNews l title = do
            `innerJoin` table @Category
            `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
         where_ (news ^. NewsTitle ==. (val title))
-        limit (fromIntegral l)
+        offset (fromIntegral userOffset)
+        limit (fromIntegral $ min configLimit userLimit)
         pure (category)
 
       fetchUser :: (MonadIO m) => SqlPersistT m [Entity User]
@@ -123,7 +126,8 @@ fetchFullNews l title = do
            `innerJoin` table @User
            `on`  (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
         where_ (news ^. NewsTitle ==. (val title))
-        limit (fromIntegral l)
+        offset (fromIntegral userOffset)
+        limit (fromIntegral $ min configLimit userLimit)
         pure user
 
       fetchLables :: (MonadIO m) => Label -> SqlPersistT m [Entity Category]
@@ -140,7 +144,8 @@ fetchFullNews l title = do
                          parent <- from $ table @Category
                          where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
                          pure parent)
-            limit (fromIntegral l)
+            offset (fromIntegral userOffset)
+            limit (fromIntegral $ min configLimit userLimit)
             from cte
 
       fetchActionImage :: (MonadIO m) => SqlPersistT m [Entity Image]
@@ -152,7 +157,8 @@ fetchFullNews l title = do
            `innerJoin` table @Image
            `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
         where_ (news ^. NewsTitle ==. (val title))
-        limit (fromIntegral l)
+        offset (fromIntegral userOffset)
+        limit (fromIntegral $ min configLimit userLimit)
         pure (image)
 
       workerImage :: [Entity Image] -> [URI_Image]
@@ -257,12 +263,12 @@ findUserByLogin connString login = try @SomeException (runDataBaseWithOutLog con
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueUserLogin login)
 
 type LimitData = Int
+type Offset = Int
+type Limit = Int
 
-pullAllUsers :: ConnectionString -> LimitData -> IO (Either SomeException [User])
-pullAllUsers connString l = do
+pullAllUsers :: ConnectionString -> LimitData -> Offset -> Limit -> IO (Either SomeException [User])
+pullAllUsers connString configLimit userOffset userLimit = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
-  -- e <- try @SomeException (runDataBaseWithOutLog connString fetchAction)
-  -- pure $ either (\x -> []) (id) e
 -- getAllUsers connString l = runDataBaseWithLog connString fetchAction
     where
       -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
@@ -270,7 +276,8 @@ pullAllUsers connString l = do
       fetchAction = (fmap . fmap) entityVal 
                     (select $ do
                     users <- from $ table @User
-                    limit (fromIntegral l)
+                    offset (fromIntegral userOffset)
+                    limit (fromIntegral $ min configLimit userLimit)
                     pure (users))
 
 ------------------------------------------------------------------------------------------------------------
@@ -309,16 +316,17 @@ findCategoryByLabel connString label = try @SomeException (runDataBaseWithOutLog
     fetchAction = (fmap . fmap) entityVal (getBy $ UniqueCategoryLabel label)
 
 
-pullAllCategories :: ConnectionString -> LimitData -> IO (Either SomeException [Category])
+pullAllCategories :: ConnectionString -> LimitData -> Offset -> Limit -> IO (Either SomeException [Category])
 -- pullAllCategories connString l = runDataBaseWithLog connString fetchAction
-pullAllCategories connString l = do
+pullAllCategories connString configLimit userOffset userLimit = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
     where
       fetchAction ::  (MonadIO m) => SqlPersistT m [Category]
       fetchAction = (fmap . fmap) entityVal 
                     (select $ do
                     categories <- from $ table @Category
-                    limit (fromIntegral l)
+                    offset (fromIntegral userOffset)
+                    limit (fromIntegral $ min configLimit userLimit)
                     pure (categories))
 
 
