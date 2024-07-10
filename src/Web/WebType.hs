@@ -11,6 +11,7 @@ import GHC.Generics (Generic)
 import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON, FromJSON)
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import qualified Data.ByteString as B 
+import Data.Maybe
   
 
 data UserToWeb = UserToWeb {name :: T.Text, login :: T.Text, created :: UTCTime, isAdmin :: Bool,
@@ -87,6 +88,24 @@ newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
   where convertToWeb :: NewsOut -> NewsToWeb
         convertToWeb (t, d, l, ls, c, im, b) = NewsToWeb t d l ls c im b 
 
+data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int }
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+-- webToPanigate :: BQueryItem -> Either String PanigateFromWeb -- from (ByteString, Maybe ByteString) -- ("panigate", Just ...)
+webToPanigate :: B.ByteString -> Either String PanigateFromWeb -- from (ByteString, Maybe ByteString)
+webToPanigate = eitherDecodeStrict @PanigateFromWeb 
+
+-- queryToPanigate :: Query -> (Int, Int)
+queryToPanigate :: [(B.ByteString, Maybe B.ByteString)] -> (Int, Int)
+queryToPanigate = convertFromWeb . listToMaybe . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
+  where convertFromWeb :: Maybe B.ByteString -> (Int, Int)
+        convertFromWeb Nothing = (0, maxBound)
+        convertFromWeb (Just xs) = case (eitherDecodeStrict @PanigateFromWeb xs) of
+                                         Right (Panigate (Just offset) (Just limit)) -> (offset, limit)
+                                         Right (Panigate (Just offset) Nothing) -> (0, maxBound)
+                                         Right (Panigate Nothing (Just limit)) -> (0, limit)
+                                         _ -> (0, maxBound)
 -- type URI_Image = T.Text
 --
 -- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
@@ -128,4 +147,3 @@ newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
 --   Primary newsId imageId
 --   deriving Eq Show
 -- |] 
---

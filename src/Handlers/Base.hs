@@ -14,7 +14,6 @@ import Data.Either (isLeft)
 data Success = Put | Change | Get deriving Show
 type Name = T.Text
 type Login = T.Text
-type Time = UTCTime
 type PasswordUser = T.Text
 type Label = T.Text
 type NewLabel = T.Text

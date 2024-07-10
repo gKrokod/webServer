@@ -2,7 +2,7 @@ module Handlers.WebLogic where
 
 import Scheme (User(..), Image)
 import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..))
-import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb)
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
@@ -22,6 +22,7 @@ data Handle m = Handle
     base :: Handlers.Base.Handle m,
     -- updateNews, createNews, updateCategory, createGategory , createUser
     getBody :: Request -> m (B.ByteString),
+    -- getQueryString :: Request -> m (Query), -- [(B.ByteString, Maybe B.ByteString)]
     response404 :: Response,
     response200 :: Response,
     mkGoodResponse :: Builder -> Response,
@@ -60,6 +61,10 @@ endPointUsers h req = do
       let queryLimit = queryString req
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      let (no, nl) = queryToPanigate  queryLimit
+
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (no, nl))
+
       let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
       existingUsers (h {base = newBaseHandle}) req
     _ -> do
@@ -68,6 +73,8 @@ endPointUsers h req = do
     --
     --
 
+  -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category WEB"
+  -- body <- webToCategory <$> getBody h req -- :: (Either String CategoryFromWeb)
   --
 existingUsers :: (Monad m) => Handle m -> Request -> m (Response) -- for ALl
 existingUsers h req = do
@@ -229,7 +236,7 @@ endPointNews h req = do
   case rawPathInfo req of
     "/news/create" -> createNews h req -- создание новости
     "/news/edit" -> updateNews h req -- редактирование новости
-    "/news" -> do
+    "/news" -> do -- get all news
       let queryLimit = queryString req
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
@@ -297,6 +304,7 @@ existingNews h req = do
       pure $ response404 h -- "Not ok. 
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 
 
+-- type Query = [QueryItem]
 offsetAndLimitFromQuery :: Query -> (Int, Int) -> (Int, Int)
 offsetAndLimitFromQuery [] (o , l) = (o,l)
 offsetAndLimitFromQuery (("limit", Just limit) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt limit) of 
@@ -305,3 +313,4 @@ offsetAndLimitFromQuery (("limit", Just limit) : xs) (o , l) = case (fmap . fmap
 offsetAndLimitFromQuery (("offset", Just offset) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt offset) of 
                                                 Just (o',True) -> offsetAndLimitFromQuery xs (o',l)
                                                 _ -> offsetAndLimitFromQuery xs (o, l)
+offsetAndLimitFromQuery (_ : xs) (o , l) = offsetAndLimitFromQuery xs (o,l)

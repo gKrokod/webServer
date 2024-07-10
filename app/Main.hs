@@ -82,5 +82,6 @@ makeSetup cfg = do
           Handlers.WebLogic.response200 = WW.response200,
           Handlers.WebLogic.mkGoodResponse = WW.mkGoodResponse,
           Handlers.WebLogic.mkResponseForImage = WW.mkResponseForImage,
+          -- Handlers.WebLogic.getQueryString = WW.getQueryString,
           Handlers.WebLogic.getBody = WW.getBody}
   pure handle

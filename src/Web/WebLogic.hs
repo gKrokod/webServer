@@ -1,6 +1,6 @@
 module Web.WebLogic where
 import Scheme 
-import Network.Wai (getRequestBodyChunk, responseBuilder)
+import Network.Wai (getRequestBodyChunk, responseBuilder, queryString)
 import Network.Wai (Request, Response)
 import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
 import Network.HTTP.Types.Header (hContentType)
@@ -14,6 +14,9 @@ import qualified Data.Text.Encoding as E
 
 getBody :: Request -> IO (B.ByteString)
 getBody = getRequestBodyChunk
+
+-- getQueryString :: Request -> Query
+-- getQueryString = queryString
 
 response404 :: Response
 response404 = responseBuilder notFound404 [] "Not ok. status 404\n" 
