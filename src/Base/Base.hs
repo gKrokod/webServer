@@ -72,26 +72,6 @@ pullAllNews connString configLimit userOffset userLimit = do
                      pure (news ^. NewsTitle))
         mapM (fetchFullNews configLimit userOffset userLimit) titles 
 
-    
-fetchLables :: (MonadIO m) => LimitData -> Offset -> Limit -> Label -> SqlPersistT m [Entity Category]
--- todo выяснить, почему трубется Database.Esqueleto.Internal.Internal.SqlExpr (Value Title)
-fetchLables configLimit userOffset userLimit label = 
-      select $ do
-      cte <- withRecursive
-               ( do
-                   child <- from $ table @Category
-                   where_ (child ^. CategoryLabel ==. val label)
-                   pure child)
-               unionAll_
-               (\self -> do
-                   child <- from self
-                   parent <- from $ table @Category
-                   where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
-                   pure parent)
-      offset (fromIntegral userOffset)
-      limit (fromIntegral $ min configLimit userLimit)
-      from cte
-
 fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Offset -> Limit -> Title -> SqlPersistT m NewsOut
 fetchFullNews configLimit userOffset userLimit title = do
   (label : _) <- (fmap . fmap) entityVal fetchLabel
@@ -115,8 +95,6 @@ fetchFullNews configLimit userOffset userLimit title = do
            `innerJoin` table @Category
            `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
         where_ (news ^. NewsTitle ==. (val title))
-        offset (fromIntegral userOffset)
-        limit (fromIntegral $ min configLimit userLimit)
         pure (category)
 
       fetchUser :: (MonadIO m) => SqlPersistT m [Entity User]
@@ -126,8 +104,6 @@ fetchFullNews configLimit userOffset userLimit title = do
            `innerJoin` table @User
            `on`  (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
         where_ (news ^. NewsTitle ==. (val title))
-        offset (fromIntegral userOffset)
-        limit (fromIntegral $ min configLimit userLimit)
         pure user
 
       fetchLables :: (MonadIO m) => Label -> SqlPersistT m [Entity Category]
@@ -144,7 +120,6 @@ fetchFullNews configLimit userOffset userLimit title = do
                          parent <- from $ table @Category
                          where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
                          pure parent)
-            offset (fromIntegral userOffset)
             limit (fromIntegral $ min configLimit userLimit)
             from cte
 
@@ -157,7 +132,6 @@ fetchFullNews configLimit userOffset userLimit title = do
            `innerJoin` table @Image
            `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
         where_ (news ^. NewsTitle ==. (val title))
-        offset (fromIntegral userOffset)
         limit (fromIntegral $ min configLimit userLimit)
         pure (image)
 
@@ -201,6 +175,7 @@ editNews pginfo title time newTitle  newLogin newLabel newContent newImages newP
         insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
         pure Change
       Nothing -> throw $ userError "function editNews fail (can't find news)")
+
 deleteImagesFromBankByNews :: (MonadIO m) => Key News -> SqlPersistT m ()
 deleteImagesFromBankByNews key =  
       delete $ do

@@ -178,7 +178,7 @@ existingCategories h req = do
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All categories Web"
-  categories <- Handlers.Base.getAllCategories (baseHandle {Handlers.Base.userOffset = 1, Handlers.Base.userLimit = 2})
+  categories <- Handlers.Base.getAllCategories baseHandle
   --proveryaj
   case categories of
     Left e -> do
@@ -255,17 +255,16 @@ endPointNews h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Query String:")
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
-
-      -- let queryLimit = queryString req
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      --
       let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
       existingNews (h {base = newBaseHandle}) req
     _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
            pure $ response404 h 
     -- _ -> error "rawPathInfo req /= /news"
-    --
+
+
 createNews :: (Monad m) => Handle m -> Request -> m (Response)
 createNews h req = do 
   let logHandle = logger h 
