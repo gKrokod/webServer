@@ -2,7 +2,7 @@ module Handlers.WebLogic where
 
 import Scheme (User(..), Image)
 import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..))
-import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate)
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
@@ -59,11 +59,18 @@ endPointUsers h req = do
     "/users/create" -> createUser h req -- создание пользователя tolko for admin todo
     "/users" -> do
       let queryLimit = queryString req
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
-      let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
-      let (no, nl) = queryToPanigate  queryLimit
+      let (userOffset, userLimit) = queryToPanigate  queryLimit
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Query String:")
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
 
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (no, nl))
+      -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "show result Panigate and another"
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (no, nl))
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "show steps"
+      -- let q2 = q1 queryLimit 
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show q2 )
 
       let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
       existingUsers (h {base = newBaseHandle}) req
@@ -81,7 +88,7 @@ existingUsers h req = do
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All users"
-  getUsers <- Handlers.Base.getAllUsers baseHandle --(baseHandle {Handlers.Base.userOffset = 1, Handlers.Base.userLimit = 2})
+  getUsers <- Handlers.Base.getAllUsers baseHandle 
   case getUsers of
     Left e -> do
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
@@ -152,8 +159,14 @@ endPointCategories h req = do
     "/categories/edit" -> updateCategory h req -- редактирование категории (названия и смена родительской)
     "/categories" -> do
       let queryLimit = queryString req
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
-      let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      let (userOffset, userLimit) = queryToPanigate  queryLimit
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Query String:")
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
+
+      -- let queryLimit = queryString req
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
+      -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
       let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
       existingCategories (h {base = newBaseHandle}) req  
     _ -> do
@@ -238,8 +251,14 @@ endPointNews h req = do
     "/news/edit" -> updateNews h req -- редактирование новости
     "/news" -> do -- get all news
       let queryLimit = queryString req
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
-      let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
+      let (userOffset, userLimit) = queryToPanigate  queryLimit
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Query String:")
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
+
+      -- let queryLimit = queryString req
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
+      -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
       let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
       existingNews (h {base = newBaseHandle}) req
     _ -> do
@@ -297,9 +316,10 @@ existingNews h req = do
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All news Web"
-  news <- Handlers.Base.getAllNews (baseHandle {Handlers.Base.userOffset = 1, Handlers.Base.userLimit = 2})
+  news <- Handlers.Base.getAllNews baseHandle
   case news of
     Left e -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Delete Left News getALl"
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
       pure $ response404 h -- "Not ok. 
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 

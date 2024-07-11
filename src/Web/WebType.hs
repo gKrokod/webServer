@@ -96,16 +96,23 @@ data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int }
 webToPanigate :: B.ByteString -> Either String PanigateFromWeb -- from (ByteString, Maybe ByteString)
 webToPanigate = eitherDecodeStrict @PanigateFromWeb 
 
+type Offset = Int
+type Limit = Int
+
 -- queryToPanigate :: Query -> (Int, Int)
-queryToPanigate :: [(B.ByteString, Maybe B.ByteString)] -> (Int, Int)
-queryToPanigate = convertFromWeb . listToMaybe . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
-  where convertFromWeb :: Maybe B.ByteString -> (Int, Int)
-        convertFromWeb Nothing = (0, maxBound)
-        convertFromWeb (Just xs) = case (eitherDecodeStrict @PanigateFromWeb xs) of
+queryToPanigate :: [(B.ByteString, Maybe B.ByteString)] -> (Offset, Limit)
+queryToPanigate = convertFromWeb . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
+  where convertFromWeb :: [B.ByteString] -> (Int, Int)
+        convertFromWeb [xs] = case (eitherDecodeStrict @PanigateFromWeb xs) of
                                          Right (Panigate (Just offset) (Just limit)) -> (offset, limit)
                                          Right (Panigate (Just offset) Nothing) -> (0, maxBound)
                                          Right (Panigate Nothing (Just limit)) -> (0, limit)
                                          _ -> (0, maxBound)
+        convertFromWeb _ = (0, maxBound)
+
+-- q1 :: [(B.ByteString, Maybe B.ByteString)] -> [B.ByteString]
+q1 :: [(B.ByteString, Maybe B.ByteString)] -> [Either String PanigateFromWeb]
+q1 = map webToPanigate  . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
 -- type URI_Image = T.Text
 --
 -- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
