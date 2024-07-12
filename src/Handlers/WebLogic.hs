@@ -164,6 +164,9 @@ endPointCategories h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
 
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "show steps"
+      -- let q2 = q1 queryLimit 
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show q2 )
       -- let queryLimit = queryString req
       -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
@@ -324,12 +327,12 @@ existingNews h req = do
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 
 
 -- type Query = [QueryItem]
-offsetAndLimitFromQuery :: Query -> (Int, Int) -> (Int, Int)
-offsetAndLimitFromQuery [] (o , l) = (o,l)
-offsetAndLimitFromQuery (("limit", Just limit) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt limit) of 
-                                                Just (l',True) -> offsetAndLimitFromQuery xs (o,l')
-                                                _ -> offsetAndLimitFromQuery xs (o, l)
-offsetAndLimitFromQuery (("offset", Just offset) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt offset) of 
-                                                Just (o',True) -> offsetAndLimitFromQuery xs (o',l)
-                                                _ -> offsetAndLimitFromQuery xs (o, l)
-offsetAndLimitFromQuery (_ : xs) (o , l) = offsetAndLimitFromQuery xs (o,l)
+-- offsetAndLimitFromQuery :: Query -> (Int, Int) -> (Int, Int)
+-- offsetAndLimitFromQuery [] (o , l) = (o,l)
+-- offsetAndLimitFromQuery (("limit", Just limit) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt limit) of 
+--                                                 Just (l',True) -> offsetAndLimitFromQuery xs (o,l')
+--                                                 _ -> offsetAndLimitFromQuery xs (o, l)
+-- offsetAndLimitFromQuery (("offset", Just offset) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt offset) of 
+--                                                 Just (o',True) -> offsetAndLimitFromQuery xs (o',l)
+--                                                 _ -> offsetAndLimitFromQuery xs (o, l)
+-- offsetAndLimitFromQuery (_ : xs) (o , l) = offsetAndLimitFromQuery xs (o,l)

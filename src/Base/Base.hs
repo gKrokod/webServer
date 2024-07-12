@@ -175,6 +175,10 @@ editNews pginfo title time newTitle  newLogin newLabel newContent newImages newP
         insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
         pure Change
       Nothing -> throw $ userError "function editNews fail (can't find news)")
+        where 
+          replaceField :: a -> Maybe a -> a
+          replaceField _ (Just a) = a
+          replaceField a _ = a
 
 deleteImagesFromBankByNews :: (MonadIO m) => Key News -> SqlPersistT m ()
 deleteImagesFromBankByNews key =  
@@ -305,7 +309,4 @@ pullAllCategories connString configLimit userOffset userLimit = do
                     pure (categories))
 
 
-replaceField :: a -> Maybe a -> a
-replaceField _ (Just a) = a
-replaceField a _ = a
 ------------------------------------------------------------------------------------------------------------

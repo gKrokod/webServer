@@ -105,7 +105,7 @@ queryToPanigate = convertFromWeb . mapMaybe (\(x,y) -> if x == "panigate" then y
   where convertFromWeb :: [B.ByteString] -> (Int, Int)
         convertFromWeb [xs] = case (eitherDecodeStrict @PanigateFromWeb xs) of
                                          Right (Panigate (Just offset) (Just limit)) -> (offset, limit)
-                                         Right (Panigate (Just offset) Nothing) -> (0, maxBound)
+                                         Right (Panigate (Just offset) Nothing) -> (offset, maxBound)
                                          Right (Panigate Nothing (Just limit)) -> (0, limit)
                                          _ -> (0, maxBound)
         convertFromWeb _ = (0, maxBound)
