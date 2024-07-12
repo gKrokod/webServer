@@ -3,7 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme (User(..), Image(..), Category(..))
+import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..))
 -- import Scheme hiding (NewsOut) --(User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
@@ -92,7 +92,7 @@ data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
--- webToPanigate :: BQueryItem -> Either String PanigateFromWeb -- from (ByteString, Maybe ByteString) -- ("panigate", Just ...)
+--todo dele with q1
 webToPanigate :: B.ByteString -> Either String PanigateFromWeb -- from (ByteString, Maybe ByteString)
 webToPanigate = eitherDecodeStrict @PanigateFromWeb 
 
@@ -100,6 +100,7 @@ type Offset = Int
 type Limit = Int
 
 -- queryToPanigate :: Query -> (Int, Int)
+-- 0 and maxBound it's default
 queryToPanigate :: [(B.ByteString, Maybe B.ByteString)] -> (Offset, Limit)
 queryToPanigate = convertFromWeb . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
   where convertFromWeb :: [B.ByteString] -> (Int, Int)
@@ -113,44 +114,29 @@ queryToPanigate = convertFromWeb . mapMaybe (\(x,y) -> if x == "panigate" then y
 -- q1 :: [(B.ByteString, Maybe B.ByteString)] -> [B.ByteString]
 q1 :: [(B.ByteString, Maybe B.ByteString)] -> [Either String PanigateFromWeb]
 q1 = map webToPanigate  . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
--- type URI_Image = T.Text
+
+-- data ColumnType = DataNews UTCTime | AuthorNews T.Text | CategoryName T.Text | QuantityImages Int
+-- data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
 --
--- PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
---  User sql=users
---   name T.Text
---   login T.Text
---   passwordId PasswordId
---   created UTCTime
---   isAdmin Bool
---   isPublisher Bool
---   UniqueUserLogin login
---   deriving Eq Show Generic ToJSON
---  Password sql=passwords
---    quasiPassword T.Text
---    deriving Eq Show
---  Category sql=categories
---   label T.Text
---   parent CategoryId Maybe
---   UniqueCategoryLabel label
---   -- deriving Generic
---   deriving Eq Show Generic ToJSON
---  News sql=news
---   title T.Text
---   created UTCTime
---   userId UserId
---   categoryId CategoryId
---   content T.Text
---   isPublish Bool
---   UniqueNews title
---   deriving Eq Show
---  Image sql=images
---   header T.Text
---   base64 T.Text
---   -- UniqueImage header base64
---   deriving Eq Show
---  ImageBank sql=images_bank -- for tests.
---   newsId NewsId
---   imageId ImageId
---   Primary newsId imageId
---   deriving Eq Show
--- |] 
+-- data SortOrder = Ascending | Descending
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+
+data SortFromWeb = SortNews {columnType :: ColumnType, sortOrder :: SortOrder }
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+-- webToSort :: B.ByteString -> Either String SortFromWeb 
+-- webToSort = eitherDecodeStrict @SortFromWeb 
+
+-- DataNews and Descending it's default
+queryToSort :: [(B.ByteString, Maybe B.ByteString)] -> (ColumnType, SortOrder) 
+queryToSort = convertFromWeb . mapMaybe (\(x,y) -> if x == "sort" then y else Nothing) 
+  where convertFromWeb :: [B.ByteString] -> (ColumnType, SortOrder)
+        convertFromWeb [xs] = case (eitherDecodeStrict @SortFromWeb xs) of
+                                Right (SortNews column order) -> (column , order)
+                                _ -> (DataNews, Descending)
+        convertFromWeb _ = (DataNews, Descending)
+

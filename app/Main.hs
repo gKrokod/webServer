@@ -64,6 +64,12 @@ makeSetup cfg = do
           Handlers.Base.putUser = BB.putUser pginfo,
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
           Handlers.Base.getTime = getCurrentTime,
+-- default setup
+          Handlers.Base.userOffset = 0,
+          Handlers.Base.userLimit = maxBound,
+          Handlers.Base.sortColumnNews = DataNews,
+          Handlers.Base.sortOrderNews = Descending,
+-- default *
           Handlers.Base.pullAllUsers = BB.pullAllUsers pginfo (cLimitData cfg),
           Handlers.Base.findCategoryByLabel = BB.findCategoryByLabel pginfo,
           Handlers.Base.putCategory = BB.putCategory pginfo,

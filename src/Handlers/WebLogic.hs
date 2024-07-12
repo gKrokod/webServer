@@ -1,8 +1,8 @@
 module Handlers.WebLogic where
 
 import Scheme (User(..), Image)
-import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..))
-import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1)
+import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..), SortFromWeb(..))
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
@@ -253,20 +253,43 @@ endPointNews h req = do
     "/news/create" -> createNews h req -- создание новости
     "/news/edit" -> updateNews h req -- редактирование новости
     "/news" -> do -- get all news
+      --- need funtion po update baseHandle
+      -- (setSearch . setSort . setPanigate baseHandle) queryLimit
       let queryLimit = queryString req
       let (userOffset, userLimit) = queryToPanigate  queryLimit
+      let sortWeb = queryToSort  queryLimit
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Query String:")
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
-      -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
-      --
-      let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
-      existingNews (h {base = newBaseHandle}) req
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ sortWeb) 
+
+      existingNews (setSort (setPanigate h queryLimit) queryLimit) req
     _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
            pure $ response404 h 
     -- _ -> error "rawPathInfo req /= /news"
+--
+-- [(B.ByteString, Maybe B.ByteString)] 
+setPanigate :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
+setPanigate h q = 
+  let 
+      baseHandle = base h 
+      (userOffset, userLimit) = queryToPanigate q 
+      newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
+  in h {base = newBaseHandle}
+  
 
+setSort :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
+setSort h q = 
+  let 
+      baseHandle = base h 
+      (userSortColumn, userSortOrder) = queryToSort q
+      newBaseHandle = baseHandle {Handlers.Base.sortColumnNews = userSortColumn, Handlers.Base.sortOrderNews = userSortOrder} 
+  in h {base = newBaseHandle}
+      
+
+    -- sortColumnNews :: ColumnType,
+    -- sortOrderNews :: SortOrder,
 
 createNews :: (Monad m) => Handle m -> Request -> m (Response)
 createNews h req = do 
@@ -321,18 +344,6 @@ existingNews h req = do
   news <- Handlers.Base.getAllNews baseHandle
   case news of
     Left e -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Delete Left News getALl"
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
       pure $ response404 h -- "Not ok. 
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 
-
--- type Query = [QueryItem]
--- offsetAndLimitFromQuery :: Query -> (Int, Int) -> (Int, Int)
--- offsetAndLimitFromQuery [] (o , l) = (o,l)
--- offsetAndLimitFromQuery (("limit", Just limit) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt limit) of 
---                                                 Just (l',True) -> offsetAndLimitFromQuery xs (o,l')
---                                                 _ -> offsetAndLimitFromQuery xs (o, l)
--- offsetAndLimitFromQuery (("offset", Just offset) : xs) (o , l) = case (fmap . fmap) BC.null (BC.readInt offset) of 
---                                                 Just (o',True) -> offsetAndLimitFromQuery xs (o',l)
---                                                 _ -> offsetAndLimitFromQuery xs (o, l)
--- offsetAndLimitFromQuery (_ : xs) (o , l) = offsetAndLimitFromQuery xs (o,l)

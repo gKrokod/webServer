@@ -69,6 +69,14 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   deriving Eq Show
 |] 
 
+data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+data SortOrder = Ascending | Descending
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
 -- type Name = T.Text
 -- type Login = T.Text
 -- type Time = UTCTime

@@ -8,7 +8,8 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, offset, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
+import Database.Esqueleto.Experimental (getBy, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
+import Database.Esqueleto.Experimental (orderBy, asc, desc, offset, limit)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
@@ -56,21 +57,87 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
+-- data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+--
+-- data SortOrder = Ascending | Descending
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
 
-pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> IO (Either SomeException [NewsOut])
+pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
-pullAllNews connString configLimit userOffset userLimit = do
-  try @SomeException (runDataBaseWithOutLog connString fetchAction)
+pullAllNews connString configLimit userOffset userLimit columnType sortOrder = do
+  try @SomeException (runDataBaseWithOutLog connString fetchActionSort2)
+  -- try @SomeException (runDataBaseWithOutLog connString fetchAction)
     where 
+      -- nado pohody delat' bolshyy join tablize dlya sortirovki
       fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
       fetchAction = do
         titles <- (fmap . fmap) unValue
                   (select $ do
                      news <- from $ table @News
+                     -- orderBy [order (column news)]
                      offset (fromIntegral userOffset)
                      limit (fromIntegral $ min configLimit userLimit)
                      pure (news ^. NewsTitle))
         mapM (fetchFullNews configLimit userOffset userLimit) titles 
+
+
+      fetchActionSort :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
+      fetchActionSort = do
+        titles <- (fmap . fmap) unValue
+                  (select $ do
+                     news <- from $ table @News
+                     offset (fromIntegral userOffset)
+                     limit (fromIntegral $ min configLimit userLimit)
+                     orderBy [asc (news ^. NewsCreated)]
+                     pure (news ^. NewsTitle))
+
+        mapM (fetchFullNews configLimit userOffset userLimit) titles 
+      
+      -- fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [Entity News]
+      fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
+      fetchActionSort2 = do
+        titles <- (fmap. fmap) unValue
+                  (select $ do
+                     (news :& author :& categoryName :& imagebank :& image) <-
+                       from $ table @News
+                         `innerJoin` table @User
+                         `on` do (\(n :& a) -> n ^.NewsUserId ==. a ^. UserId)
+                         `innerJoin` table @Category
+                         `on` do (\(n :& a :& c) -> n ^.NewsCategoryId ==. c ^. CategoryId)
+                                 -- where_ ( n^. NewsUserId ==. a ^. UserId)
+                         `innerJoin` table @ImageBank
+                         `on` do (\(n :& a :& c :& ib) -> n ^. NewsId ==. ib ^. ImageBankNewsId)
+                         `innerJoin` table @Image
+                         `on` do (\(n :& a :& c :& ib :& i) -> ib ^. ImageBankImageId ==. i ^. ImageId)
+                     -- where_ (news ^.NewsUserId ==. author ^.UserId)
+                     case columnType of
+                       DataNews -> orderBy [order sortOrder (news ^. NewsCreated)]
+                       AuthorNews -> orderBy [order sortOrder (author ^. UserName)]
+                       CategoryName -> orderBy [order sortOrder (categoryName ^. CategoryLabel)]
+                       QuantityImages -> orderBy undefined --[asc (categoryName ^. CategoryLabel)]
+
+                     -- orderBy [order (column (news, author, categoryName, image))]
+                     offset (fromIntegral userOffset)
+                     limit (fromIntegral $ min configLimit userLimit)
+                     pure (news ^. NewsTitle))
+        mapM (fetchFullNews configLimit userOffset userLimit) titles 
+
+-- order a 
+order a = case a  of
+           Ascending -> asc
+           Descending -> desc
+      -- --
+      -- column (n,a,c,i) = case columnType of
+      --             DataNews -> (n ^. NewsCreated)
+      --             AuthorNews -> (a ^. UserName)
+      --             CategoryName -> (c ^. CategoryLabel)
+      --             QuantityImages -> undefined
+      --
+--           )
+-- mapM (fetchFullNews configLimit userOffset userLimit) titles 
 
 fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Offset -> Limit -> Title -> SqlPersistT m NewsOut
 fetchFullNews configLimit userOffset userLimit title = do
