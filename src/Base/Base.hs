@@ -9,7 +9,8 @@ import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,Connect
 import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
+import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..), asc, orderBy, count)
+import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -66,6 +67,69 @@ cleanUp = rawExecute "TRUNCATE news, images_bank, images, categories, users, pas
 dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
+
+-- getAllNews :: ConnectionString -> LimitData -> IO [NewsOut]
+-- getAllNews connString l = runDataBaseWithLog connString fetchAction
+--  IO [(Key, Value T.Text)
+-- getAll :: ConnectionString -> LimitData -> IO [(Value NewsId, Value (Maybe ImageBankId), Value Int)]
+getAll connString l = runDataBaseWithOutLog connString fetchAction
+  where 
+    -- fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value NewsId, Value Int)]
+    -- fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value NewsId, Value (Maybe ImageBankId), Value Int)]
+    fetchAction = 
+      -- (fmap . fmap) unValue
+                (select $ do
+                   (news :& author :& categoryName :& imageBank) <-
+                   -- (news :& author :& categoryName :& imageBank :& image) <-
+--                      (news :& author :& categoryName :& imagebank :& image) <-
+                     from $ table @News
+                       `innerJoin` table @User
+                       `on` do \(n :& a) -> n ^. NewsUserId ==. a ^. UserId
+                       `innerJoin` table @Category
+                       `on` do \(n :& a :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
+                       `leftJoin` table @ImageBank -- left dolzen but chtobu news2 ne teryalas
+                       `on` do \(n :& a :& c :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
+                       -- `innerJoin` table @Image
+                       -- `on` do \(n :& a :& c :& ib :& i) -> ib ^. ImageBankImageId  ==. i ^. ImageId 
+                   -- groupBy (imageBank ?. ImageBankNewsId)            
+                   groupBy  (news ^. NewsId)
+                   -- let coun = countRows
+                   -- limit (fromIntegral l)
+                   -- orderBy [asc coun] 
+                   -- orderBy [asc (author ^. UserName)]
+                   -- orderBy [asc (categoryName ^. CategoryLabel)]
+                   -- orderBy [asc (count @Int $ image ^. ImageId)]
+                   -- pure (news ^. NewsId, author ^. UserName, categoryName ^. CategoryLabel))
+                   pure (news ^. NewsId))
+                   -- pure (news ^. NewsId, imageBank ?. ImageBankNewsId, coun))
+
+-- fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
+--       fetchActionSort2 = do
+--         titles <- (fmap. fmap) unValue
+--                   (select $ do
+--                      (news :& author :& categoryName :& imagebank :& image) <-
+--                        from $ table @News
+--                          `innerJoin` table @User
+--                          `on` do (\(n :& a) -> n ^.NewsUserId ==. a ^. UserId)
+--                          `innerJoin` table @Category
+--                          `on` do (\(n :& a :& c) -> n ^.NewsCategoryId ==. c ^. CategoryId)
+--                                  -- where_ ( n^. NewsUserId ==. a ^. UserId)
+--                          `innerJoin` table @ImageBank
+--                          `on` do (\(n :& a :& c :& ib) -> n ^. NewsId ==. ib ^. ImageBankNewsId)
+--                          `innerJoin` table @Image
+--                          `on` do (\(n :& a :& c :& ib :& i) -> ib ^. ImageBankImageId ==. i ^. ImageId)
+--                      -- where_ (news ^.NewsUserId ==. author ^.UserId)
+--                      case columnType of
+--                        DataNews -> orderBy [order sortOrder (news ^. NewsCreated)]
+--                        AuthorNews -> orderBy [order sortOrder (author ^. UserName)]
+--                        CategoryName -> orderBy [order sortOrder (categoryName ^. CategoryLabel)]
+--                        QuantityImages -> orderBy undefined --[asc (categoryName ^. CategoryLabel)]
+--
+--                      -- orderBy [order (column (news, author, categoryName, image))]
+--                      offset (fromIntegral userOffset)
+--                      limit (fromIntegral $ min configLimit userLimit)
+--                      pure (news ^. NewsTitle))
+--         mapM (fetchFullNews configLimit userOffset userLimit) titles 
 
 
 getAllNews :: ConnectionString -> LimitData -> IO [NewsOut]

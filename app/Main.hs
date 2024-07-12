@@ -3,7 +3,8 @@
 
 module Main (main) where
 
-
+import Database.Esqueleto.Experimental (Value (..))
+-- import Database.Persist.Postgresql  
 import GHC.Generics (Generic)
 import Config (loadConfig, ConfigDataBase, connectionString, whenMakeTables, cLimitData)
 import Scheme
@@ -86,17 +87,20 @@ logic cfg = do
   -- print "Get ALl Full news"
   -- a <- Handlers.Base.getAllNews baseHandle
   -- mapM print a
-  print "get all users and convert to builder"
-  users <- Handlers.Base.getAllUsers baseHandle
-  mapM print users 
-  print "convert all users to JSON"
-  let aa = encode @MyType (MyType "HOHO")
-  let baa = encode @[MyType] ([MyType "HOHO", MyType "NENE", MyType "3"])
-  print aa
-  print baa
+  print "getAll innerJoin news and user"
+  users <- BB.getAll pginfo (cLimitData cfg)
+  mapM (\(x) -> do
+  -- mapM (\(Value x) -> do
+          print (x) 
+          putStrLn "\n") users 
+  -- print "convert all users to JSON"
+  -- let aa = encode @MyType (MyType "HOHO")
+  -- let baa = encode @[MyType] ([MyType "HOHO", MyType "NENE", MyType "3"])
+  -- print aa
+  -- print baa
   -- let usersjson = mconcat $ map (encode @User) users
   -- let usersjson = (encode @User) users
   -- print usersjson 
   pure ()
 
-helper xs = mconcat $ map (encode @User) xs
+-- helper xs = mconcat $ map (encode @User) xs
