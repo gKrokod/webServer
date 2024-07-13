@@ -265,7 +265,7 @@ endPointNews h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ sortWeb) 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ findWeb) 
 
-      existingNews (setSort (setPanigate h queryLimit) queryLimit) req
+      existingNews (setFind (setSort (setPanigate h queryLimit) queryLimit) queryLimit) req
     _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
            pure $ response404 h 
@@ -279,7 +279,6 @@ setPanigate h q =
       (userOffset, userLimit) = queryToPanigate q 
       newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
   in h {base = newBaseHandle}
-  
 
 setSort :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
 setSort h q = 
@@ -289,6 +288,13 @@ setSort h q =
       newBaseHandle = baseHandle {Handlers.Base.sortColumnNews = userSortColumn, Handlers.Base.sortOrderNews = userSortOrder} 
   in h {base = newBaseHandle}
       
+setFind :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
+setFind h q = 
+  let 
+      baseHandle = base h 
+      mbFind = queryToFind q
+      newBaseHandle = baseHandle {Handlers.Base.findSubString = mbFind }
+  in h {base = newBaseHandle}
 
     -- sortColumnNews :: ColumnType,
     -- sortOrderNews :: SortOrder,

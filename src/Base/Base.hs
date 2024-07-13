@@ -10,6 +10,7 @@ import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
 import Database.Esqueleto.Experimental (orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr(..), OrderBy, PersistField(..))
+import Database.Esqueleto.Experimental (like, (||.), (%), (++.))
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
@@ -65,9 +66,9 @@ dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories
 --   deriving stock (Eq, Show, Generic)
 --   deriving anyclass (ToJSON, FromJSON)
 
-pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> IO (Either SomeException [NewsOut])
+pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
-pullAllNews connString configLimit userOffset userLimit columnType sortOrder = do
+pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbFind = do
   try @SomeException (runDataBaseWithOutLog connString fetchActionSort2)
   -- try @SomeException (runDataBaseWithOutLog connString fetchAction)
     where 
@@ -107,12 +108,21 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder = d
                          `on` do \(n :& a :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
                          `leftJoin` table @ImageBank 
                          `on` do \(n :& a :& c :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
-                     groupBy (news ^. NewsId, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
+                     groupBy (news ^. NewsTitle, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
+                     -- search substring
+                     maybe (where_ (val True)) 
+                           (\(Find text) -> let subtext = (%) ++. val text ++. (%)
+                                            in where_ (   (news ^. NewsTitle `like` subtext)
+                                                      ||. (author ^. UserName `like` subtext)
+                                                      ||. (categoryName ^. CategoryLabel `like` subtext)))
+                           mbFind                  
+                     -- sortBy column and order
                      orderBy $ case columnType of
                                  DataNews -> [order sortOrder (news ^. NewsCreated)]
                                  AuthorNews -> [order sortOrder (author ^. UserName)]
                                  CategoryName -> [order sortOrder (categoryName ^. CategoryLabel)]
                                  QuantityImages -> [order sortOrder (count (imageBank ?. ImageBankNewsId) :: SqlExpr (Value Int) )]
+                     -- offset and limit news
                      offset (fromIntegral userOffset)
                      limit (fromIntegral $ min configLimit userLimit)
                      pure (news ^. NewsTitle))

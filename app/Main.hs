@@ -69,6 +69,7 @@ makeSetup cfg = do
           Handlers.Base.userLimit = maxBound,
           Handlers.Base.sortColumnNews = DataNews,
           Handlers.Base.sortOrderNews = Descending,
+          Handlers.Base.findSubString = Nothing,
 -- default *
           Handlers.Base.pullAllUsers = BB.pullAllUsers pginfo (cLimitData cfg),
           Handlers.Base.findCategoryByLabel = BB.findCategoryByLabel pginfo,

@@ -3,7 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..))
+import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..), Find(..))
 -- import Scheme hiding (NewsOut) --(User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
@@ -139,10 +139,6 @@ queryToSort = convertFromWeb . mapMaybe (\(x,y) -> if x == "sort" then y else No
                                 Right (SortNews column order) -> (column , order)
                                 _ -> (DataNews, Descending)
         convertFromWeb _ = (DataNews, Descending)
-
-newtype Find = Find {subString :: T.Text}
-  deriving stock (Eq, Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
 
 data FindFromWeb = FindFromWeb (Maybe Find)
   deriving stock (Eq, Show, Generic)

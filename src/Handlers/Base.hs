@@ -34,13 +34,13 @@ data Handle m = Handle
     userLimit :: Int, -- default
     sortColumnNews :: ColumnType, -- default
     sortOrderNews :: SortOrder, -- default
-    -- findSubSring :: Maybe Find,
+    findSubString :: Maybe Find,
     --
     getTime :: m (UTCTime),
 -- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User])
     pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
-    pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> m (Either SomeException [NewsOut]),
+    pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> m (Either SomeException [NewsOut]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
     pullAllCategories :: Offset -> Limit -> m (Either SomeException [Category]),
 -- getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])
@@ -70,7 +70,7 @@ data Handle m = Handle
 getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
 getAllNews h = do
   logMessage (logger h) Debug ("Try to get all news from database")
-  news <- pullAllNews h (userOffset h) (userLimit h) (sortColumnNews h) (sortOrderNews h)
+  news <- pullAllNews h (userOffset h) (userLimit h) (sortColumnNews h) (sortOrderNews h) (findSubString h)
   when (isLeft news) (logMessage (logger h) Handlers.Logger.Error "function pullAllNews fail")
   pure $ either (Left . T.pack . displayException) Right news 
 

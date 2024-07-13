@@ -77,6 +77,10 @@ data SortOrder = Ascending | Descending
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
+newtype Find = Find {subString :: T.Text}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
 -- type Name = T.Text
 -- type Login = T.Text
 -- type Time = UTCTime
