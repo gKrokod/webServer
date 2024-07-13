@@ -10,7 +10,7 @@ import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..), asc, orderBy, count)
-import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral, SqlExpr(..))
+import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral, SqlExpr(..), ilike, (%), (++.), like, (||.))
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -109,33 +109,34 @@ getAll connString l = runDataBaseWithOutLog connString fetchAction
 -- count :: Num a => SqlExpr (Value typ) -> SqlExpr (Value a)
 
 
--- fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
---       fetchActionSort2 = do
---         titles <- (fmap. fmap) unValue
---                   (select $ do
---                      (news :& author :& categoryName :& imagebank :& image) <-
---                        from $ table @News
---                          `innerJoin` table @User
---                          `on` do (\(n :& a) -> n ^.NewsUserId ==. a ^. UserId)
---                          `innerJoin` table @Category
---                          `on` do (\(n :& a :& c) -> n ^.NewsCategoryId ==. c ^. CategoryId)
---                                  -- where_ ( n^. NewsUserId ==. a ^. UserId)
---                          `innerJoin` table @ImageBank
---                          `on` do (\(n :& a :& c :& ib) -> n ^. NewsId ==. ib ^. ImageBankNewsId)
---                          `innerJoin` table @Image
---                          `on` do (\(n :& a :& c :& ib :& i) -> ib ^. ImageBankImageId ==. i ^. ImageId)
---                      -- where_ (news ^.NewsUserId ==. author ^.UserId)
---                      case columnType of
---                        DataNews -> orderBy [order sortOrder (news ^. NewsCreated)]
---                        AuthorNews -> orderBy [order sortOrder (author ^. UserName)]
---                        CategoryName -> orderBy [order sortOrder (categoryName ^. CategoryLabel)]
---                        QuantityImages -> orderBy undefined --[asc (categoryName ^. CategoryLabel)]
---
---                      -- orderBy [order (column (news, author, categoryName, image))]
---                      offset (fromIntegral userOffset)
---                      limit (fromIntegral $ min configLimit userLimit)
---                      pure (news ^. NewsTitle))
---         mapM (fetchFullNews configLimit userOffset userLimit) titles 
+getAllSearch connString l mbtext = runDataBaseWithOutLog connString fetchAction
+  where 
+    -- fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value NewsId, Value Int)]
+    -- fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value NewsId, Value (Maybe ImageBankId), Value Int)]
+    fetchAction = 
+      -- (fmap . fmap) unValue
+                (select $ do
+                   (news :& author :& categoryName :& imageBank) <-
+                     from $ table @News
+                       `innerJoin` table @User
+                       `on` do \(n :& a) -> n ^. NewsUserId ==. a ^. UserId
+                       `innerJoin` table @Category
+                       `on` do \(n :& a :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
+                       `leftJoin` table @ImageBank -- left dolzen but chtobu news2 ne teryalas
+                       `on` do \(n :& a :& c :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
+                   -- groupBy  (news ^. NewsId, imageBank ?. ImageBankNewsId)
+                   -- groupBy  (news ^. NewsId, imageBank ?. ImageBankNewsId)
+                   groupBy (news ^. NewsTitle, author ^. UserName, categoryName ^. CategoryLabel,imageBank ?. ImageBankNewsId) 
+                   maybe (where_ (val True))
+                         (\x -> let subtext = (%) ++. val x ++. (%)
+                                 in where_ ((news ^. NewsTitle `like` subtext)
+                                             ||. (author ^. UserName `like` subtext)
+                                             ||. (categoryName ^. CategoryLabel `like` subtext)))
+                         mbtext
+                   -- where_ (val True)
+-- name `like` (%) ++. val "John" ++. (%)
+                   orderBy [asc  (count (imageBank ?. ImageBankNewsId) :: SqlExpr (Value Int) )]
+                   pure (news ^. NewsTitle, author ^. UserName, categoryName ^. CategoryLabel))
 
 
 getAllNews :: ConnectionString -> LimitData -> IO [NewsOut]

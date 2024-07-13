@@ -93,6 +93,29 @@ logic cfg = do
   -- mapM (\(Value x) -> do
           print (x) 
           putStrLn "\n") users 
+
+  -- print "getAllSearch text 1"
+  -- users <- BB.getAllSearch pginfo (cLimitData cfg) (Just "Witch")
+  -- mapM (\(x) -> do
+  -- -- mapM (\(Value x) -> do
+  --         print (x) 
+  --         putStrLn "\n") users 
+
+  let txt = "r1"
+  print $ "getAllSearch text " ++ txt
+  users <- BB.getAllSearch pginfo (cLimitData cfg) (Just (T.pack txt))
+  mapM (\(x) -> do
+  -- mapM (\(Value x) -> do
+          print (x) 
+          putStrLn "\n") users 
+
+  let txt = "vil"
+  print $ "getAllSearch Nothing text " ++ txt
+  users <- BB.getAllSearch pginfo (cLimitData cfg) Nothing
+  mapM (\(x) -> do
+  -- mapM (\(Value x) -> do
+          print (x) 
+          putStrLn "\n") users 
   -- print "convert all users to JSON"
   -- let aa = encode @MyType (MyType "HOHO")
   -- let baa = encode @[MyType] ([MyType "HOHO", MyType "NENE", MyType "3"])
