@@ -3,7 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..), Find(..))
+import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..), Find(..), Filter(..))
 -- import Scheme hiding (NewsOut) --(User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
@@ -151,3 +151,9 @@ queryToFind = convertFromWeb . mapMaybe (\(x,y) -> if x == "find" then y else No
                                 Right (FindFromWeb (Just x)) -> Just x 
                                 _ -> Nothing 
         convertFromWeb _ = Nothing
+
+
+
+
+queryToFilters :: [(B.ByteString, Maybe B.ByteString)] -> [Filter] 
+queryToFilters = undefined

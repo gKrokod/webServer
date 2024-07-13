@@ -2,7 +2,7 @@ module Handlers.WebLogic where
 
 import Scheme (User(..), Image)
 import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..), SortFromWeb(..))
-import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort, queryToFind)
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort, queryToFind, queryToFilters)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
@@ -259,11 +259,13 @@ endPointNews h req = do
       let (userOffset, userLimit) = queryToPanigate  queryLimit
       let sortWeb = queryToSort  queryLimit
       let findWeb = queryToFind  queryLimit
+      let filtersWeb = queryToFilters queryLimit
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Query String:")
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ sortWeb) 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ findWeb) 
+      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ concatMap show $ filtersWeb) 
 
       existingNews (setFind (setSort (setPanigate h queryLimit) queryLimit) queryLimit) req
     _ -> do
@@ -296,6 +298,13 @@ setFind h q =
       newBaseHandle = baseHandle {Handlers.Base.findSubString = mbFind }
   in h {base = newBaseHandle}
 
+setFilters :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
+setFilters h q = 
+  let 
+      baseHandle = base h 
+      filters = queryToFilters q
+      newBaseHandle = baseHandle {Handlers.Base.filtersNews = filters }
+  in h {base = newBaseHandle}
     -- sortColumnNews :: ColumnType,
     -- sortOrderNews :: SortOrder,
 

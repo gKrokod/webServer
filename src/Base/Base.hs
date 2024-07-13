@@ -66,12 +66,13 @@ dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories
 --   deriving stock (Eq, Show, Generic)
 --   deriving anyclass (ToJSON, FromJSON)
 
-pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> IO (Either SomeException [NewsOut])
+pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [Filter] -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
-pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbFind = do
+pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbFind [filters]= do
   try @SomeException (runDataBaseWithOutLog connString fetchActionSort2)
   -- try @SomeException (runDataBaseWithOutLog connString fetchAction)
     where 
+      --todo delete or rename
       fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
       fetchAction = do
         titles <- (fmap . fmap) unValue
@@ -82,7 +83,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                      pure (news ^. NewsTitle))
         mapM (fetchFullNews configLimit userOffset userLimit) titles 
 
-
+--todo delete
       fetchActionSort :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
       fetchActionSort = do
         titles <- (fmap . fmap) unValue
@@ -96,6 +97,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
         mapM (fetchFullNews configLimit userOffset userLimit) titles 
       
       -- fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [Entity News]
+      -- todo rename
       fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
       fetchActionSort2 = do
         titles <- (fmap. fmap) unValue

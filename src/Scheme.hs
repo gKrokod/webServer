@@ -81,6 +81,18 @@ newtype Find = Find {subString :: T.Text}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
+data FilterItem = FilterDataAt | FilterDataUntil | FilterDataSince 
+                  | FilterAuthorName 
+                  | FilterCategoryLabel 
+                  | FilterTitleFind 
+                  | FilterContentFind
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+data Filter = Filter { name :: FilterItem, value :: T.Text}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
 -- type Name = T.Text
 -- type Login = T.Text
 -- type Time = UTCTime
