@@ -10,7 +10,7 @@ import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..), asc, orderBy, count)
-import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral)
+import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral, SqlExpr(..))
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -81,7 +81,7 @@ getAll connString l = runDataBaseWithOutLog connString fetchAction
                 (select $ do
                    (news :& author :& categoryName :& imageBank) <-
                    -- (news :& author :& categoryName :& imageBank :& image) <-
---                      (news :& author :& categoryName :& imagebank :& image) <-
+                   -- (news :& author :& categoryName :& imagebank :& image) <-
                      from $ table @News
                        `innerJoin` table @User
                        `on` do \(n :& a) -> n ^. NewsUserId ==. a ^. UserId
@@ -89,19 +89,25 @@ getAll connString l = runDataBaseWithOutLog connString fetchAction
                        `on` do \(n :& a :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
                        `leftJoin` table @ImageBank -- left dolzen but chtobu news2 ne teryalas
                        `on` do \(n :& a :& c :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
+                       -- `innerJoin` table @ImageBank -- left dolzen but chtobu news2 ne teryalas
+                       -- `on` do \(n :& a :& c :& ib) -> (n ^. NewsId)  ==. ib ^. ImageBankNewsId
                        -- `innerJoin` table @Image
                        -- `on` do \(n :& a :& c :& ib :& i) -> ib ^. ImageBankImageId  ==. i ^. ImageId 
                    -- groupBy (imageBank ?. ImageBankNewsId)            
-                   groupBy  (news ^. NewsId)
+                   groupBy  (news ^. NewsId, imageBank ?. ImageBankNewsId)
                    -- let coun = countRows
                    -- limit (fromIntegral l)
                    -- orderBy [asc coun] 
                    -- orderBy [asc (author ^. UserName)]
                    -- orderBy [asc (categoryName ^. CategoryLabel)]
-                   -- orderBy [asc (count @Int $ image ^. ImageId)]
+                   orderBy [asc  (count (imageBank ?. ImageBankNewsId) :: SqlExpr (Value Int) )]
                    -- pure (news ^. NewsId, author ^. UserName, categoryName ^. CategoryLabel))
-                   pure (news ^. NewsId))
-                   -- pure (news ^. NewsId, imageBank ?. ImageBankNewsId, coun))
+                   -- pure (news ^. NewsTitle, imageBank ?. ImageBankNewsId))
+                   pure (news ^. NewsTitle))
+-- i
+
+-- count :: Num a => SqlExpr (Value typ) -> SqlExpr (Value a)
+
 
 -- fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
 --       fetchActionSort2 = do
