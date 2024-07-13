@@ -140,3 +140,18 @@ queryToSort = convertFromWeb . mapMaybe (\(x,y) -> if x == "sort" then y else No
                                 _ -> (DataNews, Descending)
         convertFromWeb _ = (DataNews, Descending)
 
+newtype Find = Find {subString :: T.Text}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+data FindFromWeb = FindFromWeb (Maybe Find)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+queryToFind :: [(B.ByteString, Maybe B.ByteString)] -> Maybe Find
+queryToFind = convertFromWeb . mapMaybe (\(x,y) -> if x == "find" then y else Nothing) 
+  where convertFromWeb :: [B.ByteString] -> Maybe Find 
+        convertFromWeb [xs] = case (eitherDecodeStrict @FindFromWeb xs) of
+                                Right (FindFromWeb (Just x)) -> Just x 
+                                _ -> Nothing 
+        convertFromWeb _ = Nothing

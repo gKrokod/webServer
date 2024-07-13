@@ -30,10 +30,12 @@ data Handle m = Handle
   {
 --API
     logger :: Handlers.Logger.Handle m,
-    userOffset :: Int,
-    userLimit :: Int,
-    sortColumnNews :: ColumnType,
-    sortOrderNews :: SortOrder,
+    userOffset :: Int, --default
+    userLimit :: Int, -- default
+    sortColumnNews :: ColumnType, -- default
+    sortOrderNews :: SortOrder, -- default
+    -- findSubSring :: Maybe Find,
+    --
     getTime :: m (UTCTime),
 -- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User])
     pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
