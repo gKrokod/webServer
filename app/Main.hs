@@ -66,7 +66,7 @@ makeSetup cfg = do
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
           Handlers.Base.getTime = getCurrentTime,
           Handlers.Base.makeHashPassword = Base.Crypto.makeHashPassword,
-          Handlers.Base.validPassword = undefined,
+          Handlers.Base.validPassword = BB.validPassword pginfo,
 -- default setup
           Handlers.Base.userOffset = 0,
           Handlers.Base.userLimit = maxBound,

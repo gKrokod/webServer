@@ -1,5 +1,6 @@
 module Base.Base where
 import Base.FillTables
+import qualified Base.Crypto
 import Scheme --(migrateAll, Category)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
 import Control.Monad.Logger (runNoLoggingT, runStderrLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
@@ -10,7 +11,7 @@ import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
 import Database.Esqueleto.Experimental (orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr(..), OrderBy, PersistField(..))
-import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.))
+import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.), left_, right_)
 import qualified Data.Text as T
 import Data.Time (addDays)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
@@ -58,13 +59,29 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
--- data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
---
--- data SortOrder = Ascending | Descending
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
+validPassword :: ConnectionString -> Login -> PasswordUser -> IO (Either SomeException Bool) 
+validPassword connString login password = do
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
+    where
+      fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m Bool 
+      fetchAction = do
+        -- ((salt, qpass) : _) <- fetchSaltAndPassword
+        ((qpass) : _) <- fetchSaltAndPassword
+        let res = Base.Crypto.validPassword password (unValue qpass)
+        pure res
+
+      -- fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text, Value T.Text)] 
+      fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text)] 
+      fetchSaltAndPassword = (select $ do
+                           (user :& password) <-
+                             from $ table @User
+                             `innerJoin` table @Password
+                             `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
+                           where_ (user ^. UserLogin ==. val login)
+                           pure (password ^. PasswordQuasiPassword))
+                           -- let salt = left_ (password ^. PasswordQuasiPassword , val (16 :: Int))
+                           -- let qpass = right_ (password ^. PasswordQuasiPassword , val (16 :: Int))
+                           -- pure (salt, qpass) )
 
 pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction

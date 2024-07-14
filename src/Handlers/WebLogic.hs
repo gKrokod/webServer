@@ -40,6 +40,11 @@ doLogic :: (Monad m) => Handle m -> Request -> m (Response)
 doLogic h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get request"  
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show req)
+  let baseHandle = base h 
+  check1 <- Handlers.Base.validPassword baseHandle "login1" "qpass1"
+  check2 <- Handlers.Base.validPassword baseHandle "Дагер" "qwerty"
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Password  :" <> (T.pack $ show check1))
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Password  :" <> (T.pack $ show check2))
   case rawPathInfo req of
     path | B.isPrefixOf "/news" path  ->    endPointNews h req
          | B.isPrefixOf "/users" path  ->  endPointUsers h req 
