@@ -35,14 +35,14 @@ data Handle m = Handle
     sortColumnNews :: ColumnType, -- default
     sortOrderNews :: SortOrder, -- default
     findSubString :: Maybe Find,
-    filtersNews :: [Filter],
+    filtersNews :: [FilterItem],
     --
     --
     getTime :: m (UTCTime),
 -- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User])
     pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
-    pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [Filter] -> m (Either SomeException [NewsOut]),
+    pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either SomeException [NewsOut]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
     pullAllCategories :: Offset -> Limit -> m (Either SomeException [Category]),
 -- getAllCategories :: (Monad m) => Handle m -> m (Either T.Text [Category])

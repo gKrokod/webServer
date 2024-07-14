@@ -265,9 +265,9 @@ endPointNews h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ sortWeb) 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ findWeb) 
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ concatMap show $ filtersWeb) 
+      mapM (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show) filtersWeb
 
-      existingNews (setFind (setSort (setPanigate h queryLimit) queryLimit) queryLimit) req
+      existingNews (setFilters (setFind (setSort (setPanigate h queryLimit) queryLimit) queryLimit) queryLimit) req
     _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
            pure $ response404 h 

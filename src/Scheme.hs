@@ -22,7 +22,7 @@ module Scheme where
 import GHC.Generics (Generic)
 import qualified Database.Persist.TH as PTH
 import qualified Data.Text as T
-import Data.Time (UTCTime)
+import Data.Time (UTCTime(..), Day(..))
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import Data.Int (Int64)
@@ -81,17 +81,20 @@ newtype Find = Find {subString :: T.Text}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-data FilterItem = FilterDataAt | FilterDataUntil | FilterDataSince 
-                  | FilterAuthorName 
-                  | FilterCategoryLabel 
-                  | FilterTitleFind 
-                  | FilterContentFind
+data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
+                  | FilterAuthorName  T.Text
+                  | FilterCategoryLabel T.Text
+                  | FilterTitleFind T.Text
+                  | FilterContentFind T.Text
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-data Filter = Filter { name :: FilterItem, value :: T.Text}
-  deriving stock (Eq, Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
+-- type FilterFromWeb = [FilterItem]
+-- encode (FilterDataAt (a <- utctDay <$> getCurrentTime))       "{\"contents\":\"2024-07-14\",\"tag\":\"FilterDataAt\"}
+-- ghci> decode @FilterItem c
+-- Just (FilterDataAt 2024-07-14)
+
+-- data Filter = Filter { name :: FilterItem, value :: T.Text}
 
 -- type Name = T.Text
 -- type Login = T.Text

@@ -3,7 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
-import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..), Find(..), Filter(..))
+import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..), Find(..), FilterItem(..))
 -- import Scheme hiding (NewsOut) --(User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
@@ -152,8 +152,14 @@ queryToFind = convertFromWeb . mapMaybe (\(x,y) -> if x == "find" then y else No
                                 _ -> Nothing 
         convertFromWeb _ = Nothing
 
+newtype FilterFromWeb = FilterFromWeb [FilterItem]
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
 
-
-
-queryToFilters :: [(B.ByteString, Maybe B.ByteString)] -> [Filter] 
-queryToFilters = undefined
+queryToFilters :: [(B.ByteString, Maybe B.ByteString)] -> [FilterItem] 
+queryToFilters = convertFromWeb . mapMaybe (\(x,y) -> if x == "filter" then y else Nothing) 
+  where convertFromWeb :: [B.ByteString] -> [FilterItem]
+        convertFromWeb [xs] = case (eitherDecodeStrict @FilterFromWeb xs) of
+                                Right (FilterFromWeb fs) -> fs 
+                                _ -> []
+        convertFromWeb _ = [] 

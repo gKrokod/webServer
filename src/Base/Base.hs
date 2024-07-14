@@ -66,9 +66,9 @@ dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories
 --   deriving stock (Eq, Show, Generic)
 --   deriving anyclass (ToJSON, FromJSON)
 
-pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [Filter] -> IO (Either SomeException [NewsOut])
+pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
-pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbFind [filters]= do
+pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbFind filters = do
   try @SomeException (runDataBaseWithOutLog connString fetchActionSort2)
   -- try @SomeException (runDataBaseWithOutLog connString fetchAction)
     where 
@@ -110,7 +110,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                          `on` do \(n :& a :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
                          `leftJoin` table @ImageBank 
                          `on` do \(n :& a :& c :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
-                     groupBy (news ^. NewsTitle, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
+                     groupBy (news ^. NewsTitle, news ^. NewsCreated, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
                      -- search substring
                      maybe (where_ (val True)) 
                            (\(Find text) -> let subtext = (%) ++. val text ++. (%)
