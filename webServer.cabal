@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Base.Base
+      Base.Crypto
       Base.FillTables
       Base.LocalTime
       Config
@@ -54,6 +55,7 @@ library
     , base64
     , binary
     , bytestring
+    , cryptonite
     , esqueleto
     , http-types
     , monad-logger

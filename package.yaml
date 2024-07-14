@@ -55,7 +55,7 @@ library:
     - http-types
     - base64
     - binary
-    
+    - cryptonite
 
 
 executables:
@@ -70,7 +70,6 @@ executables:
     - webServer
     - warp
     - wai
-    - cryptonite
 
 tests:
   webServer-test:

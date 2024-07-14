@@ -15,6 +15,7 @@ data Success = Put | Change | Get deriving Show
 type Name = T.Text
 type Login = T.Text
 type PasswordUser = T.Text
+type HashPasswordUser = T.Text
 type Label = T.Text
 type NewLabel = T.Text
 type NumberImage = Int64
@@ -37,8 +38,9 @@ data Handle m = Handle
     findSubString :: Maybe Find,
     filtersNews :: [FilterItem],
     --
-    --
     getTime :: m (UTCTime),
+    makeHashPassword :: PasswordUser -> UTCTime -> HashPasswordUser,
+    validPassword :: Login -> PasswordUser -> m (Either SomeException Bool),
 -- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User])
     pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
@@ -271,9 +273,9 @@ createUserBase h name login pwd admin publish = do
                 pure $ Left "Login arleady taken"
     Right Nothing-> do
                 logMessage (logger h) Debug ("Create user...")
-                -- makeHashPassword pwd
-                let pwd' = pwd --for make QuasiPassowrd
                 time <- getTime h
+                --- crypto
+                let pwd' = makeHashPassword h pwd time --for make QuasiPassowrd
                 tryCreate <- putUser h name login pwd' time admin publish 
                 when (isLeft tryCreate) (logMessage (logger h) Handlers.Logger.Error "Can't putUser")
                 pure $ either (Left . T.pack . displayException) Right tryCreate 

@@ -3,6 +3,7 @@
 module Base.FillTables where
   -- data for test database
 import Scheme
+import Base.Crypto (makeHashPassword)
 import Data.Time (UTCTime)
 import Base.LocalTime (localtimeTemplate)
 -- import Data.Int (Int64)
@@ -20,9 +21,9 @@ user2 = User "user2" "login2" (toSqlKey 2) (read $(localtimeTemplate)) True True
 user3 = User "user3" "login3" (toSqlKey 3) (read $(localtimeTemplate)) False True
 
 password1, password2, password3 :: Password
-password1 = Password { passwordQuasiPassword = "qpass1"}
-password2 = Password "qpass2"
-password3 = Password "qpass3"
+password1 = Password {passwordQuasiPassword = makeHashPassword "qpass1" (read $(localtimeTemplate))}
+password2 = Password (makeHashPassword "qpass2" (read $(localtimeTemplate)))
+password3 = Password (makeHashPassword "qpass3" (read $(localtimeTemplate)))
 
 image1, image2, image3 :: Image
 image1  = Image { imageHeader = "header1", imageBase64 = "base64 n 1" }

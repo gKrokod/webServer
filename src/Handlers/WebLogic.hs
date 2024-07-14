@@ -109,6 +109,7 @@ createUser h req = do
       pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
     Right (UserFromWeb name login password admin publisher) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"
+      --todo new password?
       tryCreateUser <- Handlers.Base.createUserBase baseHandle name login password admin publisher
       case tryCreateUser of
         Right _ -> do

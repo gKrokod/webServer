@@ -263,23 +263,50 @@ pullImage connString uid = do
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
     fetchAction = get (toSqlKey uid)
 
--- deleteImagesFromBank :: ConnectionString -> Title -> IO () 
--- deleteImagesFromBank connString title = runDataBaseWithOutLog connString fetchAction
--- -- deleteImagesFromBank connString title = runDataBaseWithLog connString fetchAction
---   where
---     fetchAction :: (MonadIO m) => SqlPersistT m ()
---     fetchAction = do 
---       keyNews <- (fmap . fmap) entityKey (getBy $ UniqueNews title)
---       case keyNews of
---         Just keyNews' -> 
---           delete $ do
---             imageBank <- from $ table @ImageBank
---             where_ (imageBank ^. ImageBankNewsId ==. val keyNews')
---         _ -> pure ()    
-
 ------------------------------------------------------------------------------------------------------------
+  --for api news
+-- validPassword :: ConnectionString -> Login -> PasswordUser -> IO (Either SomeException Bool)
+-- -- getImage :: ConnectionString -> Int64 -> IO (Maybe Image) 
+-- validPassword connString login pass = do
+--   try @SomeException (runDataBaseWithOutLog connString fetchAction)
+--   where
+--     -- fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
+--     fetchAction = get (toSqlKey uid)
+--     findUserByLogin
+-- fetchFullNews configLimit userOffset userLimit title = do
+--   (label : _) <- (fmap . fmap) entityVal fetchLabel
+--   lables <- fetchLables (categoryLabel label)
+--   (user : _) <- (fmap . fmap) entityVal fetchUser
+--   images <- fetchActionImage
+--   (Just partNews) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
+--   let a = (title,
+--             newsCreated partNews,
+--             userName user, 
+--             workerCategory lables, 
+--             newsContent partNews,
+--             workerImage images,
+--             newsIsPublish partNews)
+--   pure a 
+--     where
+--       fetchLabel :: (MonadIO m) => SqlPersistT m [Entity Category]
+--       fetchLabel = select $ do
+--         (news :& category) <- 
+--           from $ table @News
+--            `innerJoin` table @Category
+--            `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
+--         where_ (news ^. NewsTitle ==. (val title))
+--         pure (category)
+--
+      -- fetchPassword :: (MonadIO m) => SqlPersistT m [Entity User]
+      -- fetchPassword = select $ do
+      --   (user :& password) <- 
+      --     from $ table @User
+      --      `innerJoin` table @Password
+      --      `on`  (\(u :& p) -> u ^. UserId ==. (p ^. PasswordId))
+      --   -- where_ (news ^. NewsTitle ==. (val title))
+      --   pure ()
+--
 putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO (Either SomeException Success) 
--- putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO () 
 putUser pginfo name login pwd time admin publish  = do
   try @SomeException (runDataBaseWithOutLog pginfo $ do
   -- runDataBaseWithLog pginfo $ do

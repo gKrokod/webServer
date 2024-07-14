@@ -8,6 +8,7 @@ import qualified Handlers.Logger
 import Handlers.Logger (Log(Debug))
 import qualified Handlers.Base
 import qualified Base.Base as BB 
+import qualified Base.Crypto
 import qualified Handlers.WebLogic
 import qualified Web.WebLogic as WW 
 
@@ -64,6 +65,8 @@ makeSetup cfg = do
           Handlers.Base.putUser = BB.putUser pginfo,
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
           Handlers.Base.getTime = getCurrentTime,
+          Handlers.Base.makeHashPassword = Base.Crypto.makeHashPassword,
+          Handlers.Base.validPassword = undefined,
 -- default setup
           Handlers.Base.userOffset = 0,
           Handlers.Base.userLimit = maxBound,
