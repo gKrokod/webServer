@@ -73,20 +73,20 @@ data EditNewsFromWeb = EditNewsFromWeb {title :: T.Text, newTitle :: Maybe T.Tex
 webToEditNews :: B.ByteString -> Either String EditNewsFromWeb 
 webToEditNews = eitherDecodeStrict @EditNewsFromWeb
 
-data NewsToWeb = NewsToWeb {title :: T.Text, created :: UTCTime, login :: T.Text, 
+data NewsToWeb = NewsToWeb {title :: T.Text, created :: UTCTime, author :: T.Text, 
                             labels :: [T.Text], content :: T.Text, images :: [T.Text], 
                             isPublisher :: Bool}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON)
 --
 
--- type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
+-- type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
 type NewsOut = (T.Text, UTCTime, T.Text, [T.Text], T.Text, [T.Text], Bool)
 --
 newsToWeb :: [NewsOut] -> Builder
 newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
   where convertToWeb :: NewsOut -> NewsToWeb
-        convertToWeb (t, d, l, ls, c, im, b) = NewsToWeb t d l ls c im b 
+        convertToWeb (t, d, n, ls, c, im, b) = NewsToWeb t d n ls c im b 
 
 data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int }
   deriving stock (Eq, Show, Generic)

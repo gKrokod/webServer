@@ -10,12 +10,12 @@ import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
 import Database.Esqueleto.Experimental (orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr(..), OrderBy, PersistField(..))
-import Database.Esqueleto.Experimental (like, (||.), (%), (++.))
+import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.))
 import qualified Data.Text as T
-import Data.Time (UTCTime)
+import Data.Time (addDays)
 import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
 import Handlers.Base (NumberImage, URI_Image)
-import Data.Time (getCurrentTime)
+import Data.Time (getCurrentTime, UTCTime(..))
 import Control.Exception (try, SomeException, throwIO, Exception, throw)
 --
 makeAndFillTables :: ConnectionString -> IO ()
@@ -69,37 +69,11 @@ dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories
 pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
 pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbFind filters = do
-  try @SomeException (runDataBaseWithOutLog connString fetchActionSort2)
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
   -- try @SomeException (runDataBaseWithOutLog connString fetchAction)
     where 
-      --todo delete or rename
       fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
       fetchAction = do
-        titles <- (fmap . fmap) unValue
-                  (select $ do
-                     news <- from $ table @News
-                     offset (fromIntegral userOffset)
-                     limit (fromIntegral $ min configLimit userLimit)
-                     pure (news ^. NewsTitle))
-        mapM (fetchFullNews configLimit userOffset userLimit) titles 
-
---todo delete
-      fetchActionSort :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
-      fetchActionSort = do
-        titles <- (fmap . fmap) unValue
-                  (select $ do
-                     news <- from $ table @News
-                     offset (fromIntegral userOffset)
-                     limit (fromIntegral $ min configLimit userLimit)
-                     orderBy [asc (news ^. NewsCreated)]
-                     pure (news ^. NewsTitle))
-
-        mapM (fetchFullNews configLimit userOffset userLimit) titles 
-      
-      -- fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [Entity News]
-      -- todo rename
-      fetchActionSort2 :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
-      fetchActionSort2 = do
         titles <- (fmap. fmap) unValue
                   (select $ do
                      (news :& author :& categoryName :& imageBank) <-
@@ -118,6 +92,8 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                                                       ||. (author ^. UserName `like` subtext)
                                                       ||. (categoryName ^. CategoryLabel `like` subtext)))
                            mbFind                  
+                     -- filters
+                     mapM (filterAction news author categoryName) filters
                      -- sortBy column and order
                      orderBy $ case columnType of
                                  DataNews -> [order sortOrder (news ^. NewsCreated)]
@@ -127,28 +103,27 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                      -- offset and limit news
                      offset (fromIntegral userOffset)
                      limit (fromIntegral $ min configLimit userLimit)
+                     -- return title
                      pure (news ^. NewsTitle))
         mapM (fetchFullNews configLimit userOffset userLimit) titles 
 
+      filterAction n a c filter = case filter of
+                       -- FilterDataAt day -> where_ (( utctDay <$> (n ^. NewsCreated) ) ==. val (day))
+                       FilterDataAt day ->where_ ((n ^. NewsCreated >=. val (UTCTime day 0))
+                                                   &&. (n ^. NewsCreated <. val (UTCTime (addDays 1 day) 0)))
+                       FilterDataUntil day -> where_ (n ^. NewsCreated <. val (UTCTime day 0))
+                       FilterDataSince day -> where_ (n ^. NewsCreated >=. val (UTCTime day 0))
+                       FilterAuthorName name -> where_ (a ^. UserName ==. val name) 
+                       FilterCategoryLabel label -> where_ (c ^. CategoryLabel ==. val label)
+                       FilterTitleFind findText -> where_ (n ^. NewsTitle `like` (%) ++. val findText ++. (%))
+                       FilterContentFind findText -> where_ (n ^. NewsContent `like` (%) ++. val findText ++. (%))
+                       _ -> where_ (val True)
+
 -- order a 
       order :: (PersistField a) => SortOrder -> (SqlExpr (Value a) -> SqlExpr (OrderBy))
-      order a = case a  of
+      order a = case a of
                  Ascending -> asc
                  Descending -> desc
-      -- --
-      -- column (n,a,c,i) = case columnType of
-      --             DataNews -> (n ^. NewsCreated)
-      --             AuthorNews -> (a ^. UserName)
-      --             CategoryName -> (c ^. CategoryLabel)
-      --             QuantityImages -> undefined
-      --
---           )
--- mapM (fetchFullNews configLimit userOffset userLimit) titles 
-                     -- case columnType of
-                     --   DataNews -> orderBy [order sortOrder (news ^. NewsCreated)]
-                     --   AuthorNews -> orderBy [order sortOrder (author ^. UserName)]
-                     --   CategoryName -> orderBy [order sortOrder (categoryName ^. CategoryLabel)]
-                     --   QuantityImages -> orderBy [asc  (count (imageBank ?. ImageBankNewsId) :: SqlExpr (Value Int) )]
 
 fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Offset -> Limit -> Title -> SqlPersistT m NewsOut
 fetchFullNews configLimit userOffset userLimit title = do
