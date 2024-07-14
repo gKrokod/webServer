@@ -116,7 +116,6 @@ logic cfg = do
   -- -- mapM (\(Value x) -> do
   --         print (x) 
   --         putStrLn "\n") users 
-
   UTCTime d s <- getCurrentTime
   print d
   let txt = "vil"
@@ -128,13 +127,15 @@ logic cfg = do
           print (x) 
           putStrLn "\n") users 
 
--- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
---                   | FilterAuthorName  T.Text
---                   | FilterCategoryLabel T.Text
---                   | FilterTitleFind T.Text
---                   | FilterContentFind T.Text
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
+  print "where my password for login"
+  users <- BB.getPassword pginfo "login2"
+  res <- BB.verifyPassword pginfo "login2" "qpass12"
+  mapM (\(x) -> do
+  -- mapM (\(Value x) -> do
+          print (x) 
+          putStrLn "\n") users 
+  print res
+
   pure ()
 
 -- helper xs = mconcat $ map (encode @User) xs

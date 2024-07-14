@@ -14,7 +14,7 @@ import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..), asc, orderBy, count)
-import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral, SqlExpr(..), ilike, (%), (++.), like, (||.), (>=.), (<.), (&&.))
+import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral, SqlExpr(..), ilike, (%), (++.), like, (||.), (>=.), (<.), (&&.), left_, right_)
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -125,6 +125,43 @@ getAll connString l = runDataBaseWithOutLog connString fetchAction
 --   deriving anyclass (ToJSON, FromJSON)
 
 
+
+getPassword connString login = runDataBaseWithOutLog connString fetchAction
+  where
+      fetchAction :: (MonadIO m) => SqlPersistT m [(Value T.Text, Value T.Text)]
+      fetchAction = (select $ do
+                     (user :& password) <-
+                       from $ table @User
+                       `innerJoin` table @Password
+                       `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
+                     where_ (user ^. UserLogin ==. val login)
+                     let salt = left_ (password ^. PasswordQuasiPassword , val (16 :: Int))
+                     let qpass = right_ (password ^. PasswordQuasiPassword , val (16 :: Int))
+                     pure (salt, qpass) )
+
+verify :: T.Text -> T.Text -> T.Text -> Bool
+verify pass salt qpass = (==) pass qpass 
+
+verifyPassword connString login pass = runDataBaseWithOutLog connString (verifyPassword' login pass) 
+
+verifyPassword' :: (MonadFail m, MonadIO m) => Login -> T.Text -> SqlPersistT m Bool 
+verifyPassword' login pass = do
+  ((salt, qpass) : _) <- fetchPass
+  let res = verify pass (unValue salt) (unValue qpass)
+  pure res
+  -- pure $ verify (unValue pass) (unValue salt) (unValue qpass )
+    where
+      fetchPass :: (MonadIO m) => SqlPersistT m [(Value T.Text, Value T.Text)]
+      fetchPass = (select $ do
+                     (user :& password) <-
+                       from $ table @User
+                       `innerJoin` table @Password
+                       `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
+                     where_ (user ^. UserLogin ==. val login)
+                     let salt = left_ (password ^. PasswordQuasiPassword , val (16 :: Int))
+                     let qpass = right_ (password ^. PasswordQuasiPassword , val (16 :: Int))
+                     pure (salt, qpass) )
+      
 getAllSearchAndFilter connString l mbtext filters = runDataBaseWithOutLog connString fetchAction
   where 
     -- fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value NewsId, Value Int)]
