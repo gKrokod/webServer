@@ -70,6 +70,7 @@ executables:
     - webServer
     - warp
     - wai
+    - cryptonite
 
 tests:
   webServer-test:
