@@ -1,4 +1,8 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Base.Base where
+  
 import Base.FillTables
 import Scheme --(migrateAll, Category)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
@@ -10,7 +14,7 @@ import Database.Persist.Postgresql  (toSqlKey)
 import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
 import Database.Esqueleto.Experimental (getBy, limit, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..), asc, orderBy, count)
-import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral, SqlExpr(..), ilike, (%), (++.), like, (||.))
+import Database.Esqueleto.Experimental (countRows, groupBy, leftJoin, (?.), leftJoinLateral, SqlExpr(..), ilike, (%), (++.), like, (||.), (>=.), (<.), (&&.))
 -- import Database.Esqueleto.Experimental 
 -- import Database.Esqueleto.Internal.Internal 
 import qualified Data.Text as T
@@ -20,6 +24,9 @@ import Handlers.Base (URI_Image)
 -- import Handlers.Base (KeyIdUser, KeyIdCategory)
 import Data.Time (getCurrentTime)
 import Control.Exception (throwIO)
+import Data.Aeson hiding (Key, Value)
+import GHC.Generics (Generic)
+import Data.Time (Day, UTCTime(..), addDays)
 -- import Data.Aeson.Key (toText)
 
 -- type Name = T.Text
@@ -103,11 +110,61 @@ getAll connString l = runDataBaseWithOutLog connString fetchAction
                    orderBy [asc  (count (imageBank ?. ImageBankNewsId) :: SqlExpr (Value Int) )]
                    -- pure (news ^. NewsId, author ^. UserName, categoryName ^. CategoryLabel))
                    -- pure (news ^. NewsTitle, imageBank ?. ImageBankNewsId))
-                   pure (news ^. NewsTitle))
+                   pure (news ^. NewsTitle, news ^. NewsCreated))
 -- i
 
 -- count :: Num a => SqlExpr (Value typ) -> SqlExpr (Value a)
 
+
+-- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
+--                   | FilterAuthorName  T.Text
+--                   | FilterCategoryLabel T.Text
+--                   | FilterTitleFind T.Text
+--                   | FilterContentFind T.Text
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+
+
+getAllSearchAndFilter connString l mbtext filters = runDataBaseWithOutLog connString fetchAction
+  where 
+    -- fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value NewsId, Value Int)]
+    -- fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value NewsId, Value (Maybe ImageBankId), Value Int)]
+    fetchAction = 
+      -- (fmap . fmap) unValue
+                (select $ do
+                   (news :& author :& categoryName :& imageBank) <-
+                     from $ table @News
+                       `innerJoin` table @User
+                       `on` do \(n :& a) -> n ^. NewsUserId ==. a ^. UserId
+                       `innerJoin` table @Category
+                       `on` do \(n :& a :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
+                       `leftJoin` table @ImageBank -- left dolzen but chtobu news2 ne teryalas
+                       `on` do \(n :& a :& c :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
+
+                   groupBy (news ^. NewsTitle, news ^. NewsCreated, author ^. UserName, categoryName ^. CategoryLabel,imageBank ?. ImageBankNewsId) 
+                   -- search
+                   maybe (where_ (val True))
+                         (\x -> let subtext = (%) ++. val x ++. (%)
+                                 in where_ ((news ^. NewsTitle `like` subtext)
+                                             ||. (author ^. UserName `like` subtext)
+                                             ||. (categoryName ^. CategoryLabel `like` subtext)))
+                         mbtext
+         --        filters
+                   mapM (filterAction news author categoryName) filters
+                   orderBy [asc  (count (imageBank ?. ImageBankNewsId) :: SqlExpr (Value Int) )]
+                   pure (news ^. NewsTitle, author ^. UserName, categoryName ^. CategoryLabel, news ^. NewsCreated))
+
+    filterAction n a c filter = case filter of
+                       -- FilterDataAt day -> where_ (( utctDay <$> (n ^. NewsCreated) ) ==. val (day))
+                       FilterDataAt day ->where_ ((n ^. NewsCreated >=. val (UTCTime day 0))
+                                                   &&. (n ^. NewsCreated <. val (UTCTime (addDays 1 day) 0)))
+                       FilterDataUntil day -> where_ (n ^. NewsCreated <. val (UTCTime day 0))
+                       FilterDataSince day -> where_ (n ^. NewsCreated >=. val (UTCTime day 0))
+                       FilterAuthorName name -> where_ (a ^. UserName ==. val name) 
+                       FilterCategoryLabel label -> where_ (c ^. CategoryLabel ==. val label)
+                       FilterTitleFind findText -> where_ (n ^. NewsTitle `like` (%) ++. val findText ++. (%))
+                       FilterContentFind findText -> where_ (n ^. NewsContent `like` (%) ++. val findText ++. (%))
+                       _ -> where_ (val True)
 
 getAllSearch connString l mbtext = runDataBaseWithOutLog connString fetchAction
   where 

@@ -22,7 +22,7 @@ module Scheme where
 import GHC.Generics (Generic)
 import qualified Database.Persist.TH as PTH
 import qualified Data.Text as T
-import Data.Time (UTCTime)
+import Data.Time (UTCTime, Day)
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
@@ -65,3 +65,10 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   deriving Eq Show
 |] 
 
+data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
+                  | FilterAuthorName  T.Text
+                  | FilterCategoryLabel T.Text
+                  | FilterTitleFind T.Text
+                  | FilterContentFind T.Text
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)

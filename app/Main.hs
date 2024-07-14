@@ -16,7 +16,7 @@ import qualified Handlers.Base
 import qualified Base.Base as BB 
 import qualified Logger
 import Database.Persist.Postgresql  (keyValueEntityToJSON, ConnectionString, runMigration, entityIdToJSON)
-import Data.Time (getCurrentTime)
+import Data.Time 
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Aeson
@@ -87,12 +87,12 @@ logic cfg = do
   -- print "Get ALl Full news"
   -- a <- Handlers.Base.getAllNews baseHandle
   -- mapM print a
-  print "getAll innerJoin news and user"
-  users <- BB.getAll pginfo (cLimitData cfg)
-  mapM (\(x) -> do
-  -- mapM (\(Value x) -> do
-          print (x) 
-          putStrLn "\n") users 
+  -- print "getAll innerJoin news and user"
+  -- users <- BB.getAll pginfo (cLimitData cfg)
+  -- mapM (\(x) -> do
+  -- -- mapM (\(Value x) -> do
+  --         print (x) 
+  --         putStrLn "\n") users 
 
   -- print "getAllSearch text 1"
   -- users <- BB.getAllSearch pginfo (cLimitData cfg) (Just "Witch")
@@ -108,22 +108,33 @@ logic cfg = do
   -- mapM (\(Value x) -> do
           print (x) 
           putStrLn "\n") users 
+  --
+  -- let txt = "vil"
+  -- print $ "getAllSearch Nothing text " ++ txt
+  -- users <- BB.getAllSearch pginfo (cLimitData cfg) Nothing
+  -- mapM (\(x) -> do
+  -- -- mapM (\(Value x) -> do
+  --         print (x) 
+  --         putStrLn "\n") users 
 
+  UTCTime d s <- getCurrentTime
+  print d
   let txt = "vil"
-  print $ "getAllSearch Nothing text " ++ txt
-  users <- BB.getAllSearch pginfo (cLimitData cfg) Nothing
+  print $ "getAllSearch Nothing text and Filter " ++ txt
+  users <- BB.getAllSearchAndFilter pginfo (cLimitData cfg) Nothing [FilterTitleFind "News", FilterContentFind "2", FilterAuthorName "user1"]
+  -- users <- BB.getAllSearchAndFilter pginfo (cLimitData cfg) Nothing [FilterDataAt (addDays (-1) d)]
   mapM (\(x) -> do
   -- mapM (\(Value x) -> do
           print (x) 
           putStrLn "\n") users 
-  -- print "convert all users to JSON"
-  -- let aa = encode @MyType (MyType "HOHO")
-  -- let baa = encode @[MyType] ([MyType "HOHO", MyType "NENE", MyType "3"])
-  -- print aa
-  -- print baa
-  -- let usersjson = mconcat $ map (encode @User) users
-  -- let usersjson = (encode @User) users
-  -- print usersjson 
+
+-- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
+--                   | FilterAuthorName  T.Text
+--                   | FilterCategoryLabel T.Text
+--                   | FilterTitleFind T.Text
+--                   | FilterContentFind T.Text
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
   pure ()
 
 -- helper xs = mconcat $ map (encode @User) xs
