@@ -89,10 +89,12 @@ data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-data Privilege = Anonymous | WebUser | Admin
-  deriving stock (Eq, Show, Generic)
-  -- deriving anyclass (ToJSON, FromJSON)
+-- data Privilege = Anonymous | WebUser | Admin
+--   deriving stock (Eq, Show, Generic)
+--   -- deriving anyclass (ToJSON, FromJSON)
 
+data IsValidPassword = Valid | NotValid
+  deriving Show
 
 
 -- type FilterFromWeb = [FilterItem]

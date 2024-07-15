@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds       #-}
 module Handlers.WebLogic where
 
-import Scheme (User(..), Image, Privilege(..))
+import Scheme (User(..), Image, IsValidPassword(..))
 import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..), SortFromWeb(..))
 import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
 import qualified Handlers.Logger
@@ -28,14 +28,16 @@ data ClientRole = AdminRole | PublisherRole
 
 data Client = Client { clienAdminToken :: Maybe (Proxy 'AdminRole),
                        clientPublisherToken :: Maybe (Proxy 'PublisherRole)}
+                       -- ownNews :: [Title]}
   deriving (Eq, Show)
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
    -- logMessage 
     base :: Handlers.Base.Handle m,
+    client :: Client,
     -- updateNews, createNews, updateCategory, createGategory , createUser
-    privilege :: Privilege,
+    -- privilege :: Privilege,
     -- getPrivilege :: Maybe (T.Text, T.Text) -> m (Either SomeException Privilege)
 -- data Privilege = Anonymous | WebUser | Admin
     getBody :: Request -> m (B.ByteString),
@@ -45,7 +47,7 @@ data Handle m = Handle
     mkGoodResponse :: Builder -> Response,
     mkResponseForImage :: Image -> Response
   }
-
+--todo getImage left e cdelaj
 
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
@@ -55,41 +57,55 @@ getClient h req = do
   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
   case secureData of
     Nothing -> pure $ Right $ Client Nothing Nothing
-    Just (login, pass) -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Check password for: " <> login <> " " <> pass)
-      -- getValid napisat v Base chtob ne SOme a Text bul
-      checkValid <- Handlers.Base.validPassword baseHandle login pass
-      case checkValid of
+    Just (login, pass) -> do --
+      tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
+      case tryGetPrivilege of
         Left e -> do
-          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error (T.pack . displayException $ e)
-          pure $ Left ""
-        Right True -> do
-          Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is correct"
-          Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege"
-          tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
-          case tryGetPrivilege of
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+          pure $ Left e
+        Right (isAdmin, isPublisher) -> do
+          checkValid <- Handlers.Base.getResultValid baseHandle login pass
+          case checkValid of
             Left e -> do
               Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
               pure $ Left e
-            Right (isAdmin, isPublisher) -> do
-               Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Make Client" 
-               pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
-                                     (bool Nothing (Just Proxy) isPublisher) 
-
--- getPrivilege :: (Monad m) => Handle m -> Request -> m (Either SomeException Privilege)
--- getPrivilege h req = do
+            Right NotValid -> do
+              Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
+              pure $ Right $ Client Nothing Nothing
+            Right Valid -> do
+              Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is correct"
+              Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege"
+              pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
+                                    (bool Nothing (Just Proxy) isPublisher) 
+--
+-- getClient h req = do
 --   let logHandle = logger h 
 --   let baseHandle = base h 
 --   let secureData = headersToLoginAndPassword . requestHeaders $ req
 --   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
 --   case secureData of
---     Nothing -> pure $ Right Anonymous
---     Just (login,pass) -> do
---       check <- Handlers.Base.validPassword baseHandle login pass
---       case check of
---         Left e -> pure $ Left e
---         Right flag | False -> pure $ Right Anonymous
---                    | True -> pure $ Right WebUser
+--     Nothing -> pure $ Right $ Client Nothing Nothing
+--     Just (login, pass) -> do --
+--       -- podxodit parol
+--       -- ne nashli v baze
+--       -- ne podzodit parol
+--       checkValid <- Handlers.Base.getResultValid baseHandle login pass
+--       case checkValid of
+--         Left e -> do
+--           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+--           pure $ Left e
+--         Right True -> do
+--           Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is correct"
+--           Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege"
+--           tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
+--           case tryGetPrivilege of
+--             Left e -> do
+--               Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+--               pure $ Left e
+--             Right (isAdmin, isPublisher) -> do
+--                Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Make Client" 
+--                pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
+--                                      (bool Nothing (Just Proxy) isPublisher) 
 
 -- old  type Application = Request -> ResourceT IO Responske
 --gt
@@ -115,17 +131,23 @@ doAutorization h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get headers"  
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ requestHeaders req)
   userRole <- getClient h req
-  -- userStatus <- getPrivilege h req
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("User Status  :" <> (T.pack $ show userRole))
-  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Password  :" <> (T.pack $ show check2))
-  case rawPathInfo req of
-    path | B.isPrefixOf "/news" path  ->  undefined  --endPointNews h req
-         | B.isPrefixOf "/users" path  ->  undefined--lendPointUsers h req 
-         | B.isPrefixOf "/categories" path  -> undefined--endPointCategories h req
-         | B.isPrefixOf "/images" path  ->  undefined--endPointImages h req
-         | otherwise -> do
-            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
-            pure (Left $ response404 h) -- todo. replace 404 for another error
+  case userRole of
+    Left e -> do
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+      pure (Left $ response404 h) -- todo. replace 404 for another error
+    Right (Client a p) -> do
+       Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Autorization done for client :" <> (T.pack $ show (Client a p)) )
+
+---do logic autorization
+       case rawPathInfo req of
+        path | B.isPrefixOf "/news" path  ->  undefined  --endPointNews h req
+             | B.isPrefixOf "/users" path  ->  undefined--lendPointUsers h req 
+             | B.isPrefixOf "/categories" path  -> undefined--endPointCategories h req
+             | B.isPrefixOf "/images" path  ->  undefined--endPointImages h req
+             | otherwise -> do
+                Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+                pure (Left $ response404 h) -- todo. replace 404 for another error
+   -- pure $ Right h
 
 
 doLogic :: (Monad m) => Handle m -> Request -> m (Response) 
@@ -234,13 +256,16 @@ existingImages h req = do
     [("id", Just n)] | idImage > 0 -> do -- todo maxBound int64 and maxBound (fst . readInt n) ?
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Good request image"  
       eImage <- Handlers.Base.getImage baseHandle idImage
-      pure $ case eImage of
-        Left e -> response404 h
-        Right img -> mkResponseForImage h img
+      case eImage of
+        Left e -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+          pure $ response404 h
+        Right img -> pure $ mkResponseForImage h img
       where idImage = maybe (-1) (fromIntegral . fst) (BC.readInt n)  
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request image"  
       pure (response404 h)
+
 
 endPointCategories :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointCategories h req = do

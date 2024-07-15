@@ -10,6 +10,7 @@ import Data.Int (Int64)
 import Control.Exception (SomeException, displayException)
 import Control.Monad (when)
 import Data.Either (isLeft)
+import Data.Bool
 
 data Success = Put | Change | Get deriving Show
 type Name = T.Text
@@ -71,14 +72,13 @@ data Handle m = Handle
                 -- when (isLeft tryCreate) (logMessage (logger h) Handlers.Logger.Error "Can't putUser")
                 -- pure $ either (Left . T.pack . displayException) Right tryCreate 
 
-type IsValidPassword = Bool
 
 getResultValid :: (Monad m) => Handle m -> Login -> PasswordUser ->  m (Either T.Text IsValidPassword)
 getResultValid h login password = do
   logMessage (logger h) Debug ("Check password for: " <> login <> " " <> password)
   tryValid <- validPassword h login password 
   when (isLeft tryValid) (logMessage (logger h) Handlers.Logger.Error "function validPassword fail")
-  pure $ either (Left . T.pack . displayException) Right tryValid 
+  pure $ either (Left . T.pack . displayException) (Right . bool NotValid Valid) tryValid 
 
 type IsAdmin = Bool
 type IsPublisher = Bool
@@ -94,7 +94,7 @@ getPrivilege h login = do
     Right (Just (User _ _ _ _ a p)) -> do
       logMessage (logger h) Debug (T.pack $ "Privilege: Admin " <> show a <> " Publisher " <> show p)
       pure $ Right (a, p)
-    _ -> do
+    _ -> do -- Right Nothing - not found in base
       logMessage (logger h) Debug ( "Privilege: Admin False False ")
       pure $ Right (False, False)
   --
