@@ -1,12 +1,13 @@
+{-# LANGUAGE DataKinds       #-}
 module Handlers.WebLogic where
 
-import Scheme (User(..), Image)
+import Scheme (User(..), Image, Privilege(..))
 import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..), SortFromWeb(..))
-import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort, queryToFind, queryToFilters)
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
-import Network.Wai (Request, Response, rawPathInfo, queryString)
+import Network.Wai (Request, Response, rawPathInfo, queryString, requestHeaders)
 import qualified Data.ByteString as B 
 import Data.ByteString.Char8 as BC (readInt, empty, null)
 import qualified Data.Text as T
@@ -15,12 +16,28 @@ import Network.HTTP.Types (notFound404, status200, Query)
 -- import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
 import qualified Data.Text.Encoding as E
 import Data.Binary.Builder(Builder(..))
+import Data.Maybe
+import Control.Monad (when)
+import Network.HTTP.Types.Header (RequestHeaders)
+import Control.Exception (SomeException, displayException)
+import Data.Proxy
+import Data.Bool
+
+data ClientRole = AdminRole | PublisherRole 
+  deriving (Eq, Show)
+
+data Client = Client { clienAdminToken :: Maybe (Proxy 'AdminRole),
+                       clientPublisherToken :: Maybe (Proxy 'PublisherRole)}
+  deriving (Eq, Show)
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
    -- logMessage 
     base :: Handlers.Base.Handle m,
     -- updateNews, createNews, updateCategory, createGategory , createUser
+    privilege :: Privilege,
+    -- getPrivilege :: Maybe (T.Text, T.Text) -> m (Either SomeException Privilege)
+-- data Privilege = Anonymous | WebUser | Admin
     getBody :: Request -> m (B.ByteString),
     -- getQueryString :: Request -> m (Query), -- [(B.ByteString, Maybe B.ByteString)]
     response404 :: Response,
@@ -29,22 +46,93 @@ data Handle m = Handle
     mkResponseForImage :: Image -> Response
   }
 
--- old  type Application = Request -> ResourceT IO Response
+
+getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
+getClient h req = do
+  let logHandle = logger h 
+  let baseHandle = base h 
+  let secureData = headersToLoginAndPassword . requestHeaders $ req
+  when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
+  case secureData of
+    Nothing -> pure $ Right $ Client Nothing Nothing
+    Just (login, pass) -> do
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Check password for: " <> login <> " " <> pass)
+      -- getValid napisat v Base chtob ne SOme a Text bul
+      checkValid <- Handlers.Base.validPassword baseHandle login pass
+      case checkValid of
+        Left e -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error (T.pack . displayException $ e)
+          pure $ Left ""
+        Right True -> do
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is correct"
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege"
+          tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
+          case tryGetPrivilege of
+            Left e -> do
+              Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+              pure $ Left e
+            Right (isAdmin, isPublisher) -> do
+               Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Make Client" 
+               pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
+                                     (bool Nothing (Just Proxy) isPublisher) 
+
+-- getPrivilege :: (Monad m) => Handle m -> Request -> m (Either SomeException Privilege)
+-- getPrivilege h req = do
+--   let logHandle = logger h 
+--   let baseHandle = base h 
+--   let secureData = headersToLoginAndPassword . requestHeaders $ req
+--   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
+--   case secureData of
+--     Nothing -> pure $ Right Anonymous
+--     Just (login,pass) -> do
+--       check <- Handlers.Base.validPassword baseHandle login pass
+--       case check of
+--         Left e -> pure $ Left e
+--         Right flag | False -> pure $ Right Anonymous
+--                    | True -> pure $ Right WebUser
+
+-- old  type Application = Request -> ResourceT IO Responske
 --gt
 -- last type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived -- passing style?
 -- type Application :: Request -> Respond -> IO ResponseReceived
 -- type Respond = Response -> IO ResponseReceived
 --
 
-doLogic :: (Monad m) => Handle m -> Request -> m (Response) 
-doLogic h req = do
+-- autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Request -> Respond -> IO ResponseReceived
+--    (Handlers.WebLogic.doAutorization h nextApp req respond)
+-- app :: ServerSetup IO -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived 
+   -- (nextApp h req f)
+-- autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived 
+
+doAutorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
+-- doAutorization :: (Monad m) => Handle m -> (Handle m -> Application) -> Request -> (Response -> m ResponseReceived) -> m (Response)
+doAutorization h req = do
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Hello Autorization"  
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get request"  
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show req)
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get headers"  
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ requestHeaders req)
+  userRole <- getClient h req
+  -- userStatus <- getPrivilege h req
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("User Status  :" <> (T.pack $ show userRole))
+  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Password  :" <> (T.pack $ show check2))
+  case rawPathInfo req of
+    path | B.isPrefixOf "/news" path  ->  undefined  --endPointNews h req
+         | B.isPrefixOf "/users" path  ->  undefined--lendPointUsers h req 
+         | B.isPrefixOf "/categories" path  -> undefined--endPointCategories h req
+         | B.isPrefixOf "/images" path  ->  undefined--endPointImages h req
+         | otherwise -> do
+            Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
+            pure (Left $ response404 h) -- todo. replace 404 for another error
+
+
+doLogic :: (Monad m) => Handle m -> Request -> m (Response) 
+doLogic h req = do
+  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get request"  
+  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show req)
   let baseHandle = base h 
-  check1 <- Handlers.Base.validPassword baseHandle "login1" "qpass1"
-  check2 <- Handlers.Base.validPassword baseHandle "Дагер" "qwerty"
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Password  :" <> (T.pack $ show check1))
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug ("Password  :" <> (T.pack $ show check2))
   case rawPathInfo req of
     path | B.isPrefixOf "/news" path  ->    endPointNews h req
          | B.isPrefixOf "/users" path  ->  endPointUsers h req 

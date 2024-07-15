@@ -89,6 +89,12 @@ data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
+data Privilege = Anonymous | WebUser | Admin
+  deriving stock (Eq, Show, Generic)
+  -- deriving anyclass (ToJSON, FromJSON)
+
+
+
 -- type FilterFromWeb = [FilterItem]
 -- encode (FilterDataAt (a <- utctDay <$> getCurrentTime))       "{\"contents\":\"2024-07-14\",\"tag\":\"FilterDataAt\"}
 -- ghci> decode @FilterItem c

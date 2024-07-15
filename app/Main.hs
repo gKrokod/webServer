@@ -19,10 +19,11 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 
 import Network.Wai.Handler.Warp (run)
-import Network.Wai (Application, responseBuilder)
+import Network.Wai (Application, responseBuilder, ResponseReceived, Response, Request)
 -- import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
 import Control.Exception (bracket_)
 
+type Respond = Response -> IO ResponseReceived
 
 main :: IO ()
 main = do 
@@ -32,7 +33,8 @@ main = do
   whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
                           >> BB.makeAndFillTables (connectionString config)
   serverSetup <- makeSetup config
-  run 4221 (app serverSetup) 
+  -- run 4221 (app serverSetup ) 
+  run 4221 (autorization serverSetup app) 
 
 
 -- old  type Application = Request -> ResourceT IO Response
@@ -49,6 +51,19 @@ app h req f =
    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "Open app" )
    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "Close app")
    (Handlers.WebLogic.doLogic h req >>= f)
+
+autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Application
+-- autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Request -> Respond -> IO ResponseReceived
+autorization h nextApp req respond = 
+  bracket_
+   (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "OpenAuth app" )
+   (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "CloseAuth app")
+   -- (undefined)
+   (do
+      check <- Handlers.WebLogic.doAutorization h req
+      case check of 
+       Left fail -> respond fail
+       Right h' -> nextApp h' req respond )
 
 makeSetup :: ConfigDataBase -> IO (ServerSetup IO) 
 makeSetup cfg = do
@@ -89,6 +104,7 @@ makeSetup cfg = do
   let handle = Handlers.WebLogic.Handle { 
           Handlers.WebLogic.logger = logHandle, 
           Handlers.WebLogic.base = baseHandle,
+          Handlers.WebLogic.privilege = Anonymous,
           Handlers.WebLogic.response404 = WW.response404,
           Handlers.WebLogic.response200 = WW.response200,
           Handlers.WebLogic.mkGoodResponse = WW.mkGoodResponse,

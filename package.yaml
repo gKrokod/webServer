@@ -55,6 +55,7 @@ library:
     - http-types
     - base64
     - binary
+    - case-insensitive
     - cryptonite
 
 

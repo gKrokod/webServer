@@ -71,6 +71,33 @@ data Handle m = Handle
                 -- when (isLeft tryCreate) (logMessage (logger h) Handlers.Logger.Error "Can't putUser")
                 -- pure $ either (Left . T.pack . displayException) Right tryCreate 
 
+type IsValidPassword = Bool
+
+getResultValid :: (Monad m) => Handle m -> Login -> PasswordUser ->  m (Either T.Text IsValidPassword)
+getResultValid h login password = do
+  logMessage (logger h) Debug ("Check password for: " <> login <> " " <> password)
+  tryValid <- validPassword h login password 
+  when (isLeft tryValid) (logMessage (logger h) Handlers.Logger.Error "function validPassword fail")
+  pure $ either (Left . T.pack . displayException) Right tryValid 
+
+type IsAdmin = Bool
+type IsPublisher = Bool
+
+getPrivilege :: (Monad m) => Handle m -> Login -> m (Either T.Text (IsAdmin, IsPublisher))
+getPrivilege h login = do
+  logMessage (logger h) Debug ("Get privilege for login: " <> login)
+  tryFindUser <- findUserByLogin h login
+  when (isLeft tryFindUser) (logMessage (logger h) Error ("function findUserByLogin fail"))
+  case tryFindUser of
+    Left e -> pure . Left . T.pack . displayException $ e
+    --todo spisok novostej
+    Right (Just (User _ _ _ _ a p)) -> do
+      logMessage (logger h) Debug (T.pack $ "Privilege: Admin " <> show a <> " Publisher " <> show p)
+      pure $ Right (a, p)
+    _ -> do
+      logMessage (logger h) Debug ( "Privilege: Admin False False ")
+      pure $ Right (False, False)
+  --
 getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
 getAllNews h = do
   logMessage (logger h) Debug ("Try to get all news from database")

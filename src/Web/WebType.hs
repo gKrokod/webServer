@@ -11,8 +11,13 @@ import GHC.Generics (Generic)
 import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON, FromJSON)
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import qualified Data.ByteString as B 
-import Data.Maybe
-  
+import Data.Maybe 
+import  Data.CaseInsensitive (CI)
+import qualified Data.Text.Encoding as  E
+-- import  qualified Data.Text as T
+-- import Data.Time (UTCTime)
+import Data.ByteString.Base64 as B64
+-- import Control.Monad (when)
 
 data UserToWeb = UserToWeb {name :: T.Text, login :: T.Text, created :: UTCTime, isAdmin :: Bool,
   isPublisher :: Bool}
@@ -163,3 +168,17 @@ queryToFilters = convertFromWeb . mapMaybe (\(x,y) -> if x == "filter" then y el
                                 Right (FilterFromWeb fs) -> fs 
                                 _ -> []
         convertFromWeb _ = [] 
+
+-- headersToLoginAndPassword :: [Header]-> (T.Text, T.Text)
+-- headersToLoginAndPassword :: [(HeaderName, ByteString)]-> (T.Text, T.Text)
+headersToLoginAndPassword :: [(CI B.ByteString, B.ByteString)]-> Maybe (T.Text, T.Text)
+headersToLoginAndPassword ((header, loginpass) : xs) | header == "Authorization"
+                                                     && B.take 6 loginpass == "Basic "
+                                                     = Just $ splitLoginPass (B.drop 6 loginpass)
+                                                     | otherwise = headersToLoginAndPassword xs 
+  where splitLoginPass :: B.ByteString -> (T.Text, T.Text)
+        splitLoginPass xs = let [l, p] = map E.decodeUtf8 . B.splitWith (== colon) . B64.decodeBase64Lenient $ xs
+                                colon = fromIntegral $ fromEnum ':'
+                            in (l, p)
+headersToLoginAndPassword [] = Nothing 
+
