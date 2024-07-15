@@ -59,6 +59,24 @@ dropAll :: (MonadIO m) => SqlPersistT m ()
 -- dropAll = rawExecute "DROP SCHEMA public CASCADE" []
 dropAll = rawExecute "DROP TABLE IF EXISTS news, images_bank, images, categories, users, passwords" []
 
+validCopyRight :: ConnectionString -> Login -> Title -> IO (Either SomeException Bool) 
+validCopyRight connString login title = do
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
+    where
+      fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m Bool 
+      fetchAction = do
+        ((Value loginNews) : _ ) <- fetchUserFromNews
+        pure (login == loginNews)
+          where
+            fetchUserFromNews :: (MonadIO m) => SqlPersistT m [(Value Login)]
+            fetchUserFromNews = select $ do
+              (news :& user) <- 
+                from $ table @News
+                 `innerJoin` table @User
+                 `on`  (\(n :& u) -> n ^. NewsUserId ==. (u ^. UserId))
+              where_ (news ^. NewsTitle ==. (val title))
+              pure (user ^. UserLogin)
+
 validPassword :: ConnectionString -> Login -> PasswordUser -> IO (Either SomeException Bool) 
 validPassword connString login password = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
@@ -122,7 +140,8 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                      limit (fromIntegral $ min configLimit userLimit)
                      -- return title
                      pure (news ^. NewsTitle))
-        mapM (fetchFullNews configLimit userOffset userLimit) titles 
+        -- mapM (fetchFullNews configLimit userOffset userLimit) titles 
+        mapM (fetchFullNews configLimit userLimit) titles 
 
       filterAction n a c filter = case filter of
                        -- FilterDataAt day -> where_ (( utctDay <$> (n ^. NewsCreated) ) ==. val (day))
@@ -142,8 +161,10 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                  Ascending -> asc
                  Descending -> desc
 
-fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Offset -> Limit -> Title -> SqlPersistT m NewsOut
-fetchFullNews configLimit userOffset userLimit title = do
+-- fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Offset -> Limit -> Title -> SqlPersistT m NewsOut
+fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Limit -> Title -> SqlPersistT m NewsOut
+-- fetchFullNews configLimit userOffset userLimit title = do
+fetchFullNews configLimit userLimit title = do
   (label : _) <- (fmap . fmap) entityVal fetchLabel
   lables <- fetchLables (categoryLabel label)
   (user : _) <- (fmap . fmap) entityVal fetchUser

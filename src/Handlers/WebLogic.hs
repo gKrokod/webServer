@@ -23,12 +23,15 @@ import Control.Exception (SomeException, displayException)
 import Data.Proxy
 import Data.Bool
 
+type Login = T.Text
+type Author = T.Text
+
 data ClientRole = AdminRole | PublisherRole 
   deriving (Eq, Show)
 
 data Client = Client { clienAdminToken :: Maybe (Proxy 'AdminRole),
-                       clientPublisherToken :: Maybe (Proxy 'PublisherRole)}
-                       -- ownNews :: [Title]}
+                       clientPublisherToken :: Maybe (Proxy 'PublisherRole),
+                       author :: Maybe Login}
   deriving (Eq, Show)
 
 data Handle m = Handle
@@ -56,7 +59,7 @@ getClient h req = do
   let secureData = headersToLoginAndPassword . requestHeaders $ req
   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
   case secureData of
-    Nothing -> pure $ Right $ Client Nothing Nothing
+    Nothing -> pure $ Right $ Client Nothing Nothing Nothing
     Just (login, pass) -> do --
       tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
       case tryGetPrivilege of
@@ -71,12 +74,13 @@ getClient h req = do
               pure $ Left e
             Right NotValid -> do
               Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
-              pure $ Right $ Client Nothing Nothing
+              pure $ Right $ Client Nothing Nothing Nothing
             Right Valid -> do
               Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is correct"
               Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege"
               pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
                                     (bool Nothing (Just Proxy) isPublisher) 
+                                    (Just login)
 --
 -- getClient h req = do
 --   let logHandle = logger h 
@@ -162,7 +166,7 @@ endPointUsers h req = do
   case rawPathInfo req of
     "/users/create" -> do 
       case (client h) of
-        Client (Just adminRole) _ -> createUser adminRole h req -- создание пользователя tolko for admin todo
+        Client (Just adminRole) _ _ -> createUser adminRole h req -- создание пользователя tolko for admin todo
         _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
            pure (response404 h) -- todo. replace 404 for another error
@@ -270,13 +274,13 @@ endPointCategories h req = do
   case rawPathInfo req of
     "/categories/create"-> do
       case (client h) of
-        Client (Just adminRole) _ -> createCategory adminRole h req -- создание категории 
+        Client (Just adminRole) _ _ -> createCategory adminRole h req -- создание категории 
         _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
            pure (response404 h) -- todo. replace 404 for another error
     "/categories/edit" -> do
       case (client h) of
-        Client (Just adminRole) _ -> updateCategory adminRole h req -- редактирование категории (названия и смена родительской)
+        Client (Just adminRole) _  _-> updateCategory adminRole h req -- редактирование категории (названия и смена родительской)
         _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
            pure (response404 h) -- todo. replace 404 for another error
@@ -375,11 +379,17 @@ endPointNews h req = do
   case rawPathInfo req of
     "/news/create" -> do 
       case (client h) of
-        Client _ (Just publisherRole) -> createNews publisherRole h req -- создание новости
+        Client _ (Just publisherRole) _ -> createNews publisherRole h req -- создание новости
         _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
            pure (response404 h) -- todo. replace 404 for another error
-    "/news/edit" -> updateNews h req -- редактирование новости
+    "/news/edit" -> 
+      case (client h) of
+        Client _ _ (Just author) -> do 
+          updateNews author h req -- редактирование новости
+        _ -> do
+           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
+           pure (response404 h) -- todo. replace 404 for another error
     "/news" -> do -- get all news
       --- need funtion po update baseHandle
       -- (setSearch . setSort . setPanigate baseHandle) queryLimit
@@ -458,9 +468,9 @@ createNews _ h req = do
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
           pure $ response404 h -- "Not ok. 
- 
-updateNews :: (Monad m) => Handle m -> Request -> m (Response)
-updateNews h req = do 
+
+updateNews :: (Monad m) => Author -> Handle m -> Request -> m (Response)
+updateNews author h req = do 
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News WEB"
@@ -471,15 +481,25 @@ updateNews h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure (response404 h) -- "Not ok. 
     Right (EditNewsFromWeb title newTitle newLogin newLabel newContent newImages newIsPublish) -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit news "
-      tryEditNews <- Handlers.Base.updateNews baseHandle 
-        title newTitle newLogin
-        newLabel newContent (maybe [] id newImages) newIsPublish
-      case tryEditNews of
-        Right _ -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
-          pure $ response200 h
-        Left _ -> pure $ response404 h -- "Not ok. 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."
+      checkCopyright <- Handlers.Base.getCopyRight baseHandle author title
+      case checkCopyright of
+        Right Valid -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Ok"
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit news "
+          tryEditNews <- Handlers.Base.updateNews baseHandle 
+            title newTitle newLogin
+            newLabel newContent (maybe [] id newImages) newIsPublish
+          case tryEditNews of
+            Right _ -> do
+              Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
+              pure $ response200 h
+            _ -> pure $ response404 h -- "Not ok.  Left. delat log?
+        _ -> pure $ response404 h -- "Not ok. 
+            -- Right NotValid -> do
+            --   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
+            --   pure $ Right $ Client Nothing Nothing Nothing
+            -- Right Valid -> do
 
 existingNews :: (Monad m) => Handle m -> Request -> m (Response)
 existingNews h req = do 

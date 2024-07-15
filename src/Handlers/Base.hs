@@ -42,6 +42,7 @@ data Handle m = Handle
     getTime :: m (UTCTime),
     makeHashPassword :: PasswordUser -> UTCTime -> HashPasswordUser,
     validPassword :: Login -> PasswordUser -> m (Either SomeException Bool),
+    validCopyRight :: Login -> Title-> m (Either SomeException Bool),
 -- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User])
     pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
 -- getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
@@ -72,6 +73,12 @@ data Handle m = Handle
                 -- when (isLeft tryCreate) (logMessage (logger h) Handlers.Logger.Error "Can't putUser")
                 -- pure $ either (Left . T.pack . displayException) Right tryCreate 
 
+getCopyRight :: (Monad m) => Handle m -> Login -> Title ->  m (Either T.Text IsValidPassword)
+getCopyRight h login title = do
+  logMessage (logger h) Debug ("Check copyright for the login: " <> login <> " of the news with title: " <> title)
+  tryValid <- validCopyRight h login title 
+  when (isLeft tryValid) (logMessage (logger h) Handlers.Logger.Error "function validCopyRight fail")
+  pure $ either (Left . T.pack . displayException) (Right . bool NotValid Valid) tryValid 
 
 getResultValid :: (Monad m) => Handle m -> Login -> PasswordUser ->  m (Either T.Text IsValidPassword)
 getResultValid h login password = do

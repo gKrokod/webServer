@@ -82,6 +82,7 @@ makeSetup cfg = do
           Handlers.Base.getTime = getCurrentTime,
           Handlers.Base.makeHashPassword = Base.Crypto.makeHashPassword,
           Handlers.Base.validPassword = BB.validPassword pginfo,
+          Handlers.Base.validCopyRight = BB.validCopyRight pginfo,
 -- default setup
           Handlers.Base.userOffset = 0,
           Handlers.Base.userLimit = maxBound,
@@ -105,7 +106,7 @@ makeSetup cfg = do
           Handlers.WebLogic.logger = logHandle, 
           Handlers.WebLogic.base = baseHandle,
           -- Handlers.WebLogic.privilege = Anonymous,
-          Handlers.WebLogic.client = Handlers.WebLogic.Client Nothing Nothing,
+          Handlers.WebLogic.client = Handlers.WebLogic.Client Nothing Nothing Nothing,
           Handlers.WebLogic.response404 = WW.response404,
           Handlers.WebLogic.response200 = WW.response200,
           Handlers.WebLogic.mkGoodResponse = WW.mkGoodResponse,
