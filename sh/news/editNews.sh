@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-curl -v -X POST login2:qpass2@127.0.0.1:4221/news/edit -H "Content-Type: application/json" -d '{"title":"News from SH script", "newTitle":"Edit News from SH script", "newIsPublish":true,"newLogin":"login3","newLabel":"Man","newContent":"Edit Text about man now","images":[{"imageHeader":"edit image","imageBase64":"edit kartinka for news sh"}]}'
+curl -v -X POST login1:qpass1@127.0.0.1:4221/news/edit -H "Content-Type: application/json" -d '{"title":"News from SH script", "newTitle":"Edit News from SH script", "newIsPublish":true,"newLogin":"login3","newLabel":"Man","newContent":"Edit Text about man now","images":[{"imageHeader":"edit image","imageBase64":"edit kartinka for news sh"}]}'
 
 #  Image sql=images
 #   header T.Text

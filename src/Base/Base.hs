@@ -65,8 +65,10 @@ validCopyRight connString login title = do
     where
       fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m Bool 
       fetchAction = do
-        ((Value loginNews) : _ ) <- fetchUserFromNews
-        pure (login == loginNews)
+        logins <- fetchUserFromNews
+        case logins of
+          [Value loginNews] -> pure (login == loginNews) 
+          _ -> pure False -- noValid
           where
             fetchUserFromNews :: (MonadIO m) => SqlPersistT m [(Value Login)]
             fetchUserFromNews = select $ do
@@ -83,10 +85,10 @@ validPassword connString login password = do
     where
       fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m Bool 
       fetchAction = do
-        -- ((salt, qpass) : _) <- fetchSaltAndPassword
-        ((qpass) : _) <- fetchSaltAndPassword
-        let res = Base.Crypto.validPassword password (unValue qpass)
-        pure res
+        qpass <- fetchSaltAndPassword  
+        case qpass of
+          [Value qpass'] -> pure $ Base.Crypto.validPassword password qpass'
+          _ -> pure False -- noValid
 
       -- fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text, Value T.Text)] 
       fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text)] 

@@ -22,6 +22,7 @@ import Network.HTTP.Types.Header (RequestHeaders)
 import Control.Exception (SomeException, displayException)
 import Data.Proxy
 import Data.Bool
+import Control.Monad.Except
 
 type Login = T.Text
 type Author = T.Text
@@ -51,65 +52,61 @@ data Handle m = Handle
     mkResponseForImage :: Image -> Response
   }
 --todo getImage left e cdelaj
-
+--
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
   let logHandle = logger h 
   let baseHandle = base h 
   let secureData = headersToLoginAndPassword . requestHeaders $ req
   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
-  case secureData of
-    Nothing -> pure $ Right $ Client Nothing Nothing Nothing
-    Just (login, pass) -> do --
-      tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
-      case tryGetPrivilege of
-        Left e -> do
-          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
-          pure $ Left e
-        Right (isAdmin, isPublisher) -> do
-          checkValid <- Handlers.Base.getResultValid baseHandle login pass
-          case checkValid of
-            Left e -> do
-              Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
-              pure $ Left e
-            Right NotValid -> do
-              Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
-              pure $ Right $ Client Nothing Nothing Nothing
-            Right Valid -> do
-              Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is correct"
-              Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege"
-              pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
-                                    (bool Nothing (Just Proxy) isPublisher) 
-                                    (Just login)
---
+  runExceptT $ do
+    case secureData of
+      Nothing -> pure $ Client Nothing Nothing Nothing
+      Just (login, pass) -> do --
+        (isAdmin, isPublisher) <- ExceptT $ Handlers.Base.getPrivilege baseHandle login 
+        valid <- ExceptT $ Handlers.Base.getResultValid baseHandle login pass
+        case valid of 
+          NotValid -> do 
+            -- Handlers.Logger.logMessage (logHandle) Handlers.Logger.Debug "Password is incorrect"
+            pure $ Client Nothing Nothing Nothing
+          Valid -> do
+            -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
+            Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege" 
+            pure $ Client (bool Nothing (Just Proxy) isAdmin) 
+                          (bool Nothing (Just Proxy) isPublisher) 
+                          (Just login)
+
+
+-- getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 -- getClient h req = do
 --   let logHandle = logger h 
 --   let baseHandle = base h 
 --   let secureData = headersToLoginAndPassword . requestHeaders $ req
 --   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
 --   case secureData of
---     Nothing -> pure $ Right $ Client Nothing Nothing
+--     Nothing -> pure $ Right $ Client Nothing Nothing Nothing
 --     Just (login, pass) -> do --
---       -- podxodit parol
---       -- ne nashli v baze
---       -- ne podzodit parol
---       checkValid <- Handlers.Base.getResultValid baseHandle login pass
---       case checkValid of
+--       tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
+--       case tryGetPrivilege of
 --         Left e -> do
---           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+--           Handlers.Logger.logMessage logHandle Handlers.Logger.Error e 
 --           pure $ Left e
---         Right True -> do
---           Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is correct"
---           Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege"
---           tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
---           case tryGetPrivilege of
+--         Right (isAdmin, isPublisher) -> do
+--           checkValid <- Handlers.Base.getResultValid baseHandle login pass
+--           case checkValid of
 --             Left e -> do
---               Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+--               Handlers.Logger.logMessage logHandle Handlers.Logger.Error e 
 --               pure $ Left e
---             Right (isAdmin, isPublisher) -> do
---                Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Make Client" 
---                pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
---                                      (bool Nothing (Just Proxy) isPublisher) 
+--             Right NotValid -> do
+--               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is incorrect"
+--               pure $ Right $ Client Nothing Nothing Nothing
+--             Right Valid -> do
+--               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
+--               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get privilege"
+--               pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
+--                                     (bool Nothing (Just Proxy) isPublisher) 
+--                                     (Just login)
+--
 
 -- old  type Application = Request -> ResourceT IO Responske
 --gt
@@ -495,11 +492,42 @@ updateNews author h req = do
               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
               pure $ response200 h
             _ -> pure $ response404 h -- "Not ok.  Left. delat log?
+        Right NotValid -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Fail"
+          pure $ response404 h
         _ -> pure $ response404 h -- "Not ok. 
-            -- Right NotValid -> do
-            --   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
-            --   pure $ Right $ Client Nothing Nothing Nothing
-            -- Right Valid -> do
+
+
+updateNews' :: (Monad m) => Author -> Handle m -> Request -> m (Response)
+updateNews' author h req = do 
+  let logHandle = logger h 
+  let baseHandle = base h 
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News WEB"
+  body <- webToEditNews <$> getBody h req -- :: (Either String EditNewsFromWeb)
+  case body of
+    Left e -> do 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit News WEB"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
+      pure (response404 h) -- "Not ok. 
+    Right (EditNewsFromWeb title newTitle newLogin newLabel newContent newImages newIsPublish) -> do
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."
+      checkCopyright <- Handlers.Base.getCopyRight baseHandle author title
+      case checkCopyright of
+        Right Valid -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Ok"
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit news "
+          tryEditNews <- Handlers.Base.updateNews baseHandle 
+            title newTitle newLogin
+            newLabel newContent (maybe [] id newImages) newIsPublish
+          case tryEditNews of
+            Right _ -> do
+              Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
+              pure $ response200 h
+            _ -> pure $ response404 h -- "Not ok.  Left. delat log?
+        Right NotValid -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Fail"
+          pure $ response404 h
+        _ -> pure $ response404 h -- "Not ok. 
 
 existingNews :: (Monad m) => Handle m -> Request -> m (Response)
 existingNews h req = do 

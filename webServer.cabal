@@ -60,6 +60,7 @@ library
     , esqueleto
     , http-types
     , monad-logger
+    , mtl
     , persistent
     , persistent-postgresql
     , template-haskell

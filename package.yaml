@@ -57,6 +57,7 @@ library:
     - binary
     - case-insensitive
     - cryptonite
+    - mtl
 
 
 executables:
