@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds       #-}
 module Handlers.WebLogic where
 
-import Scheme (User(..), Image, IsValidPassword(..))
+import Scheme (User(..), Image, IsValidPassword(..), FilterItem (FilterPublishOrAuthor))
 import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..), SortFromWeb(..))
 import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
 import qualified Handlers.Logger
@@ -23,6 +23,7 @@ import Control.Exception (SomeException, displayException)
 import Data.Proxy
 import Data.Bool
 import Control.Monad.Except
+import Control.Monad.Trans (lift)
 
 type Login = T.Text
 type Author = T.Text
@@ -67,21 +68,15 @@ getClient h req = do
         valid <- ExceptT $ Handlers.Base.getResultValid baseHandle login pass
         case valid of 
           NotValid -> do 
-            -- Handlers.Logger.logMessage (logHandle) Handlers.Logger.Debug "Password is incorrect"
+            lift $ Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
             pure $ Client Nothing Nothing Nothing
           Valid -> do
-            -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
-            ExceptT ((Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege" ))
+            lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
+            lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get privilege" 
             pure $ Client (bool Nothing (Just Proxy) isAdmin) 
                           (bool Nothing (Just Proxy) isPublisher) 
                           (Just login)
 
--- getResultValid :: (Monad m) => Handle m -> Login -> PasswordUser ->  m (Either T.Text IsValidPassword)
--- logMessage :: (Monad m) => Handle m -> Log -> T.Text -> m ()
--- data Handle m = Handle
---   { levelLogger :: Log,
---     writeLog :: T.Text -> m ()
---   }
 
 -- getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 -- getClient h req = do
@@ -384,30 +379,32 @@ endPointNews h req = do
       case (client h) of
         Client _ (Just publisherRole) _ -> createNews publisherRole h req -- создание новости
         _ -> do
-           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
-           pure (response404 h) -- todo. replace 404 for another error
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
+          pure (response404 h) -- todo. replace 404 for another error
     "/news/edit" -> 
       case (client h) of
         Client _ _ (Just author) -> do 
           updateNews author h req -- редактирование новости
         _ -> do
-           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
-           pure (response404 h) -- todo. replace 404 for another error
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
+          pure (response404 h) -- todo. replace 404 for another error
     "/news" -> do -- get all news
-      --- need funtion po update baseHandle
-      -- (setSearch . setSort . setPanigate baseHandle) queryLimit
       let queryLimit = queryString req
       let (userOffset, userLimit) = queryToPanigate  queryLimit
       let sortWeb = queryToSort  queryLimit
       let findWeb = queryToFind  queryLimit
       let filtersWeb = queryToFilters queryLimit
+      -- Debug
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug ("Query String:")
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (userOffset, userLimit))
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ sortWeb) 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ findWeb) 
-      mapM (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show) filtersWeb
-
+      let filterPublishOrAuthor = FilterPublishOrAuthor (author $ client h)
+      mapM (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show) 
+        (filterPublishOrAuthor : filtersWeb)
+      -- Debug
+      --todo existingNews
       existingNews (setFilters (setFind (setSort (setPanigate h queryLimit) queryLimit) queryLimit) queryLimit) req
     _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
@@ -444,10 +441,9 @@ setFilters h q =
   let 
       baseHandle = base h 
       filters = queryToFilters q
-      newBaseHandle = baseHandle {Handlers.Base.filtersNews = filters }
+      filterVisible = FilterPublishOrAuthor (author $ client h) -- publish or author visible news
+      newBaseHandle = baseHandle {Handlers.Base.filtersNews = (filterVisible : filters) }
   in h {base = newBaseHandle}
-    -- sortColumnNews :: ColumnType,
-    -- sortOrderNews :: SortOrder,
 
 createNews :: (Monad m) => Proxy 'PublisherRole -> Handle m -> Request -> m (Response)
 createNews _ h req = do 
@@ -503,37 +499,6 @@ updateNews author h req = do
           pure $ response404 h
         _ -> pure $ response404 h -- "Not ok. 
 
-
-updateNews' :: (Monad m) => Author -> Handle m -> Request -> m (Response)
-updateNews' author h req = do 
-  let logHandle = logger h 
-  let baseHandle = base h 
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News WEB"
-  body <- webToEditNews <$> getBody h req -- :: (Either String EditNewsFromWeb)
-  case body of
-    Left e -> do 
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit News WEB"
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
-      pure (response404 h) -- "Not ok. 
-    Right (EditNewsFromWeb title newTitle newLogin newLabel newContent newImages newIsPublish) -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."
-      checkCopyright <- Handlers.Base.getCopyRight baseHandle author title
-      case checkCopyright of
-        Right Valid -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Ok"
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit news "
-          tryEditNews <- Handlers.Base.updateNews baseHandle 
-            title newTitle newLogin
-            newLabel newContent (maybe [] id newImages) newIsPublish
-          case tryEditNews of
-            Right _ -> do
-              Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
-              pure $ response200 h
-            _ -> pure $ response404 h -- "Not ok.  Left. delat log?
-        Right NotValid -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Fail"
-          pure $ response404 h
-        _ -> pure $ response404 h -- "Not ok. 
 
 existingNews :: (Monad m) => Handle m -> Request -> m (Response)
 existingNews h req = do 

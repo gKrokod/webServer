@@ -20,7 +20,6 @@ import qualified Data.Text.IO as TIO
 
 import Network.Wai.Handler.Warp (run)
 import Network.Wai (Application, responseBuilder, ResponseReceived, Response, Request)
--- import Network.Wai (Request, Response, rawPathInfo, getRequestBodyChunk)
 import Control.Exception (bracket_)
 
 type Respond = Response -> IO ResponseReceived
@@ -105,7 +104,6 @@ makeSetup cfg = do
   let handle = Handlers.WebLogic.Handle { 
           Handlers.WebLogic.logger = logHandle, 
           Handlers.WebLogic.base = baseHandle,
-          -- Handlers.WebLogic.privilege = Anonymous,
           Handlers.WebLogic.client = Handlers.WebLogic.Client Nothing Nothing Nothing,
           Handlers.WebLogic.response404 = WW.response404,
           Handlers.WebLogic.response200 = WW.response200,

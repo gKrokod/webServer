@@ -14,10 +14,7 @@ import qualified Data.ByteString as B
 import Data.Maybe 
 import  Data.CaseInsensitive (CI)
 import qualified Data.Text.Encoding as  E
--- import  qualified Data.Text as T
--- import Data.Time (UTCTime)
 import Data.ByteString.Base64 as B64
--- import Control.Monad (when)
 
 data UserToWeb = UserToWeb {name :: T.Text, login :: T.Text, created :: UTCTime, isAdmin :: Bool,
   isPublisher :: Bool}

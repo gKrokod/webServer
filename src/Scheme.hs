@@ -86,6 +86,7 @@ data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
                   | FilterCategoryLabel T.Text
                   | FilterTitleFind T.Text
                   | FilterContentFind T.Text
+                  | FilterPublishOrAuthor (Maybe T.Text)
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 

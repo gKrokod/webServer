@@ -90,7 +90,6 @@ validPassword connString login password = do
           [Value qpass'] -> pure $ Base.Crypto.validPassword password qpass'
           _ -> pure False -- noValid
 
-      -- fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text, Value T.Text)] 
       fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text)] 
       fetchSaltAndPassword = (select $ do
                            (user :& password) <-
@@ -99,9 +98,6 @@ validPassword connString login password = do
                              `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
                            where_ (user ^. UserLogin ==. val login)
                            pure (password ^. PasswordQuasiPassword))
-                           -- let salt = left_ (password ^. PasswordQuasiPassword , val (16 :: Int))
-                           -- let qpass = right_ (password ^. PasswordQuasiPassword , val (16 :: Int))
-                           -- pure (salt, qpass) )
 
 pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
@@ -155,6 +151,8 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                        FilterCategoryLabel label -> where_ (c ^. CategoryLabel ==. val label)
                        FilterTitleFind findText -> where_ (n ^. NewsTitle `like` (%) ++. val findText ++. (%))
                        FilterContentFind findText -> where_ (n ^. NewsContent `like` (%) ++. val findText ++. (%))
+                       FilterPublishOrAuthor login -> where_ ((n ^. NewsIsPublish ==. val True)  -- publish all, not publish only author
+                                                               ||. (just (a ^. UserLogin) ==. val login))
                        _ -> where_ (val True)
 
 -- order a 
@@ -427,6 +425,5 @@ pullAllCategories connString configLimit userOffset userLimit = do
                     offset (fromIntegral userOffset)
                     limit (fromIntegral $ min configLimit userLimit)
                     pure (categories))
-
 
 ------------------------------------------------------------------------------------------------------------
