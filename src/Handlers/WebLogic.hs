@@ -71,11 +71,17 @@ getClient h req = do
             pure $ Client Nothing Nothing Nothing
           Valid -> do
             -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
-            Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege" 
+            ExceptT ((Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get privilege" ))
             pure $ Client (bool Nothing (Just Proxy) isAdmin) 
                           (bool Nothing (Just Proxy) isPublisher) 
                           (Just login)
 
+-- getResultValid :: (Monad m) => Handle m -> Login -> PasswordUser ->  m (Either T.Text IsValidPassword)
+-- logMessage :: (Monad m) => Handle m -> Log -> T.Text -> m ()
+-- data Handle m = Handle
+--   { levelLogger :: Log,
+--     writeLog :: T.Text -> m ()
+--   }
 
 -- getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 -- getClient h req = do
