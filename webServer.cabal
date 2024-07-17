@@ -48,7 +48,7 @@ library
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Werror
+  ghc-options: -Wall -Werror
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -82,7 +82,7 @@ executable webServer-exe
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Werror -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , wai
@@ -104,7 +104,7 @@ test-suite webServer-test
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Werror -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , webServer

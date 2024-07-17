@@ -1,25 +1,25 @@
 {-# LANGUAGE DataKinds       #-}
 module Handlers.WebLogic where
 
-import Scheme (User(..), Image, IsValidPassword(..), FilterItem (FilterPublishOrAuthor))
-import Web.WebType (UserToWeb(..), UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..), SortFromWeb(..))
-import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, q1, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
+import Scheme (Image, IsValidPassword(..), FilterItem (FilterPublishOrAuthor))
+import Web.WebType (UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..))
+import Web.WebType (userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
 import Network.Wai (Request, Response, rawPathInfo, queryString, requestHeaders)
 import qualified Data.ByteString as B 
-import Data.ByteString.Char8 as BC (readInt, empty, null)
+import Data.ByteString.Char8 as BC (readInt)
 import qualified Data.Text as T
-import qualified Data.ByteString.Lazy as L 
-import Network.HTTP.Types (notFound404, status200, Query)
+-- import qualified Data.ByteString.Lazy as L 
+import Network.HTTP.Types (Query)
 -- import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
 import qualified Data.Text.Encoding as E
-import Data.Binary.Builder(Builder(..))
+import Data.Binary.Builder(Builder)
 import Data.Maybe
 import Control.Monad (when)
-import Network.HTTP.Types.Header (RequestHeaders)
-import Control.Exception (SomeException, displayException)
+-- import Network.HTTP.Types.Header (RequestHeaders)
+-- import Control.Exception (SomeException, displayException)
 import Data.Proxy
 import Data.Bool
 import Control.Monad.Except
@@ -41,18 +41,13 @@ data Handle m = Handle
    -- logMessage 
     base :: Handlers.Base.Handle m,
     client :: Client,
-    -- updateNews, createNews, updateCategory, createGategory , createUser
-    -- privilege :: Privilege,
-    -- getPrivilege :: Maybe (T.Text, T.Text) -> m (Either SomeException Privilege)
--- data Privilege = Anonymous | WebUser | Admin
     getBody :: Request -> m (B.ByteString),
-    -- getQueryString :: Request -> m (Query), -- [(B.ByteString, Maybe B.ByteString)]
     response404 :: Response,
     response200 :: Response,
     mkGoodResponse :: Builder -> Response,
-    mkResponseForImage :: Image -> Response
+    mkResponseForImage :: Image -> Response,
+    response404WithImage :: Response
   }
---todo getImage left e cdelaj
 --
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
@@ -78,64 +73,18 @@ getClient h req = do
                           (Just login)
 
 
--- getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
--- getClient h req = do
---   let logHandle = logger h 
---   let baseHandle = base h 
---   let secureData = headersToLoginAndPassword . requestHeaders $ req
---   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
---   case secureData of
---     Nothing -> pure $ Right $ Client Nothing Nothing Nothing
---     Just (login, pass) -> do --
---       tryGetPrivilege <- Handlers.Base.getPrivilege baseHandle login 
---       case tryGetPrivilege of
---         Left e -> do
---           Handlers.Logger.logMessage logHandle Handlers.Logger.Error e 
---           pure $ Left e
---         Right (isAdmin, isPublisher) -> do
---           checkValid <- Handlers.Base.getResultValid baseHandle login pass
---           case checkValid of
---             Left e -> do
---               Handlers.Logger.logMessage logHandle Handlers.Logger.Error e 
---               pure $ Left e
---             Right NotValid -> do
---               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is incorrect"
---               pure $ Right $ Client Nothing Nothing Nothing
---             Right Valid -> do
---               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
---               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get privilege"
---               pure $ Right $ Client (bool Nothing (Just Proxy) isAdmin) 
---                                     (bool Nothing (Just Proxy) isPublisher) 
---                                     (Just login)
---
-
--- old  type Application = Request -> ResourceT IO Responske
---gt
--- last type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived -- passing style?
--- type Application :: Request -> Respond -> IO ResponseReceived
--- type Respond = Response -> IO ResponseReceived
---
-
--- autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Request -> Respond -> IO ResponseReceived
---    (Handlers.WebLogic.doAutorization h nextApp req respond)
--- app :: ServerSetup IO -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived 
-   -- (nextApp h req f)
--- autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived 
-
 doAutorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
--- doAutorization :: (Monad m) => Handle m -> (Handle m -> Application) -> Request -> (Response -> m ResponseReceived) -> m (Response)
 doAutorization h req = do
   let logHandle = logger h 
-  let baseHandle = base h 
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Hello Autorization"  
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get request"  
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show req)
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get headers"  
-  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ requestHeaders req)
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Hello Autorization"  
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get request"  
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show req)
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get headers"  
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ requestHeaders req)
   userRole <- getClient h req
   case userRole of
     Left e -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e 
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error e 
       pure (Left $ response404 h) 
     Right clientRole -> do
       let h' = h {client = clientRole}
@@ -143,9 +92,7 @@ doAutorization h req = do
 
 doLogic :: (Monad m) => Handle m -> Request -> m (Response) 
 doLogic h req = do
-  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "get request"  
-  -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show req)
-  let baseHandle = base h 
+  Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "run doLogic"  
   case rawPathInfo req of
     path | B.isPrefixOf "/news" path  ->    endPointNews h req
          | B.isPrefixOf "/users" path  ->  endPointUsers h req 
@@ -154,6 +101,7 @@ doLogic h req = do
          | otherwise -> do
             Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"  
             pure (response404 h) -- todo. replace 404 for another error
+            -- pure (response404WithImage h) -- todo. replace 404 for another error
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointUsers h req = do
@@ -195,14 +143,14 @@ endPointUsers h req = do
   -- body <- webToCategory <$> getBody h req -- :: (Either String CategoryFromWeb)
   --
 existingUsers :: (Monad m) => Handle m -> Request -> m (Response) -- for ALl
-existingUsers h req = do
+existingUsers h _req = do
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All users"
   getUsers <- Handlers.Base.getAllUsers baseHandle 
   case getUsers of
     Left e -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error e  
       pure $ response404 h -- "Not ok. 
     Right users -> pure . mkGoodResponse h . userToWeb $ users
   
@@ -302,7 +250,7 @@ endPointCategories h req = do
            pure $ response404 h
 
 existingCategories :: (Monad m) => Handle m -> Request -> m (Response)
-existingCategories h req = do 
+existingCategories h _req = do 
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All categories Web"
@@ -310,7 +258,7 @@ existingCategories h req = do
   --proveryaj
   case categories of
     Left e -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error e  
       pure $ response404 h -- "Not ok. 
     Right c -> pure . mkGoodResponse h . categoryToWeb $ c
 
@@ -370,7 +318,7 @@ updateCategory _ h req = do
 endPointNews :: (Monad m) => Handle m -> Request -> m (Response) 
 endPointNews h req = do
   let logHandle = logger h 
-  let baseHandle = base h 
+  -- let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "end Point News"
   -- Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (T.pack $ show $ B.unpack $ rawPathInfo req)
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
@@ -401,49 +349,50 @@ endPointNews h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ sortWeb) 
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ findWeb) 
       let filterPublishOrAuthor = FilterPublishOrAuthor (author $ client h)
-      mapM (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show) 
+      _ <- mapM (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show) 
         (filterPublishOrAuthor : filtersWeb)
       -- Debug
-      --todo existingNews
-      existingNews (setFilters (setFind (setSort (setPanigate h queryLimit) queryLimit) queryLimit) queryLimit) req
+      -- existingNews (setFilters (setFind (setSort (setPanigate h queryLimit) queryLimit) queryLimit) queryLimit) req
+      existingNews (foldSets queryLimit h [setFilters, setFind, setSort, setPanigate]) req
     _ -> do
            Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
            pure $ response404 h 
-    -- _ -> error "rawPathInfo req /= /news"
---
--- [(B.ByteString, Maybe B.ByteString)] 
-setPanigate :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
-setPanigate h q = 
-  let 
-      baseHandle = base h 
-      (userOffset, userLimit) = queryToPanigate q 
-      newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
-  in h {base = newBaseHandle}
+  where 
+    foldSets :: (Monad m) => Query -> Handle m -> [Handle m -> Query -> Handle m] ->  Handle m
+    foldSets query = foldr (\set h' -> set h' query)
 
-setSort :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
-setSort h q = 
-  let 
-      baseHandle = base h 
-      (userSortColumn, userSortOrder) = queryToSort q
-      newBaseHandle = baseHandle {Handlers.Base.sortColumnNews = userSortColumn, Handlers.Base.sortOrderNews = userSortOrder} 
-  in h {base = newBaseHandle}
-      
-setFind :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
-setFind h q = 
-  let 
-      baseHandle = base h 
-      mbFind = queryToFind q
-      newBaseHandle = baseHandle {Handlers.Base.findSubString = mbFind }
-  in h {base = newBaseHandle}
+    setPanigate :: (Monad m) => Handle m -> Query -> Handle m
+    setPanigate h' q = 
+      let 
+          baseHandle = base h' 
+          (userOffset, userLimit) = queryToPanigate q 
+          newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
+      in h' {base = newBaseHandle}
 
-setFilters :: Handlers.WebLogic.Handle m -> Query -> Handlers.WebLogic.Handle m
-setFilters h q = 
-  let 
-      baseHandle = base h 
-      filters = queryToFilters q
-      filterVisible = FilterPublishOrAuthor (author $ client h) -- publish or author visible news
-      newBaseHandle = baseHandle {Handlers.Base.filtersNews = (filterVisible : filters) }
-  in h {base = newBaseHandle}
+    setSort ::  (Monad m) => Handle m -> Query -> Handle m
+    setSort h' q = 
+      let 
+          baseHandle = base h' 
+          (userSortColumn, userSortOrder) = queryToSort q
+          newBaseHandle = baseHandle {Handlers.Base.sortColumnNews = userSortColumn, Handlers.Base.sortOrderNews = userSortOrder} 
+      in h' {base = newBaseHandle}
+          
+    setFind ::  (Monad m) => Handle m -> Query -> Handle m
+    setFind h' q = 
+      let 
+          baseHandle = base h' 
+          mbFind = queryToFind q
+          newBaseHandle = baseHandle {Handlers.Base.findSubString = mbFind }
+      in h' {base = newBaseHandle}
+
+    setFilters ::  (Monad m) => Handle m -> Query -> Handle m
+    setFilters h' q = 
+      let 
+          baseHandle = base h' 
+          filters = queryToFilters q
+          filterVisible = FilterPublishOrAuthor (author $ client h) -- publish or author visible news
+          newBaseHandle = baseHandle {Handlers.Base.filtersNews = (filterVisible : filters) }
+      in h' {base = newBaseHandle}
 
 createNews :: (Monad m) => Proxy 'PublisherRole -> Handle m -> Request -> m (Response)
 createNews _ h req = do 
@@ -501,13 +450,13 @@ updateNews author h req = do
 
 
 existingNews :: (Monad m) => Handle m -> Request -> m (Response)
-existingNews h req = do 
+existingNews h _req = do 
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All news Web"
   news <- Handlers.Base.getAllNews baseHandle
   case news of
     Left e -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error e  
       pure $ response404 h -- "Not ok. 
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news' 

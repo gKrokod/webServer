@@ -1,49 +1,38 @@
 module Main (main) where
---haha
 import Config (loadConfig, ConfigDataBase, connectionString, whenMakeTables, cLimitData)
-import Scheme
--- import Database.Persist.Postgresql (ConnectionString)
-import qualified Data.ByteString.Lazy as L 
+import Scheme (ColumnType(..), SortOrder(..))
+
 import qualified Handlers.Logger
 import Handlers.Logger (Log(Debug))
+
 import qualified Handlers.Base
 import qualified Base.Base as BB 
 import qualified Base.Crypto
+
 import qualified Handlers.WebLogic
 import qualified Web.WebLogic as WW 
-
 import qualified Logger
-import Database.Persist.Postgresql  (keyValueEntityToJSON, ConnectionString, runMigration, entityIdToJSON)
+
 import Data.Time (getCurrentTime)
 import qualified Data.Text as T
-import qualified Data.Text.IO as TIO
-
 import Network.Wai.Handler.Warp (run)
-import Network.Wai (Application, responseBuilder, ResponseReceived, Response, Request)
+import Network.Wai (Application)
 import Control.Exception (bracket_)
 
-type Respond = Response -> IO ResponseReceived
+-- type Respond = Response -> IO ResponseReceived
 
 main :: IO ()
 main = do 
-  Logger.writeLog "HEEEEREEE WE STAAAART MAINNNN"
+  Logger.writeLog "START MAIN"
   config <- loadConfig
 -- make Tables and Fill its if need
   whenMakeTables config $ Logger.writeLog "MAKE AND FILL TABLES" 
                           >> BB.makeAndFillTables (connectionString config)
   serverSetup <- makeSetup config
-  -- run 4221 (app serverSetup ) 
-  run 4221 (autorization serverSetup app) 
+  run 4221 $ autorization serverSetup app 
 
-
--- old  type Application = Request -> ResourceT IO Response
---
--- last type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived -- passing style?
--- type Application :: Request -> Respond -> IO ResponseReceived
--- check user will do in another application later
---
 type ServerSetup m = Handlers.WebLogic.Handle m 
---
+
 app :: ServerSetup IO -> Application
 app h req f =
   bracket_
@@ -52,16 +41,14 @@ app h req f =
    (Handlers.WebLogic.doLogic h req >>= f)
 
 autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Application
--- autorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Request -> Respond -> IO ResponseReceived
 autorization h nextApp req respond = 
   bracket_
    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "OpenAuth app" )
    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "CloseAuth app")
-   -- (undefined)
    (do
       check <- Handlers.WebLogic.doAutorization h req
       case check of 
-       Left fail -> respond fail
+       Left fail' -> respond fail'
        Right h' -> nextApp h' req respond )
 
 makeSetup :: ConfigDataBase -> IO (ServerSetup IO) 
@@ -109,6 +96,6 @@ makeSetup cfg = do
           Handlers.WebLogic.response200 = WW.response200,
           Handlers.WebLogic.mkGoodResponse = WW.mkGoodResponse,
           Handlers.WebLogic.mkResponseForImage = WW.mkResponseForImage,
-          -- Handlers.WebLogic.getQueryString = WW.getQueryString,
+          Handlers.WebLogic.response404WithImage = WW.response404WithImage,
           Handlers.WebLogic.getBody = WW.getBody}
   pure handle

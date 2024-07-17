@@ -1,6 +1,6 @@
 module Handlers.Base where
 
-import Data.List (intercalate)
+-- import Data.List (intercalate)
 import Scheme
 import Handlers.Logger (Log(..), logMessage) 
 import qualified Handlers.Logger 
@@ -129,8 +129,8 @@ getAllCategories h = do
 getImage :: (Monad m) => Handle m -> NumberImage -> m (Either T.Text Image)
 getImage h uid = do
   logMessage (logger h) Debug ("Try to get image from database " <> (T.pack . show $ uid))
-  image <- pullImage h uid 
-  case image of
+  images <- pullImage h uid 
+  case images of
     Left e -> do 
       logMessage (logger h) Handlers.Logger.Error "function pullImage fail"
       pure . Left . T.pack . show $ e
@@ -185,11 +185,11 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
            tryFindCategory )
 
     checkNews Nothing = pure (Right Change)
-    checkNews (Just title) = do
-      tryFindNews <- findNewsByTitle h title
+    checkNews (Just titleNews) = do
+      tryFindNews <- findNewsByTitle h titleNews
       when (isLeft tryFindNews) (logMessage (logger h) Error  ("function findNewsByTitle fail"))
       pure (either (Left . T.pack . displayException)
-           (maybe  (Right Change)  (\_ -> Left $ "Fail update news. News with your title is existed! : " <> title))
+           (maybe  (Right Change)  (\_ -> Left $ "Fail update news. News with your title is existed! : " <> titleNews))
            tryFindNews )
 --   
          
@@ -241,8 +241,8 @@ updateCategory h label newlabel parent = do
     (Right [Just _, Nothing], Just labelParent) -> do
                                     logMessage (logger h) Debug ("Update category: " <> label)
                                     logMessage (logger h) Debug ("Check parent for category. Parent: " <> labelParent)
-                                    exist <- findCategoryByLabel h labelParent
-                                    case exist of
+                                    existLabel <- findCategoryByLabel h labelParent
+                                    case existLabel of
                                       Left e -> do
                                         logMessage (logger h) Handlers.Logger.Error "function findCategoryByLabel fail"
                                         pure . Left . T.pack . displayException $ e 
@@ -277,8 +277,8 @@ createCategoryBase h label parent = do
     (Right Nothing, Just labelParent) -> do
                 logMessage (logger h) Debug ("Create category with parent and label: " <> labelParent <> " " <> label)
                 logMessage (logger h) Debug ("Check parent: " <> labelParent)
-                exist <- findCategoryByLabel h labelParent
-                case exist of
+                existLabel <- findCategoryByLabel h labelParent
+                case existLabel of
                   Left e -> do
                     logMessage (logger h) Error "function findCategoryByLabel fail"
                     pure . Left . T.pack . displayException $ e
@@ -290,9 +290,6 @@ createCategoryBase h label parent = do
                     tryPut <- putCategory h label parent
                     when (isLeft tryPut) (logMessage (logger h) Handlers.Logger.Error "function putCategory fail")
                     pure $ either (Left . T.pack . displayException) Right tryPut 
-    _ -> do
-                logMessage (logger h) Warning ("fail for createCategory: ")
-                pure $ Left "fail for create Category "
 --
 createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
 createUserBase h name login pwd admin publish = do

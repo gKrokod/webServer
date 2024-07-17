@@ -8,7 +8,7 @@ import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..),
 import Data.Time (UTCTime)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
-import Data.Aeson (eitherDecode, eitherDecodeStrict, encode, ToJSON, FromJSON)
+import Data.Aeson (eitherDecodeStrict, encode, ToJSON, FromJSON)
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import qualified Data.ByteString as B 
 import Data.Maybe 
@@ -49,7 +49,7 @@ data EditCategoryFromWeb = EditCategoryFromWeb {label :: T.Text, newlabel :: May
 categoryToWeb :: [Category] -> Builder
 categoryToWeb = fromLazyByteString . encode @[CategoryToWeb] . map convertToWeb
   where convertToWeb :: Category -> CategoryToWeb
-        convertToWeb (Category l p) = CategoryToWeb l
+        convertToWeb (Category l _p) = CategoryToWeb l
 
 webToCategory :: B.ByteString -> Either String CategoryFromWeb 
 webToCategory = eitherDecodeStrict @CategoryFromWeb
@@ -166,16 +166,24 @@ queryToFilters = convertFromWeb . mapMaybe (\(x,y) -> if x == "filter" then y el
                                 _ -> []
         convertFromWeb _ = [] 
 
+
 -- headersToLoginAndPassword :: [Header]-> (T.Text, T.Text)
 -- headersToLoginAndPassword :: [(HeaderName, ByteString)]-> (T.Text, T.Text)
 headersToLoginAndPassword :: [(CI B.ByteString, B.ByteString)]-> Maybe (T.Text, T.Text)
 headersToLoginAndPassword ((header, loginpass) : xs) | header == "Authorization"
                                                      && B.take 6 loginpass == "Basic "
                                                      = Just $ splitLoginPass (B.drop 6 loginpass)
-                                                     | otherwise = headersToLoginAndPassword xs 
+                                                     | otherwise = headersToLoginAndPassword xs
+       -- ByteString length >= 6 . proofs early 
   where splitLoginPass :: B.ByteString -> (T.Text, T.Text)
-        splitLoginPass xs = let [l, p] = map E.decodeUtf8 . B.splitWith (== colon) . B64.decodeBase64Lenient $ xs
-                                colon = fromIntegral $ fromEnum ':'
-                            in (l, p)
+        -- splitLoginPass [] = (E.decodeUtf8 "", E.decodeUtf8 "")
+        --  tyty pattern esli xs = "" ne srabotate pishet.
+        splitLoginPass xs' = let colon = fromIntegral $ fromEnum ':'
+                             in case map E.decodeUtf8 . B.splitWith (== colon) . B64.decodeBase64Lenient $ xs' of
+                                 [l, p] -> (l, p)
+                                 _ -> ("","") -- WAll.
+        -- splitLoginPass xs = let [l, p] = map E.decodeUtf8 . B.splitWith (== colon) . B64.decodeBase64Lenient $ xs
+        --                         colon = fromIntegral $ fromEnum ':'
+        --                     in (l, p)
 headersToLoginAndPassword [] = Nothing 
 

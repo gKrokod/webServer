@@ -23,9 +23,10 @@ import GHC.Generics (Generic)
 import qualified Database.Persist.TH as PTH
 import qualified Data.Text as T
 import Data.Time (UTCTime(..), Day(..))
-import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
-import Data.Binary.Builder (Builder, fromLazyByteString)
-import Data.Int (Int64)
+import Data.Aeson (ToJSON(..), FromJSON (..))
+-- import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
+-- import Data.Binary.Builder (Builder, fromLazyByteString)
+-- import Data.Int (Int64)
 
 -- import Data.Binary.Builder (fromByteString, Builder, fromLazyByteString, putStringUtf8)
 

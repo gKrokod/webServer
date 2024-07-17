@@ -3,21 +3,20 @@ import Base.FillTables
 import qualified Base.Crypto
 import Scheme --(migrateAll, Category)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
-import Control.Monad.Logger (runNoLoggingT, runStderrLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
+import Control.Monad.Logger (runNoLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
 import Control.Monad.IO.Class (MonadIO)
-import Database.Persist.Postgresql  (Entity(..), rawExecute, SqlPersistT,ConnectionString, runMigration, runSqlPersistMPool, withPostgresqlPool, withPostgresqlConn)
+import Database.Persist.Postgresql  (Entity(..), rawExecute, ConnectionString, withPostgresqlConn)
 import Database.Persist.Postgresql  (toSqlKey)
-import Data.Int (Int64)
 import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, insert, insert_, replace, get, fromSqlKey, delete, selectOne, valList, in_, Value(..))
-import Database.Esqueleto.Experimental (orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr(..), OrderBy, PersistField(..))
-import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.), left_, right_)
+import Database.Esqueleto.Experimental (getBy, insert, insert_, replace, get, fromSqlKey, delete,  Value(..))
+import Database.Esqueleto.Experimental (orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr, OrderBy, PersistField(..))
+import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.))
 import qualified Data.Text as T
 import Data.Time (addDays)
-import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Header, Base64,  Content, Title, NewsOut)
+import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Content, Title, NewsOut)
 import Handlers.Base (NumberImage, URI_Image)
-import Data.Time (getCurrentTime, UTCTime(..))
-import Control.Exception (try, SomeException, throwIO, Exception, throw)
+import Data.Time (UTCTime(..))
+import Control.Exception (try, SomeException, throw)
 --
 makeAndFillTables :: ConnectionString -> IO ()
 makeAndFillTables pginfo = makeTables pginfo >> fillTables pginfo
@@ -92,12 +91,12 @@ validPassword connString login password = do
 
       fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text)] 
       fetchSaltAndPassword = (select $ do
-                           (user :& password) <-
+                           (user :& pass) <-
                              from $ table @User
                              `innerJoin` table @Password
                              `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
                            where_ (user ^. UserLogin ==. val login)
-                           pure (password ^. PasswordQuasiPassword))
+                           pure (pass ^. PasswordQuasiPassword))
 
 pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
@@ -114,9 +113,9 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                          `innerJoin` table @User
                          `on` do \(n :& a) -> n ^. NewsUserId ==. a ^. UserId
                          `innerJoin` table @Category
-                         `on` do \(n :& a :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
+                         `on` do \(n :& _ :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
                          `leftJoin` table @ImageBank 
-                         `on` do \(n :& a :& c :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
+                         `on` do \(n :& _ :& _ :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
                      groupBy (news ^. NewsTitle, news ^. NewsCreated, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
                      -- search substring
                      maybe (where_ (val True)) 
@@ -126,7 +125,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                                                       ||. (categoryName ^. CategoryLabel `like` subtext)))
                            mbFind                  
                      -- filters
-                     mapM (filterAction news author categoryName) filters
+                     _ <- mapM (filterAction news author categoryName) filters
                      -- sortBy column and order
                      orderBy $ case columnType of
                                  DataNews -> [order sortOrder (news ^. NewsCreated)]
@@ -141,7 +140,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
         -- mapM (fetchFullNews configLimit userOffset userLimit) titles 
         mapM (fetchFullNews configLimit userLimit) titles 
 
-      filterAction n a c filter = case filter of
+      filterAction n a c filter' = case filter' of
                        -- FilterDataAt day -> where_ (( utctDay <$> (n ^. NewsCreated) ) ==. val (day))
                        FilterDataAt day ->where_ ((n ^. NewsCreated >=. val (UTCTime day 0))
                                                    &&. (n ^. NewsCreated <. val (UTCTime (addDays 1 day) 0)))
@@ -153,7 +152,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                        FilterContentFind findText -> where_ (n ^. NewsContent `like` (%) ++. val findText ++. (%))
                        FilterPublishOrAuthor login -> where_ ((n ^. NewsIsPublish ==. val True)  -- publish all, not publish only author
                                                                ||. (just (a ^. UserLogin) ==. val login))
-                       _ -> where_ (val True)
+                       -- _ -> where_ (val True)
 
 -- order a 
       order :: (PersistField a) => SortOrder -> (SqlExpr (Value a) -> SqlExpr (OrderBy))
@@ -216,7 +215,7 @@ fetchFullNews configLimit userLimit title = do
 
       fetchActionImage :: (MonadIO m) => SqlPersistT m [Entity Image]
       fetchActionImage = select $ do
-        (news :& imagebank :& image) <- 
+        (news :& _imagebank :& image) <- 
           from $ table @News
            `innerJoin` table @ImageBank
            `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
@@ -246,7 +245,7 @@ editNews pginfo title time newTitle  newLogin newLabel newContent newImages newP
     oldNews <- getBy $ UniqueNews title
     case oldNews of
       Just oldNews' -> do
-        let (News oldTitle oldTime oldKeyUser oldKeyCategory oldContent oldPublish) = entityVal oldNews' 
+        let (News oldTitle _oldTime oldKeyUser oldKeyCategory oldContent oldPublish) = entityVal oldNews' 
         let keyNews = entityKey oldNews' 
         newKeyUser <- case newLogin of
                      Just login -> (fmap . fmap) entityKey (getBy $ UniqueUserLogin login)
@@ -301,55 +300,13 @@ pullImage connString uid = do
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
     fetchAction = get (toSqlKey uid)
 
-------------------------------------------------------------------------------------------------------------
-  --for api news
--- validPassword :: ConnectionString -> Login -> PasswordUser -> IO (Either SomeException Bool)
--- -- getImage :: ConnectionString -> Int64 -> IO (Maybe Image) 
--- validPassword connString login pass = do
---   try @SomeException (runDataBaseWithOutLog connString fetchAction)
---   where
---     -- fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Image)
---     fetchAction = get (toSqlKey uid)
---     findUserByLogin
--- fetchFullNews configLimit userOffset userLimit title = do
---   (label : _) <- (fmap . fmap) entityVal fetchLabel
---   lables <- fetchLables (categoryLabel label)
---   (user : _) <- (fmap . fmap) entityVal fetchUser
---   images <- fetchActionImage
---   (Just partNews) <- (fmap . fmap) entityVal (getBy $ UniqueNews title)
---   let a = (title,
---             newsCreated partNews,
---             userName user, 
---             workerCategory lables, 
---             newsContent partNews,
---             workerImage images,
---             newsIsPublish partNews)
---   pure a 
---     where
---       fetchLabel :: (MonadIO m) => SqlPersistT m [Entity Category]
---       fetchLabel = select $ do
---         (news :& category) <- 
---           from $ table @News
---            `innerJoin` table @Category
---            `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
---         where_ (news ^. NewsTitle ==. (val title))
---         pure (category)
---
-      -- fetchPassword :: (MonadIO m) => SqlPersistT m [Entity User]
-      -- fetchPassword = select $ do
-      --   (user :& password) <- 
-      --     from $ table @User
-      --      `innerJoin` table @Password
-      --      `on`  (\(u :& p) -> u ^. UserId ==. (p ^. PasswordId))
-      --   -- where_ (news ^. NewsTitle ==. (val title))
-      --   pure ()
 --
 putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO (Either SomeException Success) 
 putUser pginfo name login pwd time admin publish  = do
   try @SomeException (runDataBaseWithOutLog pginfo $ do
   -- runDataBaseWithLog pginfo $ do
     pId <- insert $ Password pwd 
-    insert $ User name login pId time admin publish
+    _ <- insert $ User name login pId time admin publish
     pure Put)
 
 findUserByLogin :: ConnectionString -> Login -> IO (Either SomeException (Maybe User)) 
