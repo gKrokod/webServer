@@ -11,6 +11,7 @@ import qualified Data.Text.Encoding as E (encodeUtf8)
 import Database.Persist.Postgresql (ConnectionString)
 import Control.Exception (throwIO, try, SomeException, displayException)
 import Control.Monad (when)
+import Data.Maybe (isJust)
 
 data ConfigDataBase = MkConfigDataBase {
     cHostDB :: T.Text
@@ -29,16 +30,20 @@ data DoIt = DoIt
   deriving anyclass (ToJSON, FromJSON)
 
 whenMakeTables :: Applicative f => ConfigDataBase -> f () -> f ()
-whenMakeTables cfg = when $ case (cCreateAndFillTable cfg) of
-                              Nothing -> False
-                              (Just _) -> True
+whenMakeTables = when . isJust . cCreateAndFillTable
 
+-- whenMakeTables = when . isJust . cCreateAndFillTable
+-- whenMakeTables = when . maybe False (const True) . cCreateAndFillTable
+-- whenMakeTables = when . maybe False (\_ -> True) . cCreateAndFillTable
+-- whenMakeTables cfg = when $ case cCreateAndFillTable cfg of
+--                               Nothing -> False
+--                               (Just _) -> True
 --for work 
 loadConfigDB :: IO (Either String ConfigDataBase)
 loadConfigDB = either (Left . displayException) eitherDecode 
                <$> try @SomeException (L.readFile "config/db.cfg")
 
-loadConfig :: IO (ConfigDataBase)
+loadConfig :: IO ConfigDataBase
 loadConfig = do
   cfg <- loadConfigDB
   case cfg of
@@ -55,11 +60,11 @@ loadConfig = do
 -- info for connect witj postgres
 connectionString :: ConfigDataBase -> ConnectionString
 connectionString cfg = E.encodeUtf8 $ 
-               mconcat ["host=", cHostDB $ cfg
-                       ," port=", cPortDB $ cfg
-                       , " user=", cUserDB $ cfg
-                       , " dbname=", cNameDB $ cfg
-                       , " password=", cPasswordDB $ cfg]
+               mconcat ["host=", cHostDB cfg
+                       ," port=", cPortDB cfg
+                       , " user=", cUserDB cfg
+                       , " dbname=", cNameDB cfg
+                       , " password=", cPasswordDB cfg]
 -- for testing
 createConfigFile :: IO ()
 createConfigFile = do
@@ -75,4 +80,4 @@ createConfigFile = do
                                     -- , cCreateAndFillTable = Nothing 
   } 
   let configToJSON = encode testConfig :: L.ByteString
-  L.writeFile "config/db.cfg" (configToJSON)
+  L.writeFile "config/db.cfg" configToJSON

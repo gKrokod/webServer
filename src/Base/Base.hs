@@ -4,19 +4,13 @@ import qualified Base.Crypto
 import Scheme --(migrateAll, Category)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
 import Control.Monad.Logger (runNoLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
-import Control.Monad.IO.Class (MonadIO)
-import Database.Persist.Postgresql  (Entity(..), rawExecute, ConnectionString, withPostgresqlConn)
-import Database.Persist.Postgresql  (toSqlKey)
-import Database.Esqueleto.Experimental (from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany)
-import Database.Esqueleto.Experimental (getBy, insert, insert_, replace, get, fromSqlKey, delete,  Value(..))
-import Database.Esqueleto.Experimental (orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr, OrderBy, PersistField(..))
-import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.))
+import Database.Persist.Postgresql  (Entity(..), rawExecute, ConnectionString, withPostgresqlConn, toSqlKey)
+import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.),from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany,getBy, insert, insert_, replace, get, fromSqlKey, delete,  Value(..),orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr, OrderBy, PersistField(..))
 import qualified Data.Text as T
-import Data.Time (addDays)
-import Handlers.Base (Success(..), Name, Login, PasswordUser, Label, NewLabel, Content, Title, NewsOut)
-import Handlers.Base (NumberImage, URI_Image)
-import Data.Time (UTCTime(..))
+import Data.Time (addDays,UTCTime(..))
+import Handlers.Base (NumberImage, URI_Image,Success(..), Name, Login, PasswordUser, Label, NewLabel, Content, Title, NewsOut)
 import Control.Exception (try, SomeException, throw)
+import Control.Monad.IO.Class (MonadIO)
 --
 makeAndFillTables :: ConnectionString -> IO ()
 makeAndFillTables pginfo = makeTables pginfo >> fillTables pginfo
@@ -69,13 +63,13 @@ validCopyRight connString login title = do
           [Value loginNews] -> pure (login == loginNews) 
           _ -> pure False -- noValid
           where
-            fetchUserFromNews :: (MonadIO m) => SqlPersistT m [(Value Login)]
+            fetchUserFromNews :: (MonadIO m) => SqlPersistT m [Value Login]
             fetchUserFromNews = select $ do
               (news :& user) <- 
                 from $ table @News
                  `innerJoin` table @User
                  `on`  (\(n :& u) -> n ^. NewsUserId ==. (u ^. UserId))
-              where_ (news ^. NewsTitle ==. (val title))
+              where_ (news ^. NewsTitle ==. val title)
               pure (user ^. UserLogin)
 
 validPassword :: ConnectionString -> Login -> PasswordUser -> IO (Either SomeException Bool) 
@@ -89,14 +83,14 @@ validPassword connString login password = do
           [Value qpass'] -> pure $ Base.Crypto.validPassword password qpass'
           _ -> pure False -- noValid
 
-      fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [(Value T.Text)] 
-      fetchSaltAndPassword = (select $ do
+      fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [Value T.Text] 
+      fetchSaltAndPassword = select $ do
                            (user :& pass) <-
                              from $ table @User
                              `innerJoin` table @Password
                              `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
                            where_ (user ^. UserLogin ==. val login)
-                           pure (pass ^. PasswordQuasiPassword))
+                           pure (pass ^. PasswordQuasiPassword)
 
 pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> IO (Either SomeException [NewsOut])
 -- getAllNews connString l = runDataBaseWithLog connString fetchAction
@@ -111,11 +105,11 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                      (news :& author :& categoryName :& imageBank) <-
                        from $ table @News
                          `innerJoin` table @User
-                         `on` do \(n :& a) -> n ^. NewsUserId ==. a ^. UserId
+                         `on` ( \(n :& a) -> n ^. NewsUserId ==. a ^. UserId)
                          `innerJoin` table @Category
-                         `on` do \(n :& _ :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId
+                         `on` ( \(n :& _ :& c) -> n ^. NewsCategoryId  ==. c ^. CategoryId)
                          `leftJoin` table @ImageBank 
-                         `on` do \(n :& _ :& _ :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId
+                         `on` ( \(n :& _ :& _ :& ib) -> just (n ^. NewsId)  ==. ib ?. ImageBankNewsId)
                      groupBy (news ^. NewsTitle, news ^. NewsCreated, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
                      -- search substring
                      maybe (where_ (val True)) 
@@ -125,7 +119,8 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                                                       ||. (categoryName ^. CategoryLabel `like` subtext)))
                            mbFind                  
                      -- filters
-                     _ <- mapM (filterAction news author categoryName) filters
+                     mapM_ (filterAction news author categoryName) filters
+                     -- _ <- mapM (filterAction news author categoryName) filters
                      -- sortBy column and order
                      orderBy $ case columnType of
                                  DataNews -> [order sortOrder (news ^. NewsCreated)]
@@ -155,7 +150,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                        -- _ -> where_ (val True)
 
 -- order a 
-      order :: (PersistField a) => SortOrder -> (SqlExpr (Value a) -> SqlExpr (OrderBy))
+      order :: (PersistField a) => SortOrder -> (SqlExpr (Value a) -> SqlExpr OrderBy)
       order a = case a of
                  Ascending -> asc
                  Descending -> desc
@@ -184,8 +179,8 @@ fetchFullNews configLimit userLimit title = do
           from $ table @News
            `innerJoin` table @Category
            `on`  (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
-        where_ (news ^. NewsTitle ==. (val title))
-        pure (category)
+        where_ (news ^. NewsTitle ==. val title)
+        pure category
 
       fetchUser :: (MonadIO m) => SqlPersistT m [Entity User]
       fetchUser = select $ do
@@ -193,7 +188,7 @@ fetchFullNews configLimit userLimit title = do
           from $ table @News
            `innerJoin` table @User
            `on`  (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
-        where_ (news ^. NewsTitle ==. (val title))
+        where_ (news ^. NewsTitle ==. val title)
         pure user
 
       fetchLables :: (MonadIO m) => Label -> SqlPersistT m [Entity Category]
@@ -221,12 +216,12 @@ fetchFullNews configLimit userLimit title = do
            `on`  (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
            `innerJoin` table @Image
            `on`  (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
-        where_ (news ^. NewsTitle ==. (val title))
+        where_ (news ^. NewsTitle ==. val title)
         limit (fromIntegral $ min configLimit userLimit)
-        pure (image)
+        pure image
 
       workerImage :: [Entity Image] -> [URI_Image]
-      workerImage = map (\(Entity key _value) -> ("/images?id=" <> (T.pack $ show $ fromSqlKey key)))
+      workerImage = map (\(Entity key _value) -> "/images?id=" <> T.pack (show $ fromSqlKey key))
 
       workerCategory :: [Entity Category] -> [Label]
       workerCategory = map (\(Entity _key value) -> categoryLabel value) 
@@ -262,7 +257,9 @@ editNews pginfo title time newTitle  newLogin newLabel newContent newImages newP
         replace keyNews newNews
         deleteImagesFromBankByNews keyNews
         keysImages <- insertMany newImages
-        insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+        -- insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+        -- insertMany_ $ zipWith ImageBank (repeat keyNews) keysImages
+        insertMany_ $ map (ImageBank keyNews) keysImages
         pure Change
       Nothing -> throw $ userError "function editNews fail (can't find news)")
         where 
@@ -285,7 +282,9 @@ putNews pginfo title time login label content images ispublish =
       (Just keyUsr, Just keyCat) -> do
         keyNews <- insert $ News title time keyUsr keyCat content ispublish 
         keysImages <- insertMany images 
-        insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+        -- insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
+        -- insertMany_ $ zipWith ImageBank (repeat keyNews) keysImages
+        insertMany_ $ map (ImageBank keyNews) keysImages
         pure Put
       _ -> throw $ userError "function putNews fail")
 
@@ -332,7 +331,7 @@ pullAllUsers connString configLimit userOffset userLimit = do
                     users <- from $ table @User
                     offset (fromIntegral userOffset)
                     limit (fromIntegral $ min configLimit userLimit)
-                    pure (users))
+                    pure users)
 
 ------------------------------------------------------------------------------------------------------------
  
@@ -381,6 +380,6 @@ pullAllCategories connString configLimit userOffset userLimit = do
                     categories <- from $ table @Category
                     offset (fromIntegral userOffset)
                     limit (fromIntegral $ min configLimit userLimit)
-                    pure (categories))
+                    pure categories)
 
 ------------------------------------------------------------------------------------------------------------

@@ -6,7 +6,6 @@
 
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances       #-}

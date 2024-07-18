@@ -106,7 +106,7 @@ type Limit = Int
 queryToPanigate :: [(B.ByteString, Maybe B.ByteString)] -> (Offset, Limit)
 queryToPanigate = convertFromWeb . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
   where convertFromWeb :: [B.ByteString] -> (Int, Int)
-        convertFromWeb [xs] = case (eitherDecodeStrict @PanigateFromWeb xs) of
+        convertFromWeb [xs] = case eitherDecodeStrict @PanigateFromWeb xs of
                                          Right (Panigate (Just offset) (Just limit)) -> (offset, limit)
                                          Right (Panigate (Just offset) Nothing) -> (offset, maxBound)
                                          Right (Panigate Nothing (Just limit)) -> (0, limit)
@@ -137,19 +137,19 @@ data SortFromWeb = SortNews {columnType :: ColumnType, sortOrder :: SortOrder }
 queryToSort :: [(B.ByteString, Maybe B.ByteString)] -> (ColumnType, SortOrder) 
 queryToSort = convertFromWeb . mapMaybe (\(x,y) -> if x == "sort" then y else Nothing) 
   where convertFromWeb :: [B.ByteString] -> (ColumnType, SortOrder)
-        convertFromWeb [xs] = case (eitherDecodeStrict @SortFromWeb xs) of
+        convertFromWeb [xs] = case eitherDecodeStrict @SortFromWeb xs of
                                 Right (SortNews column order) -> (column , order)
                                 _ -> (DataNews, Descending)
         convertFromWeb _ = (DataNews, Descending)
 
-data FindFromWeb = FindFromWeb (Maybe Find)
+newtype FindFromWeb = FindFromWeb (Maybe Find)
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
 queryToFind :: [(B.ByteString, Maybe B.ByteString)] -> Maybe Find
 queryToFind = convertFromWeb . mapMaybe (\(x,y) -> if x == "find" then y else Nothing) 
   where convertFromWeb :: [B.ByteString] -> Maybe Find 
-        convertFromWeb [xs] = case (eitherDecodeStrict @FindFromWeb xs) of
+        convertFromWeb [xs] = case eitherDecodeStrict @FindFromWeb xs of
                                 Right (FindFromWeb (Just x)) -> Just x 
                                 _ -> Nothing 
         convertFromWeb _ = Nothing
@@ -161,7 +161,7 @@ newtype FilterFromWeb = FilterFromWeb [FilterItem]
 queryToFilters :: [(B.ByteString, Maybe B.ByteString)] -> [FilterItem] 
 queryToFilters = convertFromWeb . mapMaybe (\(x,y) -> if x == "filter" then y else Nothing) 
   where convertFromWeb :: [B.ByteString] -> [FilterItem]
-        convertFromWeb [xs] = case (eitherDecodeStrict @FilterFromWeb xs) of
+        convertFromWeb [xs] = case eitherDecodeStrict @FilterFromWeb xs of
                                 Right (FilterFromWeb fs) -> fs 
                                 _ -> []
         convertFromWeb _ = [] 

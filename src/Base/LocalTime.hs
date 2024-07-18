@@ -5,4 +5,4 @@ import Data.Time (getCurrentTime)
 -- import Data.Time (UTCTime)
 
 localtimeTemplate :: Q Exp
-localtimeTemplate = (LitE . StringL . show) <$> runIO getCurrentTime
+localtimeTemplate = LitE . StringL . show <$> runIO getCurrentTime

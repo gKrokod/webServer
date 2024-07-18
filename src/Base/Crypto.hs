@@ -34,7 +34,7 @@ iterations :: NumberIterations
 iterations = 4000
 
 makeHash :: Password -> Salt -> Hash 
-makeHash = ((E.decodeUtf8 . B64.encodeBase64') . ) . (fastPBKDF2_SHA256 (Parameters iterations sizePassword)) `on` E.encodeUtf8
+makeHash = ((E.decodeUtf8 . B64.encodeBase64') . ) . fastPBKDF2_SHA256 (Parameters iterations sizePassword) `on` E.encodeUtf8
 
 timeToSalt :: UTCTime -> Salt
 timeToSalt = flip makeHash "" . (T.pack . show)
