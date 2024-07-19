@@ -3,6 +3,7 @@ module Handlers.WebLogic where
 
 import Scheme (Image, IsValidPassword(..), FilterItem (FilterPublishOrAuthor))
 import Web.WebType (UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..),userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
+-- import Web.WebType (UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..),userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
 import qualified Handlers.Logger
 import qualified Handlers.Base
 -- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
@@ -57,9 +58,9 @@ getClient h req = do
   runExceptT $ do
     case secureData of
       Nothing -> pure $ Client Nothing Nothing Nothing
-      Just (login, pass) -> do --
-        (isAdmin, isPublisher) <- ExceptT $ Handlers.Base.getPrivilege baseHandle login 
-        valid <- ExceptT $ Handlers.Base.getResultValid baseHandle login pass
+      Just (login_, password_) -> do --
+        (isAdmin_, isPublisher_) <- ExceptT $ Handlers.Base.getPrivilege baseHandle login_ 
+        valid <- ExceptT $ Handlers.Base.getResultValid baseHandle login_ password_
         case valid of 
           NotValid -> do 
             lift $ Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
@@ -67,9 +68,9 @@ getClient h req = do
           Valid -> do
             lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
             lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get privilege" 
-            pure $ Client (bool Nothing (Just Proxy) isAdmin) 
-                          (bool Nothing (Just Proxy) isPublisher) 
-                          (Just login)
+            pure $ Client (bool Nothing (Just Proxy) isAdmin_) 
+                          (bool Nothing (Just Proxy) isPublisher_) 
+                          (Just login_)
 
 
 doAutorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
@@ -166,10 +167,10 @@ createUser _ h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
-    Right (UserFromWeb name login password admin publisher) -> do
+    Right (UserFromWeb name_ login_ password_ admin_ publisher_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"
       --todo new password?
-      tryCreateUser <- Handlers.Base.createUserBase baseHandle name login password admin publisher
+      tryCreateUser <- Handlers.Base.createUserBase baseHandle name_ login_ password_ admin_ publisher_
       case tryCreateUser of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create User success WEB"
@@ -273,9 +274,9 @@ createCategory _ h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Category WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure (response404 h) -- "Not ok. 
-    Right (CategoryFromWeb label parent) -> do
+    Right (CategoryFromWeb label_ parent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create category"
-      tryCreateCategory <- Handlers.Base.createCategoryBase baseHandle label parent
+      tryCreateCategory <- Handlers.Base.createCategoryBase baseHandle label_ parent_
       case tryCreateCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category success WEB"
@@ -298,17 +299,17 @@ updateCategory _ h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit Category WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure (response404 h) -- "Not ok. 
-    Right (EditCategoryFromWeb label (Just newlabel) newparent) -> do
+    Right (EditCategoryFromWeb label_ (Just newlabel_) newparent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category Just newlabel parent"
-      tryEditCategory <- Handlers.Base.updateCategory baseHandle label newlabel newparent
+      tryEditCategory <- Handlers.Base.updateCategory baseHandle label_ newlabel_ newparent_
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
           pure $ response200 h
         Left _ -> pure $ response404 h -- "Not ok. 
-    Right (EditCategoryFromWeb label Nothing newparent) -> do
+    Right (EditCategoryFromWeb label_ Nothing newparent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category without new label"
-      tryEditCategory <- Handlers.Base.updateCategory baseHandle label label newparent
+      tryEditCategory <- Handlers.Base.updateCategory baseHandle label_ label_ newparent_
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
@@ -331,8 +332,8 @@ endPointNews h req = do
           pure (response404 h) -- todo. replace 404 for another error
     "/news/edit" -> 
       case client h of
-        Client _ _ (Just author) -> do 
-          updateNews author h req -- редактирование новости
+        Client _ _ (Just author_) -> do 
+          updateNews author_ h req -- редактирование новости
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"  
           pure (response404 h) -- todo. replace 404 for another error
@@ -406,9 +407,9 @@ createNews _ h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure (response404 h) -- "Not ok. 
 -- data NewsFromWeb = NewsFromWeb {title :: T.Text, login :: T.Text, label :: T.Text, content :: T.Text,
-    Right (NewsFromWeb title login label content images publish) -> do
+    Right (NewsFromWeb title_ login_ label_ content_ images_ publish_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"
-      tryCreateNews <- Handlers.Base.createNewsBase baseHandle title login label content images publish
+      tryCreateNews <- Handlers.Base.createNewsBase baseHandle title_ login_ label_ content_ images_ publish_
       case tryCreateNews of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create News success WEB"
@@ -418,7 +419,7 @@ createNews _ h req = do
           pure $ response404 h -- "Not ok. 
 
 updateNews :: (Monad m) => Author -> Handle m -> Request -> m Response
-updateNews author h req = do 
+updateNews author_ h req = do 
   let logHandle = logger h 
   let baseHandle = base h 
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News WEB"
@@ -428,16 +429,16 @@ updateNews author h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit News WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
       pure (response404 h) -- "Not ok. 
-    Right (EditNewsFromWeb title newTitle newLogin newLabel newContent newImages newIsPublish) -> do
+    Right (EditNewsFromWeb title_ newTitle_ newLogin_ newLabel_ newContent_ newImages_ newIsPublish_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."
-      checkCopyright <- Handlers.Base.getCopyRight baseHandle author title
+      checkCopyright <- Handlers.Base.getCopyRight baseHandle author_ title_
       case checkCopyright of
         Right Valid -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Ok"
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit news "
           tryEditNews <- Handlers.Base.updateNews baseHandle 
-            title newTitle newLogin
-            newLabel newContent (fromMaybe [] newImages) newIsPublish
+            title_ newTitle_ newLogin_
+            newLabel_ newContent_ (fromMaybe [] newImages_) newIsPublish_
           case tryEditNews of
             Right _ -> do
               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"

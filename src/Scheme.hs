@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -ddump-splices #-}
 {-# OPTIONS_GHC -ddump-to-file #-}
 
+{-# LANGUAGE TypeOperators #-} 
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE QuasiQuotes                #-}
 
@@ -27,6 +28,9 @@ import Data.Aeson (ToJSON(..), FromJSON (..))
 -- import Data.Binary.Builder (Builder, fromLazyByteString)
 -- import Data.Int (Int64)
 
+
+-- helper :: Int -> Int
+-- helper = succ
 -- import Data.Binary.Builder (fromByteString, Builder, fromLazyByteString, putStringUtf8)
 
 PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|

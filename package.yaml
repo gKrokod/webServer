@@ -72,6 +72,8 @@ executables:
     - webServer
     - warp
     - wai
+    - text
+    - time
 
 tests:
   webServer-test:
@@ -83,3 +85,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - webServer
+    - hspec
+    - QuickCheck
+    - text
+    - mtl
+

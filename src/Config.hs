@@ -13,6 +13,9 @@ import Control.Exception (throwIO, try, SomeException, displayException)
 import Control.Monad (when)
 import Data.Maybe (isJust)
 
+helper :: Int -> Int
+helper = succ
+
 data ConfigDataBase = MkConfigDataBase {
     cHostDB :: T.Text
   , cPortDB :: T.Text
@@ -32,9 +35,6 @@ data DoIt = DoIt
 whenMakeTables :: Applicative f => ConfigDataBase -> f () -> f ()
 whenMakeTables = when . isJust . cCreateAndFillTable
 
--- whenMakeTables = when . isJust . cCreateAndFillTable
--- whenMakeTables = when . maybe False (const True) . cCreateAndFillTable
--- whenMakeTables = when . maybe False (\_ -> True) . cCreateAndFillTable
 -- whenMakeTables cfg = when $ case cCreateAndFillTable cfg of
 --                               Nothing -> False
 --                               (Just _) -> True
