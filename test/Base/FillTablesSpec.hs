@@ -5,6 +5,5 @@ import Base.FillTables ()
 
 spec :: Spec
 spec = do
-  describe "Base.FillTables" $ do
-    it "removes leading and trailing whitespace" $ do
+    it "nothing to test" $ do
       (succ 2 :: Int) `shouldBe` (3 :: Int)

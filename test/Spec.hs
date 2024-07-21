@@ -1,29 +1,2 @@
 {-# OPTIONS_GHC -F -pgmF hspec-discover #-}
   
---     
---       {-# LANGUAGE TypeOperators #-} 
--- -- import Control.Monad.State (State (..), evalState, execState, get, modify, put)
--- import Control.Monad.State (State, execState, put)
--- import Test.Hspec (shouldBe, describe, it, hspec)
--- import Test.Hspec.QuickCheck ()
--- -- import Test.QuickCheck (property)
---
--- import qualified Handlers.Logger (Handle (..), logMessage, Log(..))
--- import qualified Data.Text as T
---
--- main :: IO ()
--- main = hspec $ do 
---  describe "Logger logic" $ do
---     -- describe "new" $ do
---     -- context "Logger write log message if level log message >=  level from Config:" $ do
---     it "Logger write log message if level log message >=  level from Config" $ do
---       let logHandle' =
---             Handlers.Logger.Handle
---               { Handlers.Logger.levelLogger = Handlers.Logger.Warning, --cLvlLog testConfig,
---                 Handlers.Logger.writeLog = \text -> put text >> pure ()
---               } ::
---               Handlers.Logger.Handle (State T.Text)
---       let logHandle = logHandle' {Handlers.Logger.levelLogger = Handlers.Logger.Debug}
---       -- it "Debug    vs  Debug" $ do
---       execState (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "New log") "Old log"
---         `shouldBe` "[Debug] New log"

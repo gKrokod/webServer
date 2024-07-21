@@ -126,6 +126,8 @@ test-suite webServer-test
     , base >=4.7 && <5
     , hspec
     , mtl
+    , persistent-postgresql
     , text
+    , time
     , webServer
   default-language: Haskell2010

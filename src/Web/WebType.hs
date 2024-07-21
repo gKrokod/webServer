@@ -112,11 +112,6 @@ queryToPanigate = convertFromWeb . mapMaybe (\(x,y) -> if x == "panigate" then y
                                          _ -> (0, maxBound)
         convertFromWeb _ = (0, maxBound)
 
--- q1 :: [(B.ByteString, Maybe B.ByteString)] -> [B.ByteString]
-q1 :: [(B.ByteString, Maybe B.ByteString)] -> [Either String PanigateFromWeb]
-q1 = map webToPanigate  . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
-
-
 data SortFromWeb = SortNews {columnType :: ColumnType, sortOrder :: SortOrder }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
@@ -165,14 +160,9 @@ headersToLoginAndPassword ((header, loginpass) : xs) | header == "Authorization"
                                                      | otherwise = headersToLoginAndPassword xs
        -- ByteString length >= 6 . proofs early 
   where splitLoginPass :: B.ByteString -> (T.Text, T.Text)
-        -- splitLoginPass [] = (E.decodeUtf8 "", E.decodeUtf8 "")
-        --  tyty pattern esli xs = "" ne srabotate pishet.
         splitLoginPass xs' = let colon = fromIntegral $ fromEnum ':'
                              in case map E.decodeUtf8 . B.splitWith (== colon) . B64.decodeBase64Lenient $ xs' of
                                  [l, p] -> (l, p)
-                                 _ -> ("","") -- WAll.
-        -- splitLoginPass xs = let [l, p] = map E.decodeUtf8 . B.splitWith (== colon) . B64.decodeBase64Lenient $ xs
-        --                         colon = fromIntegral $ fromEnum ':'
-        --                     in (l, p)
+                                 _ -> ("","")
 headersToLoginAndPassword [] = Nothing 
 

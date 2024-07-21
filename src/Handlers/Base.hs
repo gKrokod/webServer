@@ -1,4 +1,4 @@
-module Handlers.Base (getCopyRight, getAllNews, updateNews, createNewsBase, findSubString, sortOrderNews, filtersNews, userLimit, userOffset, updateCategory, sortColumnNews, createCategoryBase, getAllCategories, getImage, createUserBase, getAllUsers, getResultValid, getPrivilege, Handle(..), NewsOut, Title, Content, NewLabel, Label, Login, PasswordUser, Name, NumberImage, Success(..), URI_Image) where
+module Handlers.Base (getCopyRight, getAllNews, updateNews, createNewsBase, updateCategory, createCategoryBase, getAllCategories, getImage, createUserBase, getAllUsers, getResultValid, getPrivilege, Handle(..), NewsOut, Title, Content, NewLabel, Label, Login, PasswordUser, Name, NumberImage, Success(..), URI_Image) where
 
 import Scheme  (Image(..), Category(..), User(..), IsValidPassword(..), News(..), ColumnType(..), Find(..), FilterItem(..), SortOrder(..))
 import Handlers.Logger (Log(..), logMessage) 
@@ -19,8 +19,8 @@ type HashPasswordUser = T.Text
 type Label = T.Text
 type NewLabel = T.Text
 type NumberImage = Int64
-type Header = T.Text
-type Base64 = T.Text
+-- type Header = T.Text
+-- type Base64 = T.Text
 type Title = T.Text
 type Content = T.Text
 type URI_Image = T.Text
@@ -68,9 +68,6 @@ data Handle m = Handle
     editCategory :: Label -> NewLabel -> Maybe Label -> m (Either SomeException Success)
 -- updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
   }
-
-                -- when (isLeft tryCreate) (logMessage (logger h) Handlers.Logger.Error "Can't putUser")
-                -- pure $ either (Left . T.pack . displayException) Right tryCreate 
 
 getCopyRight :: (Monad m) => Handle m -> Login -> Title ->  m (Either T.Text IsValidPassword)
 getCopyRight h login title = do
@@ -321,15 +318,3 @@ createUserBase h name login pwd admin publish = do
                 tryCreate <- putUser h name login pwd' time admin publish 
                 when (isLeft tryCreate) (logMessage logHandle Handlers.Logger.Error "Can't putUser")
                 pure $ either (Left . T.pack . displayException) Right tryCreate 
-
--- checkPassword :: (Monad m) => Handle m -> Login -> PasswordUser -> m (Bool)
--- checkPassword h login pass = do
---   logMessage logHandle Debug ("check password for User: " <> login)
---   mbUser <- getUser h login
---   pure $ case mbUser of
---            Nothing -> False
---            Just user -> pass == undefined (userPasswordId user)  -- tyt nyzen poisk po tablise passwordod
---                            -- :: PasswordIdUser -> PasswordUser
-
---
---                        }

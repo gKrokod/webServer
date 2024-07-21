@@ -5,6 +5,5 @@ import Base.LocalTime ()
 
 spec :: Spec
 spec = do
-  describe "Base.LocalTime" $ do
-    it "removes leading and trailing whitespace" $ do
+    it "nothing to test" $ do
       (succ 2 :: Int) `shouldBe` (3 :: Int)

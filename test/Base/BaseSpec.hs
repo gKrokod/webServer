@@ -5,6 +5,5 @@ import Base.Base ()
 
 spec :: Spec
 spec = do
-  describe "Base.Base" $ do
-    it "removes leading and trailing whitespace" $ do
+    it "nothing to test" $ do
       (succ 2 :: Int) `shouldBe` (3 :: Int)
