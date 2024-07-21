@@ -1,7 +1,6 @@
-module Handlers.Base where
+module Handlers.Base (getCopyRight, getAllNews, updateNews, createNewsBase, findSubString, sortOrderNews, filtersNews, userLimit, userOffset, updateCategory, sortColumnNews, createCategoryBase, getAllCategories, getImage, createUserBase, getAllUsers, getResultValid, getPrivilege, Handle(..), NewsOut, Title, Content, NewLabel, Label, Login, PasswordUser, Name, NumberImage, Success(..), URI_Image) where
 
--- import Data.List (intercalate)
-import Scheme
+import Scheme  (Image(..), Category(..), User(..), IsValidPassword(..), News(..), ColumnType(..), Find(..), FilterItem(..), SortOrder(..))
 import Handlers.Logger (Log(..), logMessage) 
 import qualified Handlers.Logger 
 import qualified Data.Text as T
@@ -10,7 +9,7 @@ import Data.Int (Int64)
 import Control.Exception (SomeException, displayException)
 import Control.Monad (when)
 import Data.Either (isLeft)
-import Data.Bool
+import Data.Bool (bool)
 
 data Success = Put | Change | Get deriving Show
 type Name = T.Text

@@ -1,7 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Config where
+module Config (ConfigDataBase(..), loadConfig, connectionString, whenMakeTables) where
 
 import qualified Data.Text as T
 import Data.Aeson (eitherDecode, encode, ToJSON(..), FromJSON (..))
@@ -12,9 +12,6 @@ import Database.Persist.Postgresql (ConnectionString)
 import Control.Exception (throwIO, try, SomeException, displayException)
 import Control.Monad (when)
 import Data.Maybe (isJust)
-
-helper :: Int -> Int
-helper = succ
 
 data ConfigDataBase = MkConfigDataBase {
     cHostDB :: T.Text
@@ -35,10 +32,6 @@ data DoIt = DoIt
 whenMakeTables :: Applicative f => ConfigDataBase -> f () -> f ()
 whenMakeTables = when . isJust . cCreateAndFillTable
 
--- whenMakeTables cfg = when $ case cCreateAndFillTable cfg of
---                               Nothing -> False
---                               (Just _) -> True
---for work 
 loadConfigDB :: IO (Either String ConfigDataBase)
 loadConfigDB = either (Left . displayException) eitherDecode 
                <$> try @SomeException (L.readFile "config/db.cfg")
@@ -50,13 +43,6 @@ loadConfig = do
     Left error' -> throwIO $ userError error'
     Right config -> pure config
 
---for potencial work
--- loadConfigDB :: IO (Either SomeException ConfigDataBase)
--- loadConfigDB = join <$> try (
---     either (\_ -> (Left $ toException NonTermination)) Right 
---     <$> eitherDecode 
---     <$> L.readFile "config/db.cfg")
---
 -- info for connect witj postgres
 connectionString :: ConfigDataBase -> ConnectionString
 connectionString cfg = E.encodeUtf8 $ 

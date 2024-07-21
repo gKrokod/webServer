@@ -1,11 +1,11 @@
 module Base.Base where
-import Base.FillTables
+import Base.FillTables (image1,image2,image3, imageBank1,imageBank2,imageBank3,imageBank4,imageBank5, news1,news2, news3, news4, user1, user2, user3,password2,password3, password1, cat1, cat2, cat3, cat5, cat4, cat6, cat7, cat8, cat9)
 import qualified Base.Crypto
-import Scheme --(migrateAll, Category)
+import Scheme (Category(..), User(..), Image(..), ImageBank(..), News(..), SortOrder(..), FilterItem(..),ColumnType(..),Find(..), Password(..), Unique(..), EntityField(..), migrateAll)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn) 
 import Control.Monad.Logger (runNoLoggingT, LoggingT(..), runStdoutLoggingT, NoLoggingT(..))
 import Database.Persist.Postgresql  (Entity(..), rawExecute, ConnectionString, withPostgresqlConn, toSqlKey)
-import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.),from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany,getBy, insert, insert_, replace, get, fromSqlKey, delete,  Value(..),orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr, OrderBy, PersistField(..))
+import Database.Esqueleto.Experimental (like, (||.), (%), (++.), (&&.), (>=.),(<.),from, (^.), (==.), just, where_, table, unionAll_, val, withRecursive, select, (:&) (..), on, innerJoin , insertMany_, insertMany,getBy, insert, insert_, replace, get, fromSqlKey, delete,  Value(..),orderBy, asc, desc, offset, limit, (?.), count, groupBy, leftJoin, SqlExpr, OrderBy, PersistField(..), Key)
 import qualified Data.Text as T
 import Data.Time (addDays,UTCTime(..))
 import Handlers.Base (NumberImage, URI_Image,Success(..), Name, Login, PasswordUser, Label, NewLabel, Content, Title, NewsOut)

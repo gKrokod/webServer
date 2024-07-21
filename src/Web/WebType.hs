@@ -4,15 +4,14 @@
 
 module Web.WebType where
 import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..), Find(..), FilterItem(..))
--- import Scheme hiding (NewsOut) --(User(..), Image(..), Category(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Data.Aeson (eitherDecodeStrict, encode, ToJSON, FromJSON)
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import qualified Data.ByteString as B 
-import Data.Maybe 
-import  Data.CaseInsensitive (CI)
+import Data.Maybe  (mapMaybe)
+import Data.CaseInsensitive (CI)
 import qualified Data.Text.Encoding as  E
 import Data.ByteString.Base64 as B64
 
@@ -117,21 +116,11 @@ queryToPanigate = convertFromWeb . mapMaybe (\(x,y) -> if x == "panigate" then y
 q1 :: [(B.ByteString, Maybe B.ByteString)] -> [Either String PanigateFromWeb]
 q1 = map webToPanigate  . mapMaybe (\(x,y) -> if x == "panigate" then y else Nothing) 
 
--- data ColumnType = DataNews UTCTime | AuthorNews T.Text | CategoryName T.Text | QuantityImages Int
--- data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
---
--- data SortOrder = Ascending | Descending
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
 
 data SortFromWeb = SortNews {columnType :: ColumnType, sortOrder :: SortOrder }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
--- webToSort :: B.ByteString -> Either String SortFromWeb 
--- webToSort = eitherDecodeStrict @SortFromWeb 
 
 -- DataNews and Descending it's default
 queryToSort :: [(B.ByteString, Maybe B.ByteString)] -> (ColumnType, SortOrder) 

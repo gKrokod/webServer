@@ -1,4 +1,5 @@
 module Web.WebLogic (getBody, response404, response200, mkGoodResponse, mkResponseForImage, response404WithImage) where
+
 import Scheme  (Image(..))
 import Base.TestImage (image404)
 import Network.Wai (Request, Response,getRequestBodyChunk, responseBuilder)

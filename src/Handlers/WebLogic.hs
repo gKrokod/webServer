@@ -1,5 +1,5 @@
 {-# LANGUAGE DataKinds       #-}
-module Handlers.WebLogic where
+module Handlers.WebLogic (Handle(..), Client(..), doAutorization, doLogic) where
 
 import Scheme (Image, IsValidPassword(..), FilterItem (FilterPublishOrAuthor))
 import Web.WebType (UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..),userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
