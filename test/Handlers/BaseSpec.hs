@@ -5,7 +5,7 @@ module Handlers.BaseSpec (spec) where
 import Test.Hspec
 import Scheme
 import Handlers.Base 
-import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8)
+import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4)
 import Base.LocalTime (localtimeTemplate)
 import Data.List(foldr1)
 import qualified Handlers.Logger 
@@ -15,7 +15,6 @@ import Control.Monad.Identity
 import qualified Data.Text as T
 import Test.QuickCheck
 import Data.Time (UTCTime)
--- import Database.Persist.Postgresql  (toSqlKey)
 
 spec :: Spec
 spec = do
@@ -122,51 +121,148 @@ spec = do
            `shouldNotBe` 
               (succ $ length categoriesInBase)
 
-      -- it "Add user : findUserByLogin -> Right (Just User)" $ do
-      --     let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right $ Just user1)}
-      --     length (execState (createUserBase baseHandle' "Name" "Login" "Password" False False) usersInBase)
-      --      `shouldNotBe` 
-      --         (succ $ length usersInBase)
-      --
-      -- it "Add user : findUserByLogin -> Left _" $ do
-      --     let baseHandle' = baseHandle {findUserByLogin = const (pure $ Left undefined)}
-      --     length (execState (createUserBase baseHandle' "Name" "Login" "Password" False False) usersInBase)
-      --      `shouldNotBe` 
-      --         (succ $ length usersInBase)
+  describe "Create News" $ do
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+      let newsInBase = [news1,news2,news3,news4]
+      let baseHandle  = Handle
+            {
+               logger = logHandle,
+               findCategoryByLabel = undefined, 
+               findUserByLogin = undefined,
+               findNewsByTitle = undefined,
+               getTime = pure (read $(localtimeTemplate)), 
+               putNews = \title time login label content _images ispublish -> do
+                            modify ((News title time undefined undefined content ispublish):)
+                            pure $ Right Put
+                                                      }  :: Handle (State [News])
 
--- createCategoryBase :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success) 
--- createCategoryBase h label parent = do
---   let logHandle = logger h
---   logMessage logHandle Debug ("Check category for label for create: " <> label)
---   exist <- findCategoryByLabel h label
---   case (exist, parent) of
---     (Left e, _) -> do
---                 logMessage logHandle Error "function findCategoryByLabel fail"
---                 pure . Left . T.pack . displayException $ e
---     (Right (Just _), _) -> do
---                 logMessage logHandle Warning ("Category arleady taken: " <> label)
---                 pure $ Left "Category arleady taken"
---     (Right Nothing, Nothing) -> do
---                 logMessage logHandle Debug ("Create category without parent and label: " <> label)
---                 tryPut <- putCategory h label parent
---                 when (isLeft tryPut) (logMessage logHandle Handlers.Logger.Error "function putCategory fali")
---                 pure $ either (Left . T.pack . displayException) Right tryPut 
---     (Right Nothing, Just labelParent) -> do
---                 logMessage logHandle Debug ("Create category with parent and label: " <> labelParent <> " " <> label)
---                 logMessage logHandle Debug ("Check parent: " <> labelParent)
---                 existLabel <- findCategoryByLabel h labelParent
---                 case existLabel of
---                   Left e -> do
---                     logMessage logHandle Error "function findCategoryByLabel fail"
---                     pure . Left . T.pack . displayException $ e
---                   Right Nothing -> do
---                     logMessage logHandle Warning ("Abort. Parent dont' exist: " <> labelParent)
---                     pure $ Left "Parent dont' exist"
---                   _ -> do
---                     logMessage logHandle Debug "Parent exist"
---                     tryPut <- putCategory h label parent
---                     when (isLeft tryPut) (logMessage logHandle Handlers.Logger.Error "function putCategory fail")
---                     pure $ either (Left . T.pack . displayException) Right tryPut 
+      it "Success add news : title new, user exist, category exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right Nothing),
+              findUserByLogin = const (pure $ Right $ Just user1),
+              findCategoryByLabel = const (pure $ Right $ Just cat1)
+                                        }
+          length (execState (createNewsBase baseHandle' "NewTitle" "UserOld" "CatOld" "Content" undefined False) newsInBase)
+           `shouldBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title new, user exist, category don't exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right Nothing),
+              findUserByLogin = const (pure $ Right $ Just user1),
+              findCategoryByLabel = const (pure $ Right Nothing)
+                                        }
+          length (execState (createNewsBase baseHandle' "NewTitle" "UserOld" "CatNew" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title new, user don't exist, category exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right Nothing),
+              findUserByLogin = const (pure $ Right Nothing),
+              findCategoryByLabel = const (pure $ Right $ Just cat1)
+                                        }
+          length (execState (createNewsBase baseHandle' "NewTitle" "UserNew" "CatOld" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title new, user don't exist, category don't exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right Nothing),
+              findUserByLogin = const (pure $ Right Nothing),
+              findCategoryByLabel = const (pure $ Right Nothing)
+                                        }
+          length (execState (createNewsBase baseHandle' "NewTitle" "UserNew" "CatNew" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title old, user exist, category exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right $ Just news1),
+              findUserByLogin = const (pure $ Right $ Just user1),
+              findCategoryByLabel = const (pure $ Right $ Just cat1)
+                                        }
+          length (execState (createNewsBase baseHandle' "OldTitle" "UserOld" "CatOld" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title old, user exist, category don't exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right $ Just news1),
+              findUserByLogin = const (pure $ Right $ Just user1),
+              findCategoryByLabel = const (pure $ Right Nothing)
+                                        }
+          length (execState (createNewsBase baseHandle' "OldTitle" "UserOld" "CatNew" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title old, user don't exist, category exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right $ Just news1),
+              findUserByLogin = const (pure $ Right Nothing),
+              findCategoryByLabel = const (pure $ Right $ Just cat1)
+                                        }
+          length (execState (createNewsBase baseHandle' "OldTitle" "UserNew" "CatOld" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title old, user don't exist, category don't exist" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Right $ Just news1),
+              findUserByLogin = const (pure $ Right Nothing),
+              findCategoryByLabel = const (pure $ Right Nothing)
+                                        }
+          length (execState (createNewsBase baseHandle' "OldTitle" "UserNew" "CatNew" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+      it "not add news : title new, user exist, category exist, fail data base" $ do
+          let baseHandle' = baseHandle {
+              findNewsByTitle = const (pure $ Left undefined),
+              findUserByLogin = const (pure $ Right $ Just user1),
+              findCategoryByLabel = const (pure $ Right $ Just cat1)
+                                        }
+          length (execState (createNewsBase baseHandle' "NewTitle" "UserOld" "CatOld" "Content" undefined False) newsInBase)
+           `shouldNotBe` 
+              (succ $ length newsInBase)
+
+  describe "Edit Category" $ do
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+-- "Man" "Woman" "Warrior" "Archer" "Neutral" "Evil" "Good" "Witch"
+      let baseHandle  = Handle
+            {
+               logger = logHandle,
+               findCategoryByLabel = \label  -> do
+                 categories <- map categoryLabel <$> get
+                 pure $ Right $ 
+                   if label `elem` categories then Just (Category label undefined)
+                                              else Nothing,
+               getTime = pure (read $(localtimeTemplate)), 
+               putCategory = \label parent -> do
+                            modify ((Category label undefined):)
+                            pure $ Right Put
+                                                      }  :: Handle (State [Category])
+
+      it "Success edit category : label... old, parent exist" $ do
+          let baseHandle' = baseHandle 
+          length (execState (createCategoryBase baseHandle' "NewLabel" (Just "Man")) categoriesInBase)
+           `shouldBe` 
+              (succ $ length categoriesInBase)
+
+      it "not add category : label old, parent exist" $ do
+          let baseHandle' = baseHandle 
+          length (execState (createCategoryBase baseHandle' "Archer" (Just "Man")) categoriesInBase)
+           `shouldNotBe` 
+              (succ $ length categoriesInBase)
+--
+--
 --
   describe "Part 2Handlers.Base" $ do
     -- context "Logic base" $ do
@@ -175,26 +271,6 @@ spec = do
       it "removes leading and trailing whitespace" $ do
         (succ 2 :: Int) `shouldBe` (2 :: Int)
 
--- createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)  
--- createUserBase h name login pwd admin publish = do
---   let logHandle = logger h
---   logMessage logHandle Debug ("check user By login for  create: " <> login)
---   tryFind <- findUserByLogin h login -- todo
---   case tryFind of
---     Left e -> do
---                 logMessage logHandle Error "function findUserByLogin fail"
---                 pure . Left . T.pack . displayException $ e 
---     Right (Just _) -> do
---                 logMessage logHandle Warning ("Login arleady taken: " <> login)
---                 pure $ Left "Login arleady taken"
---     Right Nothing-> do
---                 logMessage logHandle Debug "Create user..."
---                 time <- getTime h
---                 --- crypto
---                 let pwd' = makeHashPassword h pwd time --for make QuasiPassowrd
---                 tryCreate <- putUser h name login pwd' time admin publish 
---                 when (isLeft tryCreate) (logMessage logHandle Handlers.Logger.Error "Can't putUser")
---                 pure $ either (Left . T.pack . displayException) Right tryCreate 
 --   let logHandle = Handlers.Logger.Handle
 --         { Handlers.Logger.levelLogger = Debug,
 --           Handlers.Logger.writeLog = Logger.writeLog
