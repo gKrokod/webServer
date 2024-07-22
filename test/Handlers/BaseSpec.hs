@@ -318,9 +318,66 @@ spec = do
            `shouldBe`  True
           (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
            `shouldNotBe`  True
-
-
 --
+--
+--     editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either SomeException Success), 
+-- -- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
+  describe "Edit News" $ do
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+             }  :: Handlers.Logger.Handle (State ([News],[User],[Category]) )
+                                                      -- }  :: Handle (State [Category])
+
+      let newsInBase = [news1,news2,news3,news4]
+      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+      let usersInBase = [user1,user2,user3]
+      let basse = (newsInBase, usersInBase, categoriesInBase)
+
+      -- let baseHandle  = Handle
+      --       {
+      --          logger = logHandle
+               -- findUserByLogin = \login  -> do
+               --   (n,u,c) <- get
+               --   let users = map userLogin u
+               --   pure $ Right $ 
+               --     if login `elem` users then Just (User "" login undefined undefined False False)
+               --                                else Nothing,
+               -- findNewsByTitle = \title  -> do
+               --   (n,u,c) <- get
+               --   let news' = map newsTitle n
+               --   pure $ Right $ 
+               --     if title `elem` news' then Just (News title undefined undefined undefined undefined undefined)
+               --                                else Nothing,
+               -- findCategoryByLabel = \label  -> do
+               --   (n,u,c) <- get
+               --   let categories = map categoryLabel c
+               --   pure $ Right $ 
+               --     if label `elem` categories then Just (Category label undefined)
+               --                                else Nothing,
+               -- getTime = pure (read $(localtimeTemplate)), 
+      -- tryEdit <- editNews h title t newTitle newLogin newLabel newContent newImages newPublish
+               -- editNews = \titleOld time mbTitle mbLogin mbLabel mbContent images mbPublish -> undefined
+                                                      -- } :: Handle (State ([News],[User],[Category]))
+
+      it "Success edit news : TitleOld, NewTitleNew" $ do
+          -- let baseHandle' = baseHandle
+          -- let baseHandle' = baseHandle {editNews = do
+                                          -- undefined
+          -- } -- :: Handle (State ([News],[User],[Category]))
+          -- let newsTitleOld = newsTitle news1
+          -- (news1) `elem` (newsInBase)
+           True `shouldBe`  True
+          -- -- (news1) `elem` (execState (updateNews baseHandle' 
+          -- --                              "" (Just "New Title for news1") 
+          -- --                              Nothing Nothing Nothing 
+          -- --                              [] Nothing) undefined )--(newsInBase, usersInBase, categoriesInBase))
+          --  -- `shouldNotBe`  True
+          -- (Category "NewArcher" undefined) `elem` (execState (updateCategoryBase baseHandle "Archer" "NewArcher" Nothing) basse) 
+          --  `shouldNotBe`  True
+
+-- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
+-- updateNews h title newTitle newLogin newLabel newContent newImages newPublish = do
 --
   describe "Part 2Handlers.Base" $ do
     -- context "Logic base" $ do

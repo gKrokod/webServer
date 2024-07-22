@@ -50,7 +50,7 @@ news1 = S.News { S.newsTitle = "S.News 1 about Witch from user 1",
               S.newsContent = "Witch havean apple with photo 1 and 2",
               S.newsIsPublish = False
              }
-news2 = S.News "S.News 2 about Warrior from user 2" (read $(localtimeTemplate)) 
+news2 = S.News "S.News 2 about Warriorgfrom user 2" (read $(localtimeTemplate)) 
              (toSqlKey 2) (toSqlKey 4) "Warrior like Woman. No photo" False
 news3 = S.News "S.News 3 about Good from user 3" (read $(localtimeTemplate)) 
              (toSqlKey 3) (toSqlKey 8) "Good is good. Photo 1 and 3" True
