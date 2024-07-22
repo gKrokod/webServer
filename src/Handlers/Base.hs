@@ -1,4 +1,4 @@
-module Handlers.Base (getCopyRight, getAllNews, updateNews, createNewsBase, updateCategory, createCategoryBase, getAllCategories, getImage, createUserBase, getAllUsers, getResultValid, getPrivilege, Handle(..), NewsOut, Title, Content, NewLabel, Label, Login, PasswordUser, Name, NumberImage, Success(..), URI_Image) where
+module Handlers.Base (getCopyRight, getAllNews, updateNews, createNewsBase, updateCategoryBase, createCategoryBase, getAllCategories, getImage, createUserBase, getAllUsers, getResultValid, getPrivilege, Handle(..), NewsOut, Title, Content, NewLabel, Label, Login, PasswordUser, Name, NumberImage, Success(..), URI_Image) where
 
 import Scheme  (Image(..), Category(..), User(..), IsValidPassword(..), News(..), ColumnType(..), Find(..), FilterItem(..), SortOrder(..))
 import Handlers.Logger (Log(..), logMessage) 
@@ -66,7 +66,7 @@ data Handle m = Handle
     editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either SomeException Success), 
 -- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
     editCategory :: Label -> NewLabel -> Maybe Label -> m (Either SomeException Success)
--- updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
+-- updateCategoryBase :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
   }
 
 getCopyRight :: (Monad m) => Handle m -> Login -> Title ->  m (Either T.Text IsValidPassword)
@@ -225,8 +225,8 @@ createNewsBase h title login label content images ispublish = do
       pure $ Left "fail to create news"
 
 
-updateCategory :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
-updateCategory h label newlabel parent = do
+updateCategoryBase :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)  
+updateCategoryBase h label newlabel parent = do
   let logHandle = logger h
   logMessage logHandle Debug ("Check category for label for update: " <> label <> " " <> newlabel)
 

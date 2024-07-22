@@ -15,6 +15,7 @@ import Control.Monad.Identity
 import qualified Data.Text as T
 import Test.QuickCheck
 import Data.Time (UTCTime)
+import Data.Maybe (mapMaybe)
 
 spec :: Spec
 spec = do
@@ -236,6 +237,11 @@ spec = do
             }
       let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
 -- "Man" "Woman" "Warrior" "Archer" "Neutral" "Evil" "Good" "Witch"
+      let giveParent label = case label of
+                               "Man" -> categoryParent cat5
+                               "Abstract" -> categoryParent cat2
+                               "Evil" -> categoryParent cat7
+                               _ -> undefined
       let baseHandle  = Handle
             {
                logger = logHandle,
@@ -244,24 +250,76 @@ spec = do
                  pure $ Right $ 
                    if label `elem` categories then Just (Category label undefined)
                                               else Nothing,
-               getTime = pure (read $(localtimeTemplate)), 
-               putCategory = \label parent -> do
-                            modify ((Category label undefined):)
-                            pure $ Right Put
+               -- getTime = pure (read $(localtimeTemplate)), 
+               editCategory = \label newlabel parent -> do
+                                 categories <- get
+                                 modify (map (\(Category l p) -> if l == label 
+                                                                    then Category newlabel (maybe p giveParent parent)
+                                                                    else Category l (maybe p giveParent parent) ))
+                                 pure $ Right Change
                                                       }  :: Handle (State [Category])
 
-      it "Success edit category : label... old, parent exist" $ do
+      it "Success edit category : LabelOld, NewLabel don't exist, don't change parent" $ do
           let baseHandle' = baseHandle 
-          length (execState (createCategoryBase baseHandle' "NewLabel" (Just "Man")) categoriesInBase)
-           `shouldBe` 
-              (succ $ length categoriesInBase)
+          let archerKey = giveParent "Man"  -- Archer Man
+          (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
+           `shouldBe`  True
+          (Category "Archer" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
+           `shouldNotBe`  True
+          (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
+           `shouldBe`  True
 
-      it "not add category : label old, parent exist" $ do
+      it "Success edit category : LabelOld, NewLabel don't exist, Change parent, parent exist" $ do
           let baseHandle' = baseHandle 
-          length (execState (createCategoryBase baseHandle' "Archer" (Just "Man")) categoriesInBase)
-           `shouldNotBe` 
-              (succ $ length categoriesInBase)
---
+          let archerKey = giveParent "Man"   --  Man
+          let newArcherKey = giveParent "Abstract"  -- Abstract
+          (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
+           `shouldBe`  True
+          (Category "Archer" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" (Just "Abstract")) categoriesInBase)
+           `shouldNotBe`  True
+          (Category "NewArcher" newArcherKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" (Just "Abstract")) categoriesInBase)
+           `shouldBe`  True
+          (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" (Just "Man")) categoriesInBase)
+           `shouldBe`  True
+
+      it "not edit category : LabelNew, NewLabel don't exist, don't change parent" $ do
+          let baseHandle' = baseHandle --{
+              -- findCategoryByLabel = const (pure $ Right Nothing)
+              --                           }
+          let archerKey = giveParent "Man"   --  Man
+
+          (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
+           `shouldBe`  True
+          (Category "Archer1" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
+           `shouldNotBe`  True
+          (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer1" "NewArcher" Nothing) categoriesInBase)
+           `shouldNotBe`  True
+
+      it "not edit category : LabelNew, NewLabel exist, don't change parent" $ do
+          let baseHandle' = baseHandle
+          let archerKey = giveParent "Man"
+          let evilKey = giveParent "Evil"
+
+          (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
+           `shouldBe`  True
+          (Category "Evil" evilKey) `elem` categoriesInBase --  == cat7 `elem` categoriesInBase
+           `shouldBe`  True
+          (Category "Archer" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "Evil" Nothing) categoriesInBase)
+           `shouldBe`  True
+          (Category "Evil" evilKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "Evil" Nothing) categoriesInBase)
+           `shouldBe`  True
+
+      it "not edit category : LabelOld, NewLabel don't exist, don't change parent, fail data base" $ do
+          let baseHandle' = baseHandle {findCategoryByLabel = const (pure $ Left undefined)}
+          let archerKey = giveParent "Man"  -- Archer Man
+          (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
+           `shouldBe`  True
+          (Category "Archer" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
+           `shouldBe`  True
+          (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
+           `shouldNotBe`  True
+
+
 --
 --
   describe "Part 2Handlers.Base" $ do

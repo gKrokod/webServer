@@ -301,7 +301,7 @@ updateCategory _ h req = do
       pure (response404 h) -- "Not ok. 
     Right (EditCategoryFromWeb label_ (Just newlabel_) newparent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category Just newlabel parent"
-      tryEditCategory <- Handlers.Base.updateCategory baseHandle label_ newlabel_ newparent_
+      tryEditCategory <- Handlers.Base.updateCategoryBase baseHandle label_ newlabel_ newparent_
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
@@ -309,7 +309,7 @@ updateCategory _ h req = do
         Left _ -> pure $ response404 h -- "Not ok. 
     Right (EditCategoryFromWeb label_ Nothing newparent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category without new label"
-      tryEditCategory <- Handlers.Base.updateCategory baseHandle label_ label_ newparent_
+      tryEditCategory <- Handlers.Base.updateCategoryBase baseHandle label_ label_ newparent_
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
