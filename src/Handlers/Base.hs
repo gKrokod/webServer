@@ -11,7 +11,7 @@ import Control.Monad (when)
 import Data.Either (isLeft)
 import Data.Bool (bool)
 
-data Success = Put | Change | Get deriving Show
+data Success = Put | Change | Get deriving (Show, Eq)
 type Name = T.Text
 type Login = T.Text
 type PasswordUser = T.Text

@@ -357,25 +357,58 @@ spec = do
                    if label `elem` categories then Just (Category label undefined)
                                               else Nothing,
                getTime = pure (read $(localtimeTemplate)), 
-      -- tryEdit <- editNews h title t newTitle newLogin newLabel newContent newImages newPublish
-               editNews = \titleOld time mbTitle mbLogin mbLabel mbContent images mbPublish -> undefined
+               editNews = \titleOld time mbTitle mbLogin mbLabel mbContent images mbPublish -> pure $ Right Change 
                                                       } :: Handle (State ([News],[User],[Category]))
 
       it "Success edit news : TitleOld, NewTitleNew" $ do
           let baseHandle' = baseHandle
-          -- let baseHandle' = baseHandle {editNews = do
-                                          -- undefined
-          -- } -- :: Handle (State ([News],[User],[Category]))
-          -- let newsTitleOld = newsTitle news1
-          (news1) `elem` (newsInBase)
-            `shouldBe`  True
-          (newsTitle news1) `elem` ((\(n,_,_) -> map newsTitle n) (execState (updateNews baseHandle' 
+          (evalState (updateNews baseHandle' 
+                                         (newsTitle news1) (Just "New Title for news1") 
+                                         Nothing Nothing Nothing 
+                                          [] Nothing) base)
+           `shouldBe`  (Right Change)
+      it "Success edit news : TitleOld, NewTitleNew, User exist" $ do
+          let baseHandle' = baseHandle
+          (evalState (updateNews baseHandle' 
+                                         (newsTitle news1) (Just "New Title for news1") 
+                                         (Just $ userLogin user2) Nothing Nothing 
+                                          [] Nothing) base)
+           `shouldBe`  (Right Change)
+      it "Success edit news : TitleOld, NewTitleNew, Category exist" $ do
+          let baseHandle' = baseHandle
+          (evalState (updateNews baseHandle' 
+                                         (newsTitle news1) (Just "New Title for news1") 
+                                         Nothing (Just $ categoryLabel cat1)  Nothing 
+                                          [] Nothing) base)
+           `shouldBe`  (Right Change)
+      it "not edit news : TitleNew, NewTitleNew" $ do
+          let baseHandle' = baseHandle
+          (evalState (updateNews baseHandle' 
                                          "" (Just "New Title for news1") 
                                          Nothing Nothing Nothing 
-                                          [] Nothing) base))
-           `shouldNotBe`  True
-          -- undefined `elem` (execState (updateCategoryBase baseHandle "Archer" "NewArcher" Nothing) basse) 
-          --  `shouldNotBe`  True
+                                          [] Nothing) base)
+           `shouldNotBe`  (Right Change)
+      it "not edit news : TitleOld, NewTitleOld" $ do
+          let baseHandle' = baseHandle
+          (evalState (updateNews baseHandle' 
+                                         (newsTitle news1) (Just $ newsTitle news2)
+                                         Nothing Nothing Nothing 
+                                          [] Nothing) base)
+           `shouldNotBe`  (Right Change)
+      it "not edit news : TitleOld, NewTitleNew, User don't exist" $ do
+          let baseHandle' = baseHandle
+          (evalState (updateNews baseHandle' 
+                                         (newsTitle news1) (Just "New Title for news1") 
+                                         (Just "") Nothing Nothing 
+                                          [] Nothing) base)
+            `shouldNotBe`  (Right Change)
+      it "not edit news : TitleOld, NewTitleNew, Category don't exist" $ do
+          let baseHandle' = baseHandle
+          (evalState (updateNews baseHandle' 
+                                         (newsTitle news1) (Just "New Title for news1") 
+                                         Nothing (Just "") Nothing 
+                                          [] Nothing) base)
+           `shouldNotBe`  (Right Change)
 
 -- updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
 -- updateNews h title newTitle newLogin newLabel newContent newImages newPublish = do
