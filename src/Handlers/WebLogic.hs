@@ -102,7 +102,6 @@ doLogic h req = do
          | otherwise -> do
             Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"  
             pure (response404 h) -- todo. replace 404 for another error
-            -- pure (response404WithImage h) -- todo. replace 404 for another error
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m Response 
 endPointUsers h req = do
@@ -238,12 +237,6 @@ endPointCategories h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))
 
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "show steps"
-      -- let q2 = q1 queryLimit 
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show q2 )
-      -- let queryLimit = queryString req
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
-      -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
       let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
       existingCategories (h {base = newBaseHandle}) req  
     _ -> do
@@ -361,6 +354,7 @@ endPointNews h req = do
   where 
     foldSets :: (Monad m) => Query -> Handle m -> [Handle m -> Query -> Handle m] ->  Handle m
     foldSets query = foldr (\set h' -> set h' query)
+    -- foldSets query = foldr (\set h' -> set h' query)
 
     setPanigate :: (Monad m) => Handle m -> Query -> Handle m
     setPanigate h' q = 
@@ -417,7 +411,8 @@ createNews _ h req = do
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
           pure $ response404 h -- "Not ok. 
-
+--
+---updateNews 3 case in row
 updateNews :: (Monad m) => Author -> Handle m -> Request -> m Response
 updateNews author_ h req = do 
   let logHandle = logger h 
