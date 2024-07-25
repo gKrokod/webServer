@@ -314,7 +314,7 @@ createUserBase h name login pwd admin publish = do
                 logMessage logHandle Debug "Create user..."
                 time <- getTime h
                 --- crypto
-                let pwd' = makeHashPassword h pwd time --for make QuasiPassowrd
+                let pwd' = makeHashPassword h pwd time --for make QuasiPassword
                 tryCreate <- putUser h name login pwd' time admin publish 
                 when (isLeft tryCreate) (logMessage logHandle Handlers.Logger.Error "Can't putUser")
                 pure $ either (Left . T.pack . displayException) Right tryCreate 

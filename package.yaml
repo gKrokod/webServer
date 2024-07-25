@@ -91,4 +91,6 @@ tests:
     - mtl
     - time
     - persistent-postgresql
+    - http-types
+    - wai
 
