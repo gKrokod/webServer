@@ -118,18 +118,10 @@ endPointUsers h req = do
            pure (response404 h) -- todo. replace 404 for another error
     "/users" -> do
       let queryLimit = queryString req
-      let (userOffset, userLimit) = queryToPanigate  queryLimit
+      let (userOffset, userLimit) = queryToPanigate queryLimit
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Query String:"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit )
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))
-
-      -- let (userOffset, userLimit) = offsetAndLimitFromQuery queryLimit (0, maxBound)
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "show result Panigate and another"
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ (no, nl))
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "show steps"
-      -- let q2 = q1 queryLimit 
-      -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show q2 )
 
       let newBaseHandle = baseHandle {Handlers.Base.userOffset = userOffset, Handlers.Base.userLimit = userLimit} 
       existingUsers (h {base = newBaseHandle}) req

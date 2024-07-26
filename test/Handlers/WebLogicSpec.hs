@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 module Handlers.WebLogicSpec (spec) where
 
@@ -6,6 +7,7 @@ import Scheme
 import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4)
 import Test.Hspec
 import Handlers.WebLogic
+import Base.LocalTime (localtimeTemplate)
 import qualified Handlers.Logger 
 import qualified Handlers.Base
 -- import qualified Logger 
@@ -13,9 +15,12 @@ import Control.Monad.State
 import Test.QuickCheck
 import Data.Maybe
 import Data.Either (isLeft)
-import Network.Wai (defaultRequest, Request, Response, rawPathInfo, queryString, requestHeaders)
-import Network.Wai (Request, Response,getRequestBodyChunk, responseBuilder)
+import Network.Wai (defaultRequest, Request, rawPathInfo, queryString, requestHeaders)
+import Network.Wai (getRequestBodyChunk, responseBuilder)
+import Network.Wai.Internal (Response(..))
 import Network.HTTP.Types (notFound404, status200)
+import Data.Proxy
+import qualified Data.Text.Encoding as E
 
 test404 :: Response
 test404 = responseBuilder notFound404 [] "Not ok. status 404\n" 
@@ -23,9 +28,27 @@ test404 = responseBuilder notFound404 [] "Not ok. status 404\n"
 test200 :: Response
 test200 = responseBuilder status200 [] "All ok. status 200\n" 
 
+instance Show Response where
+  show (ResponseBuilder s h b) = mconcat [show s,show h, show b]
+  show _ = undefined 
+
+instance Eq Response where
+  (==) (ResponseBuilder s h b) (ResponseBuilder s' h' b') = (s == s') && (h == h') && (show b == show b') 
+  (==) _ _ = undefined 
+
+
+-- data Response
+--     = ResponseFile H.Status H.ResponseHeaders FilePath (Maybe FilePart)
+--     | ResponseBuilder H.Status H.ResponseHeaders Builder
+--     | ResponseStream H.Status H.ResponseHeaders StreamingBody
+--     | ResponseRaw (IO B.ByteString -> (B.ByteString -> IO ()) -> IO ()) Response
+--   deriving Typeable
+
 spec :: Spec
 spec = do
-  describe "Create User" $ do
+  describe "EndPoint: /users/create" $ do
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/users/create"}
 
       let logHandle = Handlers.Logger.Handle
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
@@ -37,6 +60,7 @@ spec = do
       let baseHandle  = Handlers.Base.Handle
             {
                Handlers.Base.logger = logHandle,
+               Handlers.Base.getTime = pure (read $(localtimeTemplate)), 
                Handlers.Base.findUserByLogin = \login -> do
                  users <- get
                  pure 
@@ -50,23 +74,47 @@ spec = do
             {
                logger = logHandle,
                base = baseHandle,
-               getBody = pure "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Дагер\",\"name\":\"Петр\",\"password\":\"qwerty\"}",
-               mkGoodResponse = \bulder -> undefined
+               response404 = test404, 
+               response200 = test200 
                                                       }  :: Handle (State [User])
-      it "Good Request" $ do
-          let baseHandle' = baseHandle
-          -- let baseHandle' = baseHandle {Handlers.Base.validPassword = \login password -> pure $ Right True}
-          let webHandle' = webHandle {base = baseHandle'}
 
-          (evalState (createUser undefined webHandle' undefined) usersInBase)
+      it "admin create new user" $ do
+          let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
+          let baseHandle' = baseHandle
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = Client (Just Proxy) undefined undefined
+                                     , getBody = const . pure $ bodyReq}
+
+          (evalState (doLogic webHandle' req') usersInBase)
               `shouldBe` 
-                      test200
+                  (test200)
+
+      it "admin can't create new user with login already exist" $ do
+          let oldUser = E.encodeUtf8 . userLogin $ user1
+          let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
+          let baseHandle' = baseHandle
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = Client (Just Proxy) undefined undefined
+                                     , getBody = const . pure $ bodyReq}
+
+          (evalState (doLogic webHandle' req') usersInBase)
+              `shouldNotBe` 
+                  (test200)
+
+
 
   describe "part 2" $ do
 
       it "haha" $ do
         True `shouldBe`  False
 
+      --          getTime = pure (read $(localtimeTemplate)), 
+      --          putUser = \name login pass time admin publish -> do
+      --                       modify ((User name login undefined time admin publish):)
+      --                       pure $ Right Put
+      --                                                 }  :: Handle (State [User])
+      -- it "Sucess add user : user don't exist" $ do
+      --     let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right Nothing)}
 -- createUser :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response -- for Admin
 -- -- createUser :: (Monad m) => Handle m -> Proxy Admin -> Request -> m (Response) -- for Admin
 -- createUser _ h req = do
