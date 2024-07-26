@@ -46,6 +46,59 @@ instance Eq Response where
 
 spec :: Spec
 spec = do
+  describe "Autorization:" $ do
+    -- user1 admin noPublisher
+    -- user2 admin publisher
+    -- user3 noAdmin publisher
+    -- unknown user noAdmin noPublisher
+    --
+-- ("Authorization","Basic bG9naW4xOnFwYXNzMQ=="),
+-- requestHeaders = [("Host","127.0.0.1:4221"),("Authorization","Basic bG9naW4xOnFwYXNzMQ=="),("User-Agent","curl/7.68.0"),("Accept","*/*")]-- user1
+-- Authorization","Basic bG9naW4yOnFwYXNzMg==")-- user2
+-- "Authorization","Basic bG9naW4zOnFwYXNzMw==")-- user3
+--
+      let req = defaultRequest
+
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      let usersInBase = [user1, user2, user3] 
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.findUserByLogin = \login -> do
+                 users <- get
+                 pure 
+                   (Right 
+                     $ listToMaybe 
+                      $ mapMaybe (\user@(User _ l _ _ _ _) -> if l == login
+                                                            then Just user else Nothing) $ users),
+               Handlers.Base.validPassword = \login password -> pure $ Right True
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               response404 = test404 
+                                                      }  :: Handle (State [User])
+
+      it "Unknow user get no privilege" $ do
+          let req' = req {requestHeaders = []} 
+
+          client <$> (evalState (doAutorization webHandle' req') usersInBase)
+              `shouldBe` 
+                  Right (Client Nothing Nothing Nothing)
+
+      it "User1 with right password get his privilege" $ do
+          let req' = req {requestHeaders = [("Authorization","Basic bG9naW4xOnFwYXNzMQ==")]} 
+
+          client <$> (evalState (doAutorization webHandle' req') usersInBase)
+              `shouldBe` 
+                  Right (Client (Just Proxy) Nothing Nothing)
+
   describe "EndPoint: /users/create" $ do
       let req = defaultRequest
       let req' = req {rawPathInfo = "/users/create"}
