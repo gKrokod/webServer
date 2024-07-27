@@ -130,17 +130,17 @@ spec = do
               `shouldNotBe` 
                   Right (Client Nothing (Just Proxy)  (Just $ userLogin user3)) -- user3
 
+-- doAutorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
+--
   describe "EndPoint: /users/create" $ do
       let req = defaultRequest
       let req' = req {rawPathInfo = "/users/create"}
-
       let logHandle = Handlers.Logger.Handle
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
             }
 
       let usersInBase = [user1, user2, user3] 
-
       let baseHandle  = Handlers.Base.Handle
             {
                Handlers.Base.logger = logHandle,
@@ -165,26 +165,39 @@ spec = do
       it "admin create new user" $ do
           let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
           let webHandle' = webHandle {base = baseHandle'
-                                     , client = Client (Just Proxy) undefined undefined
+                                     , client = clientAdminUser1 
                                      , getBody = const . pure $ bodyReq}
 
           (evalState (doLogic webHandle' req') usersInBase)
               `shouldBe` 
                   (test200)
 
-      it "admin can't create new user with login already exist" $ do
-          let oldUser = E.encodeUtf8 . userLogin $ user1
-          let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
+      it "No admin can't create new user" $ do
+          let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           let baseHandle' = baseHandle
+          let clientAdminUser1 = Client Nothing (Just Proxy) (Just $ userLogin user3)
           let webHandle' = webHandle {base = baseHandle'
-                                     , client = Client (Just Proxy) undefined undefined
+                                     , client = clientAdminUser1 
                                      , getBody = const . pure $ bodyReq}
 
           (evalState (doLogic webHandle' req') usersInBase)
               `shouldNotBe` 
                   (test200)
 
+      it "admin can't create new user with login already exist" $ do
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let oldUser = E.encodeUtf8 . userLogin $ user1
+          let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
+          let baseHandle' = baseHandle
+          let webHandle' = webHandle {base = baseHandle'
+            , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq}
+
+          (evalState (doLogic webHandle' req') usersInBase)
+              `shouldNotBe` 
+                  (test200)
 
 
   describe "part 2" $ do
