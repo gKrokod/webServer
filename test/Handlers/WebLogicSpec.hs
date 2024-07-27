@@ -65,7 +65,6 @@ spec = do
             }
 
       let usersInBase = [user1, user2, user3] 
-
       let baseHandle  = Handlers.Base.Handle
             {
                Handlers.Base.logger = logHandle,
@@ -85,19 +84,51 @@ spec = do
                response404 = test404 
                                                       }  :: Handle (State [User])
 
-      it "Unknow user get no privilege" $ do
+      it "Unknow users do not received privileges" $ do
           let req' = req {requestHeaders = []} 
+          let webHandle' = webHandle 
 
           client <$> (evalState (doAutorization webHandle' req') usersInBase)
               `shouldBe` 
                   Right (Client Nothing Nothing Nothing)
 
-      it "User1 with right password get his privilege" $ do
-          let req' = req {requestHeaders = [("Authorization","Basic bG9naW4xOnFwYXNzMQ==")]} 
+      it "Users with the correct password receive their privileges correctly" $ do
+          let req1 = req {requestHeaders = [("Authorization","Basic bG9naW4xOnFwYXNzMQ==")]} -- user1
+          let req2 = req {requestHeaders = [("Authorization","Basic bG9naW4yOnFwYXNzMg==")]} -- user2
+          let req3 = req {requestHeaders = [("Authorization","Basic bG9naW4zOnFwYXNzMw==")]} -- user3
 
-          client <$> (evalState (doAutorization webHandle' req') usersInBase)
+          let webHandle' = webHandle 
+
+          client <$> (evalState (doAutorization webHandle' req1) usersInBase)
               `shouldBe` 
-                  Right (Client (Just Proxy) Nothing Nothing)
+                  Right (Client (Just Proxy) Nothing (Just $ userLogin user1)) -- user1
+
+          client <$> (evalState (doAutorization webHandle' req2) usersInBase)
+              `shouldBe` 
+                  Right (Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)) -- user2
+
+          client <$> (evalState (doAutorization webHandle' req3) usersInBase)
+              `shouldBe` 
+                  Right (Client Nothing (Just Proxy)  (Just $ userLogin user3)) -- user3
+
+      it "Users with the uncorrect password do not receive their privileges" $ do
+          let req1 = req {requestHeaders = [("Authorization","Basic bG9naW4xOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user1
+          let req2 = req {requestHeaders = [("Authorization","Basic bG9naW4yOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user2
+          let req3 = req {requestHeaders = [("Authorization","Basic bG9naW4zOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user3
+          let baseHandle' = baseHandle {Handlers.Base.validPassword = \login password -> pure $ Right False}
+          let webHandle' = webHandle {base = baseHandle'}
+               
+          client <$> (evalState (doAutorization webHandle' req1) usersInBase)
+              `shouldNotBe` 
+                  Right (Client (Just Proxy) Nothing (Just $ userLogin user1)) -- user1
+
+          client <$> (evalState (doAutorization webHandle' req2) usersInBase)
+              `shouldNotBe` 
+                  Right (Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)) -- user2
+
+          client <$> (evalState (doAutorization webHandle' req3) usersInBase)
+              `shouldNotBe` 
+                  Right (Client Nothing (Just Proxy)  (Just $ userLogin user3)) -- user3
 
   describe "EndPoint: /users/create" $ do
       let req = defaultRequest
