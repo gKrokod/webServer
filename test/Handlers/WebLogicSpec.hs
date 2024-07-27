@@ -7,6 +7,7 @@ import Scheme
 import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4)
 import Test.Hspec
 import Handlers.WebLogic
+import Web.WebType (userToWeb)
 import Base.LocalTime (localtimeTemplate)
 import qualified Handlers.Logger 
 import qualified Handlers.Base
@@ -15,18 +16,21 @@ import Control.Monad.State
 import Test.QuickCheck
 import Data.Maybe
 import Data.Either (isLeft)
-import Network.Wai (defaultRequest, Request, rawPathInfo, queryString, requestHeaders)
+import Network.Wai (defaultRequest, Request, rawPathInfo, queryString, requestHeaders, rawQueryString, queryString)
 import Network.Wai (getRequestBodyChunk, responseBuilder)
 import Network.Wai.Internal (Response(..))
 import Network.HTTP.Types (notFound404, status200)
 import Data.Proxy
 import qualified Data.Text.Encoding as E
 
+--
 test404 :: Response
 test404 = responseBuilder notFound404 [] "Not ok. status 404\n" 
 
 test200 :: Response
 test200 = responseBuilder status200 [] "All ok. status 200\n" 
+
+testBuilder = responseBuilder status200 []
 
 instance Show Response where
   show (ResponseBuilder s h b) = mconcat [show s,show h, show b]
@@ -131,7 +135,72 @@ spec = do
                   Right (Client Nothing (Just Proxy)  (Just $ userLogin user3)) -- user3
 
 -- doAutorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
+  describe "EndPoint: /users" $ do
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/users", queryString= [("panigate", Just "{\"offset\":0,\"limit\":7}")]}
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      let usersInBase = [user1, user2, user3] 
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.pullAllUsers = \offset limit -> get >>= pure . Right . take limit . drop offset
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               mkGoodResponse = testBuilder,
+               response404 = test404, 
+               response200 = test200 
+                                                      }  :: Handle (State [User])
+
+      it "All client may get list of users" $ do
 --
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
+          let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+          let clientAdminUser4 = Client Nothing Nothing Nothing
+
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 }
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser2 }
+          let webHandle3 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser3 }
+          let webHandle4 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser4 }
+
+          (evalState (doLogic webHandle1 req') usersInBase)
+              `shouldBe` 
+                  (testBuilder . userToWeb $ usersInBase)
+          (evalState (doLogic webHandle2 req') usersInBase)
+              `shouldBe` 
+                  (testBuilder . userToWeb $ usersInBase)
+          (evalState (doLogic webHandle3 req') usersInBase)
+              `shouldBe` 
+                  (testBuilder . userToWeb $ usersInBase)
+          (evalState (doLogic webHandle4 req') usersInBase)
+              `shouldBe` 
+                  (testBuilder . userToWeb $ usersInBase)
+
+      it "Client can panigate" $ do
+          
+          let req' = req {rawPathInfo = "/users", queryString= [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
+          let baseHandle' = baseHandle
+          let client' = Client Nothing Nothing Nothing 
+
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = client' }
+
+          (evalState (doLogic webHandle' req') usersInBase)
+              `shouldBe` 
+                  (testBuilder . userToWeb $ take 1 $ drop 1 usersInBase)
+
   describe "EndPoint: /users/create" $ do
       let req = defaultRequest
       let req' = req {rawPathInfo = "/users/create"}
@@ -162,7 +231,7 @@ spec = do
                response200 = test200 
                                                       }  :: Handle (State [User])
 
-      it "admin create new user" $ do
+      it "admin can create new user" $ do
           let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
@@ -199,6 +268,105 @@ spec = do
               `shouldNotBe` 
                   (test200)
 
+  describe "EndPoint: /categories/create" $ do
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/categories/create"}
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.getTime = pure (read $(localtimeTemplate)), 
+               Handlers.Base.findCategoryByLabel = \label  -> do
+                 categories <- map categoryLabel <$> get
+                 pure $ Right $ 
+                   if label `elem` categories then Just (Category label undefined)
+                                              else Nothing,
+               Handlers.Base.putCategory = \label parent -> pure $ Right Handlers.Base.Put
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               response404 = test404, 
+               response200 = test200 
+                                                      }  :: Handle (State [Category])
+
+-- curl -v -X POST 127.0.0.1:4221/categories/create -H "Content-Type: application/json" -d '{"label":"Angel","parent":"Abstract"}'
+-- curl -v -X POST 127.0.0.1:4221/categories/create -H "Content-Type: application/json" -d '{"label":"NewAbstract","parent":null}'
+--
+      it "admin can create new category" $ do
+          let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq}
+
+          (evalState (doLogic webHandle' req') categoriesInBase)
+              `shouldBe` 
+                  (test200)
+
+      it "No admin can't create new category" $ do
+          let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq}
+
+          (evalState (doLogic webHandle' req') categoriesInBase)
+              `shouldNotBe` 
+                  (test200)
+
+      it "admin can't create new category with label already exist" $ do
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let oldLabel = E.encodeUtf8 . categoryLabel $ cat1
+          let bodyReq = "{\"label\":\"" <> oldLabel <> "\",\"parent\":\"Abstract\"}"
+          let baseHandle' = baseHandle
+          let webHandle' = webHandle {base = baseHandle'
+            , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq}
+
+          (evalState (doLogic webHandle' req') categoriesInBase)
+              `shouldNotBe` 
+                  (test200)
+
+      it "admin can't create new category with parent don't exist" $ do
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let bodyReq = "{\"parent\":\"NOCATEGORYLABEL\",\"label\":\"NewLabel\"}"
+          let baseHandle' = baseHandle
+          let webHandle' = webHandle {base = baseHandle'
+            , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq}
+
+          (evalState (doLogic webHandle' req') categoriesInBase)
+              `shouldNotBe` 
+                  (test200)
+
+      it "admin can create new category without parent" $ do
+          let bodyReq1 = "{\"label\":\"Angel\",\"parent\":null}"
+          let bodyReq2 = "{\"label\":\"Angel\"}"
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq1}
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq2}
+
+          (evalState (doLogic webHandle1 req') categoriesInBase)
+              `shouldBe` 
+                  (test200)
+          (evalState (doLogic webHandle2 req') categoriesInBase)
+              `shouldBe` 
+                  (test200)
 
   describe "part 2" $ do
 
@@ -212,61 +380,3 @@ spec = do
       --                                                 }  :: Handle (State [User])
       -- it "Sucess add user : user don't exist" $ do
       --     let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right Nothing)}
--- createUser :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response -- for Admin
--- -- createUser :: (Monad m) => Handle m -> Proxy Admin -> Request -> m (Response) -- for Admin
--- createUser _ h req = do
---   let logHandle = logger h 
---   let baseHandle = base h 
---   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "create User WEB"
---   body <- webToUser <$> getBody h req -- :: (Either String UserFromWeb)
---   case body of
---     Left e -> do 
---       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User WEB"
---       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)  
---       pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
---     Right (UserFromWeb name_ login_ password_ admin_ publisher_) -> do
---       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"
---       --todo new password?
---       tryCreateUser <- Handlers.Base.createUserBase baseHandle name_ login_ password_ admin_ publisher_
---       case tryCreateUser of
---         Right _ -> do
---           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create User success WEB"
---           pure (response200 h)
---         Left e -> do
---           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e  
---           pure $ response404 h -- "Not ok. 
-
--- data Handle m = Handle
---   { logger :: Handlers.Logger.Handle m,
---    -- logMessage 
---     base :: Handlers.Base.Handle m,
---     client :: Client,
---     getBody :: Request -> m B.ByteString,
---     response404 :: Response,
---     response200 :: Response,
---     mkGoodResponse :: Builder -> Response,
---     mkResponseForImage :: Image -> Response,
---     response404WithImage :: Response
---   }
--- getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
--- getClient h req = do
---   let logHandle = logger h 
---   let baseHandle = base h 
---   let secureData = headersToLoginAndPassword . requestHeaders $ req
---   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
---   runExceptT $ do
---     case secureData of
---       Nothing -> pure $ Client Nothing Nothing Nothing
---       Just (login_, password_) -> do --
---         (isAdmin_, isPublisher_) <- ExceptT $ Handlers.Base.getPrivilege baseHandle login_ 
---         valid <- ExceptT $ Handlers.Base.getResultValid baseHandle login_ password_
---         case valid of 
---           NotValid -> do 
---             lift $ Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
---             pure $ Client Nothing Nothing Nothing
---           Valid -> do
---             lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
---             lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get privilege" 
---             pure $ Client (bool Nothing (Just Proxy) isAdmin_) 
---                           (bool Nothing (Just Proxy) isPublisher_) 
---  

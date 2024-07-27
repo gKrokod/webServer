@@ -3,6 +3,7 @@
 {-# Language DuplicateRecordFields #-}
 
 module Web.WebType where
+  
 import Scheme (User(..), Image(..), Category(..), ColumnType(..), SortOrder(..), Find(..), FilterItem(..))
 import Data.Time (UTCTime)
 import qualified Data.Text as T
