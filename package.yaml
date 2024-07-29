@@ -93,4 +93,5 @@ tests:
     - persistent-postgresql
     - http-types
     - wai
-
+    - base64
+    - binary

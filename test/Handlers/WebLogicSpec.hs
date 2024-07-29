@@ -4,10 +4,10 @@
 module Handlers.WebLogicSpec (spec) where
 
 import Scheme
-import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4)
+import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4, image1,image2,image3)
 import Test.Hspec
 import Handlers.WebLogic
-import Web.WebType (userToWeb)
+import Web.WebType (userToWeb, categoryToWeb)
 import Base.LocalTime (localtimeTemplate)
 import qualified Handlers.Logger 
 import qualified Handlers.Base
@@ -19,10 +19,13 @@ import Data.Either (isLeft)
 import Network.Wai (defaultRequest, Request, rawPathInfo, queryString, requestHeaders, rawQueryString, queryString)
 import Network.Wai (getRequestBodyChunk, responseBuilder)
 import Network.Wai.Internal (Response(..))
-import Network.HTTP.Types (notFound404, status200)
+import Network.HTTP.Types (notFound404, status200, hContentType)
 import Data.Proxy
 import qualified Data.Text.Encoding as E
 
+import Data.Binary.Builder as BU (Builder, fromByteString)
+import Data.ByteString.Base64 as B64
+--
 --
 test404 :: Response
 test404 = responseBuilder notFound404 [] "Not ok. status 404\n" 
@@ -31,6 +34,12 @@ test200 :: Response
 test200 = responseBuilder status200 [] "All ok. status 200\n" 
 
 testBuilder = responseBuilder status200 []
+
+testImage :: Image -> Response
+testImage (Image header base) = responseBuilder status200 [(hContentType, contentType)] content
+  where 
+    contentType = E.encodeUtf8 header
+    content = BU.fromByteString . B64.decodeBase64Lenient . E.encodeUtf8 $ base 
 
 instance Show Response where
   show (ResponseBuilder s h b) = mconcat [show s,show h, show b]
@@ -153,9 +162,7 @@ spec = do
             {
                logger = logHandle,
                base = baseHandle,
-               mkGoodResponse = testBuilder,
-               response404 = test404, 
-               response200 = test200 
+               mkGoodResponse = testBuilder
                                                       }  :: Handle (State [User])
 
       it "All client may get list of users" $ do
@@ -200,6 +207,125 @@ spec = do
           (evalState (doLogic webHandle' req') usersInBase)
               `shouldBe` 
                   (testBuilder . userToWeb $ take 1 $ drop 1 usersInBase)
+
+  describe "EndPoint: /categories" $ do --- todo
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/categories", queryString= [("panigate", Just "{\"offset\":0,\"limit\":10}")]}
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.pullAllCategories = \offset limit -> get >>= pure . Right . take limit . drop offset
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               mkGoodResponse = testBuilder
+                                                      }  :: Handle (State [Category])
+
+      it "All client may get list of category" $ do
+--
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
+          let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+          let clientAdminUser4 = Client Nothing Nothing Nothing
+
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 }
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser2 }
+          let webHandle3 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser3 }
+          let webHandle4 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser4 }
+
+          (evalState (doLogic webHandle1 req') categoriesInBase)
+              `shouldBe` 
+                  (testBuilder . categoryToWeb $ categoriesInBase)
+          (evalState (doLogic webHandle2 req') categoriesInBase)
+              `shouldBe` 
+                  (testBuilder . categoryToWeb $ categoriesInBase)
+          (evalState (doLogic webHandle3 req') categoriesInBase)
+              `shouldBe` 
+                  (testBuilder . categoryToWeb $ categoriesInBase)
+          (evalState (doLogic webHandle4 req') categoriesInBase)
+              `shouldBe` 
+                  (testBuilder . categoryToWeb $ categoriesInBase)
+
+      it "Client can panigate" $ do
+          
+          let req' = req {rawPathInfo = "/categories", queryString= [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
+          let baseHandle' = baseHandle
+          let client' = Client Nothing Nothing Nothing 
+
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = client' }
+
+          (evalState (doLogic webHandle' req') categoriesInBase)
+              `shouldBe` 
+                  (testBuilder . categoryToWeb $ take 1 $ drop 1 categoriesInBase)
+
+-- curl "127.0.0.1:4221/images?id=1" --output -
+
+  describe "EndPoint: /images" $ do --- todo
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/images", queryString= [("id", Just "1")]}
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      let imagesInBase = [image1,image2,image3]
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.pullImage = \num -> get >>= pure . Right . Just . flip (!!) (fromIntegral num)
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               mkResponseForImage = testImage
+                                                      }  :: Handle (State [Image])
+
+      it "All client may get image" $ do
+--
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
+          let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+          let clientAdminUser4 = Client Nothing Nothing Nothing
+
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 }
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser2 }
+          let webHandle3 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser3 }
+          let webHandle4 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser4 }
+
+          (evalState (doLogic webHandle1 req') imagesInBase)
+              `shouldBe` 
+                  (testImage $ (imagesInBase !! 1))
+          (evalState (doLogic webHandle2 req') imagesInBase)
+              `shouldBe` 
+                  (testImage $ (imagesInBase !! 1))
+          (evalState (doLogic webHandle3 req') imagesInBase)
+              `shouldBe` 
+                  (testImage $ (imagesInBase !! 1))
+          (evalState (doLogic webHandle4 req') imagesInBase)
+              `shouldBe` 
+                  (testImage $ (imagesInBase !! 1))
 
   describe "EndPoint: /users/create" $ do
       let req = defaultRequest
@@ -368,15 +494,77 @@ spec = do
               `shouldBe` 
                   (test200)
 
-  describe "part 2" $ do
+  describe "EndPoint: /categories/edit" $ do
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/categories/edit"}
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
 
-      it "haha" $ do
+      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.getTime = pure (read $(localtimeTemplate)), 
+               Handlers.Base.findCategoryByLabel = \label  -> do
+                 categories <- map categoryLabel <$> get
+                 pure $ Right $ 
+                   if label `elem` categories then Just (Category label undefined)
+                                              else Nothing,
+               Handlers.Base.putCategory = \label parent -> pure $ Right Handlers.Base.Put
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               response404 = test404, 
+               response200 = test200 
+                                                      }  :: Handle (State [Category])
+      it "admin can edit category" $ do
+          -- let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
+          -- let baseHandle' = baseHandle
+          -- let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          -- let webHandle' = webHandle {base = baseHandle'
+          --                            , client = clientAdminUser1 
+          --                            , getBody = const . pure $ bodyReq}
+          True `shouldBe` False
+
+      it "No admin can't edit category" $ do
+          -- let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
+          -- let baseHandle' = baseHandle
+          -- let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          -- let webHandle' = webHandle {base = baseHandle'
+          --                            , client = clientAdminUser1 
+          --                            , getBody = const . pure $ bodyReq}
+          True `shouldBe` False
+          -- (evalState (doLogic webHandle' req') categoriesInBase)
+          --     `shouldBe` 
+          --         (test200)
+  describe "EndPoint: /news" $ do
+      it "All client may get news" $ do
         True `shouldBe`  False
 
-      --          getTime = pure (read $(localtimeTemplate)), 
-      --          putUser = \name login pass time admin publish -> do
-      --                       modify ((User name login undefined time admin publish):)
-      --                       pure $ Right Put
-      --                                                 }  :: Handle (State [User])
-      -- it "Sucess add user : user don't exist" $ do
-      --     let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right Nothing)}
+  describe "EndPoint: /news/create" $ do
+      it "Publisher can create news" $ do
+          True `shouldBe` False
+
+      it "No publisher can't create news" $ do
+          True `shouldBe` False
+
+  describe "EndPoint: /news/edit" $ do
+      it "Author can edit news" $ do
+          True `shouldBe` False
+
+      it "No Author can't edit news" $ do
+          True `shouldBe` False
+
+  -- describe "EndPoint: Another" $ do
+  --     let endPoints = mconcat ["/images"
+  --                           ,"/news","/news/create","/news/edit"
+  --                           ,"/users","/users/create"
+  --                           ,"/categories","/categories/create","/categories/edit"
+  --                           ]
+  --     it "vse krome nashoyashix endpoint" $ do
+  --       True `shouldBe`  False
