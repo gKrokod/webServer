@@ -7,7 +7,8 @@ import Scheme
 import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4, image1,image2,image3)
 import Test.Hspec
 import Handlers.WebLogic
-import Web.WebType (userToWeb, categoryToWeb)
+import Scheme (ColumnType(..), SortOrder(..))
+import Web.WebType (userToWeb, categoryToWeb, newsToWeb)
 import Base.LocalTime (localtimeTemplate)
 import qualified Handlers.Logger 
 import qualified Handlers.Base
@@ -22,11 +23,17 @@ import Network.Wai.Internal (Response(..))
 import Network.HTTP.Types (notFound404, status200, hContentType)
 import Data.Proxy
 import qualified Data.Text.Encoding as E
+import qualified Data.Text as T
 
 import Data.Binary.Builder as BU (Builder, fromByteString)
 import Data.ByteString.Base64 as B64
 --
 --
+--
+
+typeToText :: (Show a) => a -> T.Text
+typeToText = T.pack . show
+
 test404 :: Response
 test404 = responseBuilder notFound404 [] "Not ok. status 404\n" 
 
@@ -513,7 +520,7 @@ spec = do
                  pure $ Right $ 
                    if label `elem` categories then Just (Category label undefined)
                                               else Nothing,
-               Handlers.Base.putCategory = \label parent -> pure $ Right Handlers.Base.Put
+               Handlers.Base.editCategory = \label newlabel parent -> pure $ Right Handlers.Base.Change
                                                       } 
       let webHandle  = Handle
             {
@@ -522,30 +529,186 @@ spec = do
                response404 = test404, 
                response200 = test200 
                                                       }  :: Handle (State [Category])
+
       it "admin can edit category" $ do
-          -- let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
-          -- let baseHandle' = baseHandle
-          -- let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
-          -- let webHandle' = webHandle {base = baseHandle'
-          --                            , client = clientAdminUser1 
-          --                            , getBody = const . pure $ bodyReq}
-          True `shouldBe` False
+          let bodyReq1 = "{\"label\":\"Man\",\"newLabel\":\"NewMan\",\"newparent\":\"Woman\"}"
+          let bodyReq2 = "{\"label\":\"Man\",\"newLabel\":\"NewMan\"}"
+          let bodyReq3 = "{\"label\":\"Man\",\"newparent\":\"Woman\"}"
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq1}
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq2}
+          let webHandle3 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq3}
+
+          (evalState (doLogic webHandle1 req') categoriesInBase)
+              `shouldBe` 
+                  (test200)
+          (evalState (doLogic webHandle2 req') categoriesInBase)
+              `shouldBe` 
+                  (test200)
+          (evalState (doLogic webHandle3 req') categoriesInBase)
+              `shouldBe` 
+                  (test200)
 
       it "No admin can't edit category" $ do
-          -- let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
-          -- let baseHandle' = baseHandle
-          -- let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
-          -- let webHandle' = webHandle {base = baseHandle'
-          --                            , client = clientAdminUser1 
-          --                            , getBody = const . pure $ bodyReq}
-          True `shouldBe` False
-          -- (evalState (doLogic webHandle' req') categoriesInBase)
-          --     `shouldBe` 
-          --         (test200)
-  describe "EndPoint: /news" $ do
-      it "All client may get news" $ do
-        True `shouldBe`  False
+          let bodyReq = "{\"label\":\"Man\",\"newLabel\":\"NewMan\",\"newparent\":\"Woman\"}"
+          let baseHandle' = baseHandle
+          let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = clientAdminUser3 
+                                     , getBody = const . pure $ bodyReq}
+          (evalState (doLogic webHandle' req') categoriesInBase)
+              `shouldNotBe` 
+                  (test200)
 
+  describe "EndPoint: /news" $ do
+
+    -- pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either SomeException [NewsOut]),
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/news", queryString= [("panigate", Just "{\"offset\":0,\"limit\":10}")]}
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      -- type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
+      let newsInBase = [("news1", read $(localtimeTemplate), "user1",["Abstract","Man"],"content1",["/images?id=1"], True)
+                       ,("news2", read $(localtimeTemplate), "user2",["Abstract","Woman"],"content2",[], True)
+                       ,("news3", read $(localtimeTemplate), "user3",["Abstract","Woman","Witch"],"content3",[], False)
+                       ,("news4", read $(localtimeTemplate), "user1",["Abstract","Woman","Queen"],"content4",["/images?id=2","/images?id=3"], True)]
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.sortColumnNews = DataNews,
+               Handlers.Base.sortOrderNews = Descending,
+               Handlers.Base.findSubString = Nothing,
+               Handlers.Base.filtersNews = [],
+               Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> get >>= pure . Right . take limit . drop offset 
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               mkGoodResponse = testBuilder
+                                                      }  :: Handle (State [Handlers.Base.NewsOut])
+
+      it "All client may get list of news" $ do
+--
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
+          let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+          let clientAdminUser4 = Client Nothing Nothing Nothing
+
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 }
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser2 }
+          let webHandle3 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser3 }
+          let webHandle4 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser4 }
+
+          (evalState (doLogic webHandle1 req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ newsInBase)
+          (evalState (doLogic webHandle2 req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ newsInBase)
+          (evalState (doLogic webHandle3 req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ newsInBase)
+          (evalState (doLogic webHandle4 req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ newsInBase)
+
+      it "Client can panigate" $ do
+          
+          let req' = req {rawPathInfo = "/news", queryString= [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
+          let baseHandle' = baseHandle
+          let client' = Client Nothing Nothing Nothing 
+
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = client' }
+
+          (evalState (doLogic webHandle' req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ take 1 $ drop 1 newsInBase)
+
+      it "Check default sets for news" $ do
+
+          let baseHandle' = baseHandle {
+               Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
+                     pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
+                                      map typeToText filters, False)]}
+
+          let client1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let client2 = Client Nothing Nothing Nothing
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = client1}
+                                     -- , getBody = const . pure $ bodyReq}
+
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = client2}
+-- data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+--
+-- data SortOrder = Ascending | Descending
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+--
+-- newtype Find = Find {subString :: T.Text}
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+--
+-- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
+--                   | FilterAuthorName  T.Text
+--                   | FilterCategoryLabel T.Text
+--                   | FilterTitleFind T.Text
+--                   | FilterContentFind T.Text
+--                   | FilterPublishOrAuthor (Maybe T.Text)
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+          
+          -- type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
+          -- let client' = Client Nothing Nothing Nothing 
+
+          (evalState (doLogic webHandle1 req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+          (evalState (doLogic webHandle2 req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText $ FilterPublishOrAuthor Nothing],False)])
+
+      it "Clinet can set sort of sort" $ do
+
+-- curl -v '127.0.0.1:4221/news?panigate=%7B"offset"%3A0%2C"limit"%3A17%7D&sort=%7B"columnType"%3A"CategoryName"%2C"sortOrder"%3A"Ascending"%7D'
+--
+          let req' = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"CategoryName\",\"sortOrder\":\"Ascending\"}")]}
+          let baseHandle' = baseHandle {
+               Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
+                     pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
+                                      map typeToText filters, False)]}
+
+          let client1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = client1}
+
+          (evalState (doLogic webHandle1 req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText CategoryName,testTime,typeToText Ascending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+-- todo another sort of sort
+--
   describe "EndPoint: /news/create" $ do
       it "Publisher can create news" $ do
           True `shouldBe` False
@@ -568,3 +731,6 @@ spec = do
   --                           ]
   --     it "vse krome nashoyashix endpoint" $ do
   --       True `shouldBe`  False
+
+testTime = read $(localtimeTemplate)
+

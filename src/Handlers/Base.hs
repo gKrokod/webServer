@@ -26,7 +26,7 @@ type Content = T.Text
 type URI_Image = T.Text
 type Offset = Int
 type Limit = Int
-type NewsOut = (Title, UTCTime, Login, [Label], Content, [URI_Image], Bool)
+type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
 data Handle m = Handle 
   {
 --API
