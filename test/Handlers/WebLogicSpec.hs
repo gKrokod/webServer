@@ -28,9 +28,16 @@ import qualified Data.Text as T
 import Data.Binary.Builder as BU (Builder, fromByteString)
 import Data.ByteString.Base64 as B64
 import Data.Time (UTCTime(..), Day(..), fromGregorian )
+import Control.Monad.Identity
 --
 --
 --
+
+testTime :: UTCTime
+testTime = read $(localtimeTemplate)
+
+testDay :: Day
+testDay = fromGregorian 2023 1 1
 
 typeToText :: (Show a) => a -> T.Text
 typeToText = T.pack . show
@@ -431,9 +438,6 @@ spec = do
                response200 = test200 
                                                       }  :: Handle (State [Category])
 
--- curl -v -X POST 127.0.0.1:4221/categories/create -H "Content-Type: application/json" -d '{"label":"Angel","parent":"Abstract"}'
--- curl -v -X POST 127.0.0.1:4221/categories/create -H "Content-Type: application/json" -d '{"label":"NewAbstract","parent":null}'
---
       it "admin can create new category" $ do
           let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
           let baseHandle' = baseHandle
@@ -570,7 +574,6 @@ spec = do
 
   describe "EndPoint: /news" $ do
 
-    -- pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either SomeException [NewsOut]),
       let req = defaultRequest
       let req' = req {rawPathInfo = "/news", queryString= [("panigate", Just "{\"offset\":0,\"limit\":10}")]}
       let logHandle = Handlers.Logger.Handle
@@ -658,27 +661,6 @@ spec = do
 
           let webHandle2 = webHandle {base = baseHandle'
                                      , client = client2}
--- data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
---
--- data SortOrder = Ascending | Descending
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
---
--- newtype Find = Find {subString :: T.Text}
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
---
--- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
---                   | FilterAuthorName  T.Text
---                   | FilterCategoryLabel T.Text
---                   | FilterTitleFind T.Text
---                   | FilterContentFind T.Text
---                   | FilterPublishOrAuthor (Maybe T.Text)
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
-          
           -- type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
           -- let client' = Client Nothing Nothing Nothing 
 
@@ -768,9 +750,6 @@ spec = do
           let req3 = req {rawPathInfo = "/news", queryString= [("filter", 
             Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataSince\"}]")]}
 
-   --                -- {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
-            -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataSince\"},
-            --        {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
           let baseHandle' = baseHandle {
                Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
                      pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
@@ -858,11 +837,57 @@ spec = do
                                      ,False)])
 
   describe "EndPoint: /news/create" $ do
+
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/news/create"}
+      
+      let bodyReq = "{\"title\":\"News from SH script\",\"isPublish\":false,\"login\":\"login1\",\"label\":\"Witch\",\"content\":\"New text about news from sh\",\"images\":[{\"imageHeader\":\"image\",\"imageBase64\":\"kartinka for news sh\"},{\"imageHeader\":\"image2 sh\",\"imageBase64\":\"kartinka for news sh\"}]}"
+
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.getTime = pure (read $(localtimeTemplate)), 
+               Handlers.Base.findNewsByTitle = const (pure $ Right Nothing),
+               Handlers.Base.findUserByLogin = const (pure $ Right $ Just user1),
+               Handlers.Base.findCategoryByLabel = const (pure $ Right $ Just cat1),
+               Handlers.Base.putNews = \title time login label content images isPublish -> pure $ Right Handlers.Base.Put
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               response404 = test404, 
+               response200 = test200 
+                                                      }  :: Handle Identity
+
       it "Publisher can create news" $ do
-          True `shouldBe` False
+
+          let baseHandle' = baseHandle
+          let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = clientAdminUser2 
+                                     , getBody = const . pure $ bodyReq}
+          (runIdentity (doLogic webHandle' req'))
+              `shouldBe` 
+                  (test200)
 
       it "No publisher can't create news" $ do
-          True `shouldBe` False
+
+          let baseHandle' = baseHandle
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     , getBody = const . pure $ bodyReq}
+
+          (runIdentity (doLogic webHandle' req'))
+              `shouldNotBe` 
+                  (test200)
+        
 
   describe "EndPoint: /news/edit" $ do
       it "Author can edit news" $ do
@@ -879,8 +904,3 @@ spec = do
   --                           ]
   --     it "vse krome nashoyashix endpoint" $ do
   --       True `shouldBe`  False
-testTime :: UTCTime
-testTime = read $(localtimeTemplate)
-
-testDay :: Day
-testDay = fromGregorian 2023 1 1
