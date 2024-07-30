@@ -27,6 +27,7 @@ import qualified Data.Text as T
 
 import Data.Binary.Builder as BU (Builder, fromByteString)
 import Data.ByteString.Base64 as B64
+import Data.Time (UTCTime(..), Day(..), fromGregorian )
 --
 --
 --
@@ -689,26 +690,162 @@ spec = do
               `shouldBe` 
                   (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText $ FilterPublishOrAuthor Nothing],False)])
 
-      it "Clinet can set sort of sort" $ do
+      it "Client can set sort of sort" $ do
 
--- curl -v '127.0.0.1:4221/news?panigate=%7B"offset"%3A0%2C"limit"%3A17%7D&sort=%7B"columnType"%3A"CategoryName"%2C"sortOrder"%3A"Ascending"%7D'
---
-          let req' = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"CategoryName\",\"sortOrder\":\"Ascending\"}")]}
+          let req1 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"DataNews\",\"sortOrder\":\"Ascending\"}")]}
+          let req2 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"DataNews\",\"sortOrder\":\"Descending\"}")]}
+          let req3 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"AuthorNews\",\"sortOrder\":\"Ascending\"}")]}
+          let req4 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"AuthorNews\",\"sortOrder\":\"Descending\"}")]}
+          let req5 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"CategoryName\",\"sortOrder\":\"Ascending\"}")]}
+          let req6 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"CategoryName\",\"sortOrder\":\"Descending\"}")]}
+          let req7 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"QuantityImages\",\"sortOrder\":\"Ascending\"}")]}
+          let req8 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"QuantityImages\",\"sortOrder\":\"Descending\"}")]}
+
           let baseHandle' = baseHandle {
                Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
                      pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
                                       map typeToText filters, False)]}
 
           let client1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
-          let webHandle1 = webHandle {base = baseHandle'
+          let webHandle' = webHandle {base = baseHandle'
                                      , client = client1}
 
-          (evalState (doLogic webHandle1 req') newsInBase)
+          (evalState (doLogic webHandle' req1) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Ascending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+          (evalState (doLogic webHandle' req2) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+          (evalState (doLogic webHandle' req3) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText AuthorNews,testTime,typeToText Ascending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+          (evalState (doLogic webHandle' req4) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText AuthorNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+          (evalState (doLogic webHandle' req5) newsInBase)
               `shouldBe` 
                   (testBuilder . newsToWeb $ [(typeToText CategoryName,testTime,typeToText Ascending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
 
--- todo another sort of sort
---
+          (evalState (doLogic webHandle' req6) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText CategoryName,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+          (evalState (doLogic webHandle' req7) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText QuantityImages,testTime,typeToText Ascending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+          (evalState (doLogic webHandle' req8) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText QuantityImages,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+      it "Client can search by string" $ do
+
+          let req' = req {rawPathInfo = "/news", queryString= [("find", Just "{\"subString\":\"googleIt\"}")]}
+
+          let baseHandle' = baseHandle {
+               Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
+                     pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
+                                      map typeToText filters, False)]}
+
+          let client1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = client1}
+
+          (evalState (doLogic webHandle' req') newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Just $ Find "googleIt"),[typeToText . FilterPublishOrAuthor . Just . userLogin $ user1],False)])
+
+      it "Client can filter news by date" $ do
+
+          let req1 = req {rawPathInfo = "/news", queryString= [("filter", 
+            Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataAt\"}]")]}
+          let req2 = req {rawPathInfo = "/news", queryString= [("filter", 
+            Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataUntil\"}]")]}
+          let req3 = req {rawPathInfo = "/news", queryString= [("filter", 
+            Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataSince\"}]")]}
+
+   --                -- {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
+            -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataSince\"},
+            --        {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
+          let baseHandle' = baseHandle {
+               Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
+                     pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
+                                      map typeToText filters, False)]}
+
+          let client1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = client1}
+
+          (evalState (doLogic webHandle' req1) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),
+                  (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1) :
+                  [typeToText . FilterDataAt $ testDay]
+                                     ,False)])
+
+          (evalState (doLogic webHandle' req2) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),
+                  (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1) :
+                  [typeToText . FilterDataUntil $ testDay]
+                                     ,False)])
+
+          (evalState (doLogic webHandle' req3) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),
+                  (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1) :
+                  [typeToText . FilterDataSince $ testDay]
+                                     ,False)])
+-- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
+--                   | FilterAuthorName  T.Text
+--                   | FilterCategoryLabel T.Text
+--                   | FilterTitleFind T.Text
+--                   | FilterContentFind T.Text
+--                   | FilterPublishOrAuthor (Maybe T.Text)
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
+          
+      it "Client can filter news by data, by author name, by category label, by string in title, by string in content" $ do
+--todo
+          -- let req1 = req {rawPathInfo = "/news", queryString= [("filter", 
+              -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataAt\"},
+              --         {\"contents\":\"Vasya\",\"tag\":\"FilterAythorName\"},
+              --        {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
+
+              -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataUntil\"}]")]}
+                   -- ,{\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
+            -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataSince\"},
+            --        {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
+          let baseHandle' = baseHandle {
+               Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
+                     pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
+                                      map typeToText filters, False)]}
+
+          let client1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = client1}
+
+          (evalState (doLogic webHandle' req1) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),
+                  (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1) :
+                  (typeToText . FilterDataAt $ testDay) :
+                  (typeToText . FilterAuthorName "Vasya") :
+                  []
+                                     ,False)])
+
+-- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
+--                   | FilterAuthorName  T.Text
+--                   | FilterCategoryLabel T.Text
+--                   | FilterTitleFind T.Text
+--                   | FilterContentFind T.Text
+--                   | FilterPublishOrAuthor (Maybe T.Text)
+--   deriving stock (Eq, Show, Generic)
+--   deriving anyclass (ToJSON, FromJSON)
   describe "EndPoint: /news/create" $ do
       it "Publisher can create news" $ do
           True `shouldBe` False
@@ -733,4 +870,4 @@ spec = do
   --       True `shouldBe`  False
 
 testTime = read $(localtimeTemplate)
-
+testDay = fromGregorian 2023 1 1
