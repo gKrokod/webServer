@@ -800,26 +800,14 @@ spec = do
                   (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1) :
                   [typeToText . FilterDataSince $ testDay]
                                      ,False)])
--- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
---                   | FilterAuthorName  T.Text
---                   | FilterCategoryLabel T.Text
---                   | FilterTitleFind T.Text
---                   | FilterContentFind T.Text
---                   | FilterPublishOrAuthor (Maybe T.Text)
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
           
       it "Client can filter news by data, by author name, by category label, by string in title, by string in content" $ do
 --todo
-          -- let req1 = req {rawPathInfo = "/news", queryString= [("filter", 
-              -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataAt\"},
-              --         {\"contents\":\"Vasya\",\"tag\":\"FilterAythorName\"},
-              --        {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
-
-              -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataUntil\"}]")]}
-                   -- ,{\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
-            -- Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataSince\"},
-            --        {\"contents\":\"user\",\"tag\":\"FilterTitleFind\"}]")]}
+          let req1 = req {rawPathInfo = "/news", 
+                          queryString = [("filter",
+     Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataAt\"},{\"contents\":\"Vasya\",\"tag\":\"FilterAuthorName\"},{\"contents\":\"Man\",\"tag\":\"FilterCategoryLabel\"},{\"contents\":\"a\",\"tag\":\"FilterTitleFind\"},{\"contents\":\"b\",\"tag\":\"FilterContentFind\"}]"
+                                         )]}
+                                                 
           let baseHandle' = baseHandle {
                Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
                      pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
@@ -834,18 +822,41 @@ spec = do
                   (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),
                   (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1) :
                   (typeToText . FilterDataAt $ testDay) :
-                  (typeToText . FilterAuthorName "Vasya") :
+                  (typeToText . FilterAuthorName $ "Vasya") :
+                  (typeToText . FilterCategoryLabel $ "Man") :
+                  (typeToText . FilterTitleFind $ "a") :
+                  (typeToText . FilterContentFind $ "b") :
                   []
                                      ,False)])
 
--- data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
---                   | FilterAuthorName  T.Text
---                   | FilterCategoryLabel T.Text
---                   | FilterTitleFind T.Text
---                   | FilterContentFind T.Text
---                   | FilterPublishOrAuthor (Maybe T.Text)
---   deriving stock (Eq, Show, Generic)
---   deriving anyclass (ToJSON, FromJSON)
+      it "Client can filter, sort and search in one request" $ do
+--todo
+          let req1 = req {rawPathInfo = "/news", 
+                          queryString = [("sort", Just "{\"columnType\":\"CategoryName\",\"sortOrder\":\"Ascending\"}"),("find", Just "{\"subString\":\"googleIt\"}"),("filter",
+     Just "[{\"contents\":\"2023-01-01\",\"tag\":\"FilterDataAt\"},{\"contents\":\"Vasya\",\"tag\":\"FilterAuthorName\"},{\"contents\":\"Man\",\"tag\":\"FilterCategoryLabel\"},{\"contents\":\"a\",\"tag\":\"FilterTitleFind\"},{\"contents\":\"b\",\"tag\":\"FilterContentFind\"}]"
+                                         )]}
+
+          let baseHandle' = baseHandle {
+               Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
+                     pure . Right $ [(typeToText columnType, testTime, typeToText sortOrder, [], typeToText find,
+                                      map typeToText filters, False)]}
+
+          let client1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let webHandle' = webHandle {base = baseHandle'
+                                     , client = client1}
+
+          (evalState (doLogic webHandle' req1) newsInBase)
+              `shouldBe` 
+                  (testBuilder . newsToWeb $ [(typeToText CategoryName,testTime,typeToText Ascending,[],typeToText (Just $ Find "googleIt"), 
+                  (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1) :
+                  (typeToText . FilterDataAt $ testDay) :
+                  (typeToText . FilterAuthorName $ "Vasya") :
+                  (typeToText . FilterCategoryLabel $ "Man") :
+                  (typeToText . FilterTitleFind $ "a") :
+                  (typeToText . FilterContentFind $ "b") :
+                  []
+                                     ,False)])
+
   describe "EndPoint: /news/create" $ do
       it "Publisher can create news" $ do
           True `shouldBe` False
@@ -868,6 +879,8 @@ spec = do
   --                           ]
   --     it "vse krome nashoyashix endpoint" $ do
   --       True `shouldBe`  False
-
+testTime :: UTCTime
 testTime = read $(localtimeTemplate)
+
+testDay :: Day
 testDay = fromGregorian 2023 1 1
