@@ -43,18 +43,18 @@ cat8 = S.Category "Good" (Just $ toSqlKey 4)
 cat9 = S.Category "Witch" (Just $ toSqlKey 3)
 
 news1, news2, news3, news4 :: S.News
-news1 = S.News { S.newsTitle = "S.News 1 about Witch from user 1",
+news1 = S.News { S.newsTitle = "News 1 about Witch from user 1",
               S.newsCreated = read $(localtimeTemplate),
               S.newsUserId = toSqlKey 1,
               S.newsCategoryId = toSqlKey 9,
               S.newsContent = "Witch havean apple with photo 1 and 2",
               S.newsIsPublish = False
              }
-news2 = S.News "S.News 2 about Warriorgfrom user 2" (read $(localtimeTemplate)) 
+news2 = S.News "News 2 about Warriorgfrom user 2" (read $(localtimeTemplate)) 
              (toSqlKey 2) (toSqlKey 4) "Warrior like Woman. No photo" False
-news3 = S.News "S.News 3 about Good from user 3" (read $(localtimeTemplate)) 
+news3 = S.News "News 3 about Good from user 3" (read $(localtimeTemplate)) 
              (toSqlKey 3) (toSqlKey 8) "Good is good. Photo 1 and 3" True
-news4 = S.News "S.News 4 about Evil from user 1" (read $(localtimeTemplate))
+news4 = S.News "News 4 about Evil from user 1" (read $(localtimeTemplate))
              (toSqlKey 1) (toSqlKey 7) "Evil is evil. Photo 1" False
 
 imageBank1, imageBank2, imageBank3, imageBank4, imageBank5 :: S.ImageBank

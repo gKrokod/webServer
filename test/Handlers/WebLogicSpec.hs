@@ -64,7 +64,6 @@ instance Eq Response where
   (==) (ResponseBuilder s h b) (ResponseBuilder s' h' b') = (s == s') && (h == h') && (show b == show b') 
   (==) _ _ = undefined 
 
-
 -- data Response
 --     = ResponseFile H.Status H.ResponseHeaders FilePath (Maybe FilePart)
 --     | ResponseBuilder H.Status H.ResponseHeaders Builder
@@ -80,11 +79,6 @@ spec = do
     -- user3 noAdmin publisher
     -- unknown user noAdmin noPublisher
     --
--- ("Authorization","Basic bG9naW4xOnFwYXNzMQ=="),
--- requestHeaders = [("Host","127.0.0.1:4221"),("Authorization","Basic bG9naW4xOnFwYXNzMQ=="),("User-Agent","curl/7.68.0"),("Accept","*/*")]-- user1
--- Authorization","Basic bG9naW4yOnFwYXNzMg==")-- user2
--- "Authorization","Basic bG9naW4zOnFwYXNzMw==")-- user3
---
       let req = defaultRequest
 
       let logHandle = Handlers.Logger.Handle
@@ -158,10 +152,10 @@ spec = do
               `shouldNotBe` 
                   Right (Client Nothing (Just Proxy)  (Just $ userLogin user3)) -- user3
 
--- doAutorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
   describe "EndPoint: /users" $ do
       let req = defaultRequest
       let req' = req {rawPathInfo = "/users", queryString= [("panigate", Just "{\"offset\":0,\"limit\":7}")]}
+
       let logHandle = Handlers.Logger.Handle
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
@@ -426,7 +420,7 @@ spec = do
                Handlers.Base.findCategoryByLabel = \label  -> do
                  categories <- map categoryLabel <$> get
                  pure $ Right $ 
-                   if label `elem` categories then Just (Category label undefined)
+                   if label `elem` categories then Just undefined
                                               else Nothing,
                Handlers.Base.putCategory = \label parent -> pure $ Right Handlers.Base.Put
                                                       } 
@@ -523,7 +517,7 @@ spec = do
                Handlers.Base.findCategoryByLabel = \label  -> do
                  categories <- map categoryLabel <$> get
                  pure $ Right $ 
-                   if label `elem` categories then Just (Category label undefined)
+                   if label `elem` categories then Just undefined
                                               else Nothing,
                Handlers.Base.editCategory = \label newlabel parent -> pure $ Right Handlers.Base.Change
                                                       } 
@@ -862,7 +856,8 @@ spec = do
                logger = logHandle,
                base = baseHandle,
                response404 = test404, 
-               response200 = test200 
+               response200 = test200, 
+               getBody = const . pure $ bodyReq
                                                       }  :: Handle Identity
 
       it "Publisher can create news" $ do
@@ -871,7 +866,7 @@ spec = do
           let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
           let webHandle' = webHandle {base = baseHandle'
                                      , client = clientAdminUser2 
-                                     , getBody = const . pure $ bodyReq}
+                          }
           (runIdentity (doLogic webHandle' req'))
               `shouldBe` 
                   (test200)
@@ -882,7 +877,7 @@ spec = do
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
           let webHandle' = webHandle {base = baseHandle'
                                      , client = clientAdminUser1 
-                                     , getBody = const . pure $ bodyReq}
+                          }
 
           (runIdentity (doLogic webHandle' req'))
               `shouldNotBe` 
@@ -890,17 +885,95 @@ spec = do
         
 
   describe "EndPoint: /news/edit" $ do
+      let req = defaultRequest
+      let req' = req {rawPathInfo = "/news/edit"}
+      
+      let bodyReq = "{\"title\":\"News 1 about Witch from user 1\",\"newTitle\":\"Edit News1\",\"newIsPublish\":true,\"newLogin\":\"login3\",\"newLabel\":\"Man\",\"newContent\":\"New Content\",\"images\":[{\"imageHeader\":\"edit image\",\"imageBase64\":\"edit kartinka for news sh\"}]}"
+
+      let logHandle = Handlers.Logger.Handle
+            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+              Handlers.Logger.writeLog = \_ -> pure ()
+            }
+
+      let newsInBase = [news1,news2,news3,news4] 
+
+      let baseHandle  = Handlers.Base.Handle
+            {
+               Handlers.Base.logger = logHandle,
+               Handlers.Base.findNewsByTitle = \title -> do
+                 titles <- map newsTitle <$> get
+                 pure $ Right $ 
+                   if title `elem` titles then Just undefined 
+                                          else Nothing,
+               Handlers.Base.findUserByLogin = const (pure $ Right $ Just user1),
+               Handlers.Base.findCategoryByLabel = const (pure $ Right $ Just cat1),
+               Handlers.Base.editNews = \title time mbtitle mblogin mblabel mbcontent image mbp -> pure $ Right Handlers.Base.Change
+                                                      } 
+      let webHandle  = Handle
+            {
+               logger = logHandle,
+               base = baseHandle,
+               response200 = test200, 
+               response404 = test404, 
+               getBody = const . pure $ bodyReq
+                                                      }  :: Handle (State [News])
+
+
       it "Author can edit news" $ do
-          True `shouldBe` False
+          let baseHandle' = baseHandle {Handlers.Base.validCopyRight = \login title -> pure $ Right True}
+
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
+          let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     }
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser2 
+                                     }
+          let webHandle3 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser3 }
+                                      
+
+          (evalState (doLogic webHandle1 req') newsInBase)
+              `shouldBe` 
+                  (test200)
+          (evalState (doLogic webHandle2 req') newsInBase)
+              `shouldBe` 
+                  (test200)
+          (evalState (doLogic webHandle3 req') newsInBase)
+              `shouldBe` 
+                  (test200)
 
       it "No Author can't edit news" $ do
-          True `shouldBe` False
+          let baseHandle' = baseHandle {Handlers.Base.validCopyRight = \login title -> pure $ Right False}
 
-  -- describe "EndPoint: Another" $ do
-  --     let endPoints = mconcat ["/images"
-  --                           ,"/news","/news/create","/news/edit"
-  --                           ,"/users","/users/create"
-  --                           ,"/categories","/categories/create","/categories/edit"
-  --                           ]
-  --     it "vse krome nashoyashix endpoint" $ do
-  --       True `shouldBe`  False
+          let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
+          let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
+          let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
+          let clientAdminUser4 = Client Nothing Nothing Nothing 
+
+          let webHandle1 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser1 
+                                     }
+          let webHandle2 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser2 
+                                     }
+          let webHandle3 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser3 }
+          let webHandle4 = webHandle {base = baseHandle'
+                                     , client = clientAdminUser4 }
+
+          (evalState (doLogic webHandle1 req') newsInBase)
+              `shouldNotBe` 
+                  (test200)
+          (evalState (doLogic webHandle2 req') newsInBase)
+              `shouldNotBe` 
+                  (test200)
+          (evalState (doLogic webHandle3 req') newsInBase)
+              `shouldNotBe` 
+                  (test200)
+          (evalState (doLogic webHandle4 req') newsInBase)
+              `shouldNotBe` 
+                  (test200)
