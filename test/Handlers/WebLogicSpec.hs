@@ -28,45 +28,6 @@ import Data.Time (UTCTime(..), Day(..), fromGregorian )
 import Control.Monad.Identity (runIdentity, Identity)
 --
 
-testTime :: UTCTime
-testTime = read $(localtimeTemplate)
-
-testDay :: Day
-testDay = fromGregorian 2023 1 1
-
-typeToText :: (Show a) => a -> T.Text
-typeToText = T.pack . show
-
-test404 :: Response
-test404 = responseBuilder notFound404 [] "Not ok. status 404\n" 
-
-test200 :: Response
-test200 = responseBuilder status200 [] "All ok. status 200\n" 
-
-testBuilder :: Builder -> Response
-testBuilder = responseBuilder status200 []
-
-testImage :: Image -> Response
-testImage (Image header base) = responseBuilder status200 [(hContentType, contentType)] content
-  where 
-    contentType = E.encodeUtf8 header
-    content = BU.fromByteString . B64.decodeBase64Lenient . E.encodeUtf8 $ base 
-
-instance Show Response where
-  show (ResponseBuilder s h b) = mconcat [show s,show h, show b]
-  show _ = undefined 
-
-instance Eq Response where
-  (==) (ResponseBuilder s h b) (ResponseBuilder s' h' b') = (s == s') && (h == h') && (show b == show b') 
-  (==) _ _ = undefined 
-
--- data Response
---     = ResponseFile H.Status H.ResponseHeaders FilePath (Maybe FilePart)
---     | ResponseBuilder H.Status H.ResponseHeaders Builder
---     | ResponseStream H.Status H.ResponseHeaders StreamingBody
---     | ResponseRaw (IO B.ByteString -> (B.ByteString -> IO ()) -> IO ()) Response
---   deriving Typeable
-
 spec :: Spec
 spec = do
   describe "Autorization:" $ do
@@ -102,7 +63,7 @@ spec = do
                response404 = test404 
                                                       }  :: Handle (State [User])
 
-      it "Unknow users do not received privileges" $ do
+      it "Unknown user does not received privileges" $ do
           let req' = req {requestHeaders = []} 
           let webHandle' = webHandle 
 
@@ -110,7 +71,7 @@ spec = do
               `shouldBe` 
                   Right (Client Nothing Nothing Nothing)
 
-      it "Users with the correct password receive their privileges correctly" $ do
+      it "A user with a valid password receives their privileges" $ do
           let req1 = req {requestHeaders = [("Authorization","Basic bG9naW4xOnFwYXNzMQ==")]} -- user1
           let req2 = req {requestHeaders = [("Authorization","Basic bG9naW4yOnFwYXNzMg==")]} -- user2
           let req3 = req {requestHeaders = [("Authorization","Basic bG9naW4zOnFwYXNzMw==")]} -- user3
@@ -129,7 +90,7 @@ spec = do
               `shouldBe` 
                   Right (Client Nothing (Just Proxy)  (Just $ userLogin user3)) -- user3
 
-      it "Users with the uncorrect password do not receive their privileges" $ do
+      it "A user with an invalid password does not receive his privileges" $ do
           let req1 = req {requestHeaders = [("Authorization","Basic bG9naW4xOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user1
           let req2 = req {requestHeaders = [("Authorization","Basic bG9naW4yOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user2
           let req3 = req {requestHeaders = [("Authorization","Basic bG9naW4zOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user3
@@ -170,7 +131,7 @@ spec = do
                mkGoodResponse = testBuilder
                                                       }  :: Handle (State [User])
 
-      it "All client may get list of users" $ do
+      it "All clients can get a list of users" $ do
 --
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
@@ -235,8 +196,7 @@ spec = do
                mkGoodResponse = testBuilder
                                                       }  :: Handle (State [Category])
 
-      it "All client may get list of category" $ do
---
+      it "All clients can get a list of category" $ do
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
           let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
@@ -302,8 +262,7 @@ spec = do
                mkResponseForImage = testImage
                                                       }  :: Handle (State [Image])
 
-      it "All client may get image" $ do
---
+      it "All clients can get a image" $ do
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
           let clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just $ userLogin user2)
@@ -362,7 +321,7 @@ spec = do
                response200 = test200 
                                                       }  :: Handle (State [User])
 
-      it "admin can create new user" $ do
+      it "Admin can create new user" $ do
           let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
@@ -374,7 +333,7 @@ spec = do
               `shouldBe` 
                   (test200)
 
-      it "No admin can't create new user" $ do
+      it "Non-admin can't create a new user" $ do
           let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client Nothing (Just Proxy) (Just $ userLogin user3)
@@ -386,7 +345,7 @@ spec = do
               `shouldNotBe` 
                   (test200)
 
-      it "admin can't create new user with login already exist" $ do
+      it "Admin can't create a new user with login that already exists in the databse" $ do
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
           let oldUser = E.encodeUtf8 . userLogin $ user1
           let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
@@ -428,7 +387,7 @@ spec = do
                response200 = test200 
                                                       }  :: Handle (State [Category])
 
-      it "admin can create new category" $ do
+      it "Admin can create a new category" $ do
           let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
@@ -440,8 +399,8 @@ spec = do
               `shouldBe` 
                   (test200)
 
-      it "No admin can't create new category" $ do
-          let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
+      it "Non-admin can't create a new category" $ do 
+          let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}" 
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client Nothing (Just Proxy) (Just $ userLogin user3)
           let webHandle' = webHandle {base = baseHandle'
@@ -452,7 +411,7 @@ spec = do
               `shouldNotBe` 
                   (test200)
 
-      it "admin can't create new category with label already exist" $ do
+      it "Admin can't create a new category with label that already exists in the database" $ do
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
           let oldLabel = E.encodeUtf8 . categoryLabel $ cat1
           let bodyReq = "{\"label\":\"" <> oldLabel <> "\",\"parent\":\"Abstract\"}"
@@ -465,7 +424,7 @@ spec = do
               `shouldNotBe` 
                   (test200)
 
-      it "admin can't create new category with parent don't exist" $ do
+      it "Admin can't create a new category with parent that does not exis in the database" $ do
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
           let bodyReq = "{\"parent\":\"NOCATEGORYLABEL\",\"label\":\"NewLabel\"}"
           let baseHandle' = baseHandle
@@ -477,7 +436,7 @@ spec = do
               `shouldNotBe` 
                   (test200)
 
-      it "admin can create new category without parent" $ do
+      it "Admin can create a new category without \"parent\" category" $ do
           let bodyReq1 = "{\"label\":\"Angel\",\"parent\":null}"
           let bodyReq2 = "{\"label\":\"Angel\"}"
           let baseHandle' = baseHandle
@@ -525,7 +484,7 @@ spec = do
                response200 = test200 
                                                       }  :: Handle (State [Category])
 
-      it "admin can edit category" $ do
+      it "Admin can edit a category" $ do
           let bodyReq1 = "{\"label\":\"Man\",\"newLabel\":\"NewMan\",\"newparent\":\"Woman\"}"
           let bodyReq2 = "{\"label\":\"Man\",\"newLabel\":\"NewMan\"}"
           let bodyReq3 = "{\"label\":\"Man\",\"newparent\":\"Woman\"}"
@@ -551,7 +510,7 @@ spec = do
               `shouldBe` 
                   (test200)
 
-      it "No admin can't edit category" $ do
+      it "Non-admin can't edit a category" $ do
           let bodyReq = "{\"label\":\"Man\",\"newLabel\":\"NewMan\",\"newparent\":\"Woman\"}"
           let baseHandle' = baseHandle
           let clientAdminUser3 = Client Nothing (Just Proxy) (Just $ userLogin user3)
@@ -593,7 +552,7 @@ spec = do
                mkGoodResponse = testBuilder
                                                       }  :: Handle (State [Handlers.Base.NewsOut])
 
-      it "All client may get list of news" $ do
+      it "All clients can get list of news" $ do
 --
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
@@ -636,7 +595,7 @@ spec = do
               `shouldBe` 
                   (testBuilder . newsToWeb $ take 1 $ drop 1 newsInBase)
 
-      it "Check default sets for news" $ do
+      it "Check default news settings" $ do
 
           let baseHandle' = baseHandle {
                Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters -> 
@@ -662,7 +621,7 @@ spec = do
               `shouldBe` 
                   (testBuilder . newsToWeb $ [(typeToText DataNews,testTime,typeToText Descending,[], typeToText (Nothing :: Maybe Find),[typeToText $ FilterPublishOrAuthor Nothing],False)])
 
-      it "Client can set sort of sort" $ do
+      it "Client can choouse the type of sorting" $ do
 
           let req1 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"DataNews\",\"sortOrder\":\"Ascending\"}")]}
           let req2 = req {rawPathInfo = "/news", queryString= [("sort", Just "{\"columnType\":\"DataNews\",\"sortOrder\":\"Descending\"}")]}
@@ -867,7 +826,7 @@ spec = do
               `shouldBe` 
                   (test200)
 
-      it "No publisher can't create news" $ do
+      it "Non-publisher can't create news" $ do
 
           let baseHandle' = baseHandle
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
@@ -942,7 +901,7 @@ spec = do
               `shouldBe` 
                   (test200)
 
-      it "No Author can't edit news" $ do
+      it "Non-author can't edit news" $ do
           let baseHandle' = baseHandle {Handlers.Base.validCopyRight = \login title -> pure $ Right False}
 
           let clientAdminUser1 = Client (Just Proxy) Nothing (Just $ userLogin user1)
@@ -973,3 +932,42 @@ spec = do
           (evalState (doLogic webHandle4 req') newsInBase)
               `shouldNotBe` 
                   (test200)
+
+testTime :: UTCTime
+testTime = read $(localtimeTemplate)
+
+testDay :: Day
+testDay = fromGregorian 2023 1 1
+
+typeToText :: (Show a) => a -> T.Text
+typeToText = T.pack . show
+
+test404 :: Response
+test404 = responseBuilder notFound404 [] "Not ok. status 404\n" 
+
+test200 :: Response
+test200 = responseBuilder status200 [] "All ok. status 200\n" 
+
+testBuilder :: Builder -> Response
+testBuilder = responseBuilder status200 []
+
+testImage :: Image -> Response
+testImage (Image header base) = responseBuilder status200 [(hContentType, contentType)] content
+  where 
+    contentType = E.encodeUtf8 header
+    content = BU.fromByteString . B64.decodeBase64Lenient . E.encodeUtf8 $ base 
+
+instance Show Response where
+  show (ResponseBuilder s h b) = mconcat [show s,show h, show b]
+  show _ = undefined 
+
+instance Eq Response where
+  (==) (ResponseBuilder s h b) (ResponseBuilder s' h' b') = (s == s') && (h == h') && (show b == show b') 
+  (==) _ _ = undefined 
+
+-- data Response
+--     = ResponseFile H.Status H.ResponseHeaders FilePath (Maybe FilePart)
+--     | ResponseBuilder H.Status H.ResponseHeaders Builder
+--     | ResponseStream H.Status H.ResponseHeaders StreamingBody
+--     | ResponseRaw (IO B.ByteString -> (B.ByteString -> IO ()) -> IO ()) Response
+--   deriving Typeable

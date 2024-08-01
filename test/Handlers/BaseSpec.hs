@@ -53,18 +53,18 @@ spec = do
                             modify ((User name login undefined time admin publish):)
                             pure $ Right Put
                                                       }  :: Handle (State [User])
-      it "Sucess add user : user don't exist" $ do
+      it "Sucess: user does not exist in the database" $ do
           let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right Nothing)}
           length (execState (createUserBase baseHandle' "Name" "Login" "Password" False False) usersInBase)
            `shouldBe` 
               (succ $ length usersInBase)
-      it "not add user : user already exist" $ do
+      it "Failure: user exists in the database" $ do
           let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right $ Just user1)}
           length (execState (createUserBase baseHandle' "Name" "Login" "Password" False False) usersInBase)
            `shouldNotBe` 
               (succ $ length usersInBase)
 
-      it "not add user : fail data base" $ do
+      it "Failure: error when working with database" $ do
           let baseHandle' = baseHandle {findUserByLogin = const (pure $ Left undefined)}
           length (execState (createUserBase baseHandle' "Name" "Login" "Password" False False) usersInBase)
            `shouldNotBe` 
@@ -91,31 +91,31 @@ spec = do
                             pure $ Right Put
                                                       }  :: Handle (State [Category])
 
-      it "Success add category : label new, parent exist" $ do
+      it "Success: category does not exist in the database, category \"parent\" exists in the database" $ do
           let baseHandle' = baseHandle 
           length (execState (createCategoryBase baseHandle' "NewLabel" (Just "Man")) categoriesInBase)
            `shouldBe` 
               (succ $ length categoriesInBase)
 
-      it "not add category : label old, parent exist" $ do
+      it "Failure: category already exists in the database, category \"parent\" exists in the database" $ do
           let baseHandle' = baseHandle 
           length (execState (createCategoryBase baseHandle' "Archer" (Just "Man")) categoriesInBase)
            `shouldNotBe` 
               (succ $ length categoriesInBase)
 
-      it "not add category : label new, parent don't exist" $ do
+      it "Failure: category does not exist in the database, category \"parent\" does not exist in the database" $ do
           let baseHandle' = baseHandle 
           length (execState (createCategoryBase baseHandle' "NewLabel" (Just "ManNew")) categoriesInBase)
            `shouldNotBe` 
               (succ $ length categoriesInBase)
 
-      it "not add category : label old, parent don't exist" $ do
+      it "Failure: category already exists in the database, category \"parent\" does not exist in the database" $ do
           let baseHandle' = baseHandle 
           length (execState (createCategoryBase baseHandle' "Man" (Just "ManNew")) categoriesInBase)
            `shouldNotBe` 
               (succ $ length categoriesInBase)
 
-      it "not add category : label new, parent exist, fail data base" $ do
+      it "Failure: category does not exist in the database, category \"parent\" exists in the database, error when working with database" $ do
           let baseHandle' = baseHandle {findCategoryByLabel = const (pure $ Left undefined)}
           length (execState (createCategoryBase baseHandle' "NewLabel" (Just "Man")) categoriesInBase)
            `shouldNotBe` 
@@ -139,7 +139,8 @@ spec = do
                             pure $ Right Put
                                                       }  :: Handle (State [News])
 
-      it "Success add news : title new, user exist, category exist" $ do
+
+      it "Success: title does not exist in the database, user exists in the database, category exists in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right Nothing),
               findUserByLogin = const (pure $ Right $ Just user1),
@@ -149,7 +150,7 @@ spec = do
            `shouldBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title new, user exist, category don't exist" $ do
+      it "Failure: title does not exist in the database, user exists in the database, category does not exist in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right Nothing),
               findUserByLogin = const (pure $ Right $ Just user1),
@@ -159,7 +160,7 @@ spec = do
            `shouldNotBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title new, user don't exist, category exist" $ do
+      it "Failure: title does not exist in the database, user does not exist in the database, category exists in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right Nothing),
               findUserByLogin = const (pure $ Right Nothing),
@@ -169,7 +170,7 @@ spec = do
            `shouldNotBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title new, user don't exist, category don't exist" $ do
+      it "Failure: title does not exist in the database, user does not exist in the database, category does not exist in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right Nothing),
               findUserByLogin = const (pure $ Right Nothing),
@@ -179,7 +180,7 @@ spec = do
            `shouldNotBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title old, user exist, category exist" $ do
+      it "Failure: title already exists in the database, user exists in the database, category exists in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right $ Just news1),
               findUserByLogin = const (pure $ Right $ Just user1),
@@ -189,7 +190,7 @@ spec = do
            `shouldNotBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title old, user exist, category don't exist" $ do
+      it "Failure: title already exists in the database, user exists in the database, category does not exist in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right $ Just news1),
               findUserByLogin = const (pure $ Right $ Just user1),
@@ -199,7 +200,7 @@ spec = do
            `shouldNotBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title old, user don't exist, category exist" $ do
+      it "Failure: title already exists in the database, user does not exist in the database, category exists in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right $ Just news1),
               findUserByLogin = const (pure $ Right Nothing),
@@ -209,7 +210,7 @@ spec = do
            `shouldNotBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title old, user don't exist, category don't exist" $ do
+      it "Failure: title already exists in the database, user does not exist in the database, category does not exist in the database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Right $ Just news1),
               findUserByLogin = const (pure $ Right Nothing),
@@ -219,7 +220,7 @@ spec = do
            `shouldNotBe` 
               (succ $ length newsInBase)
 
-      it "not add news : title new, user exist, category exist, fail data base" $ do
+      it "Success: title does not exist in the database, user exists in the database, category exists in the database, error when working with database" $ do
           let baseHandle' = baseHandle {
               findNewsByTitle = const (pure $ Left undefined),
               findUserByLogin = const (pure $ Right $ Just user1),
@@ -256,8 +257,7 @@ spec = do
                                                                     else Category l (maybe p giveParent parent) ))
                                  pure $ Right Change
                                                       }  :: Handle (State [Category])
-
-      it "Success edit category : LabelOld, NewLabel don't exist, don't change parent" $ do
+      it "Success: The category being edited exists, the new category label is not contained in the database, and the \"parent\" category is not changed." $ do 
           let baseHandle' = baseHandle 
           let archerKey = giveParent "Man"  -- Archer Man
           (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
@@ -267,7 +267,7 @@ spec = do
           (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
            `shouldBe`  True
 
-      it "Success edit category : LabelOld, NewLabel don't exist, Change parent, parent exist" $ do
+      it "Success: The category being edited exists, the new category label is not contained in the database, the \"parent\" category is being edited." $ do 
           let baseHandle' = baseHandle 
           let archerKey = giveParent "Man"   --  Man
           let newArcherKey = giveParent "Abstract"  -- Abstract
@@ -280,7 +280,7 @@ spec = do
           (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" (Just "Man")) categoriesInBase)
            `shouldBe`  True
 
-      it "not edit category : LabelNew, NewLabel don't exist, don't change parent" $ do
+      it "Failure: The category being edited does not exist, the new category label is not contained in the database, and the \"parent\" category is not changed." $ do 
           let baseHandle' = baseHandle 
           let archerKey = giveParent "Man"   --  Man
 
@@ -291,7 +291,7 @@ spec = do
           (Category "NewArcher" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer1" "NewArcher" Nothing) categoriesInBase)
            `shouldNotBe`  True
 
-      it "not edit category : LabelNew, NewLabel exist, don't change parent" $ do
+      it "Failure: The category being edited does not exist, the new category label is contained in the database, and the \"parent\" category is not changed." $ do 
           let baseHandle' = baseHandle
           let archerKey = giveParent "Man"
           let evilKey = giveParent "Evil"
@@ -305,7 +305,7 @@ spec = do
           (Category "Evil" evilKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "Evil" Nothing) categoriesInBase)
            `shouldBe`  True
 
-      it "not edit category : LabelOld, NewLabel don't exist, don't change parent, fail data base" $ do
+      it "Failure: The category being edited exists, the new category label is not contained in the database, and the \"parent\" category is not changed, error when working with database" $ do 
           let baseHandle' = baseHandle {findCategoryByLabel = const (pure $ Left undefined)}
           let archerKey = giveParent "Man"  -- Archer Man
           (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
@@ -354,49 +354,49 @@ spec = do
                editNews = \titleOld time mbTitle mbLogin mbLabel mbContent images mbPublish -> pure $ Right Change 
                                                       } :: Handle (State ([News],[User],[Category]))
 
-      it "Success edit news : TitleOld, NewTitleNew" $ do
+      it "Success: The news being edited exists, the new news title is not contained in the database" $ do 
           let baseHandle' = baseHandle
           (evalState (updateNews baseHandle' 
                                          (newsTitle news1) (Just "New Title for news1") 
                                          Nothing Nothing Nothing 
                                           [] Nothing) base)
            `shouldBe`  (Right Change)
-      it "Success edit news : TitleOld, NewTitleNew, User exist" $ do
+      it "Success: The news being edited exists, the new news title is not contained in the database, the new user is contained in the database" $ do 
           let baseHandle' = baseHandle
           (evalState (updateNews baseHandle' 
                                          (newsTitle news1) (Just "New Title for news1") 
                                          (Just $ userLogin user2) Nothing Nothing 
                                           [] Nothing) base)
            `shouldBe`  (Right Change)
-      it "Success edit news : TitleOld, NewTitleNew, Category exist" $ do
+      it "Success: The news being edited exists, the new news title is not contained in the database, the new category is contained in the database" $ do 
           let baseHandle' = baseHandle
           (evalState (updateNews baseHandle' 
                                          (newsTitle news1) (Just "New Title for news1") 
                                          Nothing (Just $ categoryLabel cat1)  Nothing 
                                           [] Nothing) base)
            `shouldBe`  (Right Change)
-      it "not edit news : TitleNew, NewTitleNew" $ do
+      it "Failure: The news being edited does not exist, the new news title is not contained in the database" $ do 
           let baseHandle' = baseHandle
           (evalState (updateNews baseHandle' 
                                          "" (Just "New Title for news1") 
                                          Nothing Nothing Nothing 
                                           [] Nothing) base)
            `shouldNotBe`  (Right Change)
-      it "not edit news : TitleOld, NewTitleOld" $ do
+      it "Failure: The news being edited exists, the new news title is contained in the database" $ do 
           let baseHandle' = baseHandle
           (evalState (updateNews baseHandle' 
                                          (newsTitle news1) (Just $ newsTitle news2)
                                          Nothing Nothing Nothing 
                                           [] Nothing) base)
            `shouldNotBe`  (Right Change)
-      it "not edit news : TitleOld, NewTitleNew, User don't exist" $ do
+      it "Failure: The news being edited exists, the new news title is not contained in the database, the new user is not contained in the database" $ do 
           let baseHandle' = baseHandle
           (evalState (updateNews baseHandle' 
                                          (newsTitle news1) (Just "New Title for news1") 
                                          (Just "") Nothing Nothing 
                                           [] Nothing) base)
             `shouldNotBe`  (Right Change)
-      it "not edit news : TitleOld, NewTitleNew, Category don't exist" $ do
+      it "Failure: The news being edited exists, the new news title is not contained in the database, the new category is not contained in the database" $ do 
           let baseHandle' = baseHandle
           (evalState (updateNews baseHandle' 
                                          (newsTitle news1) (Just "New Title for news1") 
@@ -423,13 +423,13 @@ spec = do
                       $ mapMaybe (\user@(User _ l _ _ _ _) -> if l == login
                                                             then Just user else Nothing) $ users)
                                                       }  :: Handle (State [User])
-      it "Get no privilege for user who don't exist" $ do
+      it "Get no privilege for a user that is not in the database" $ do
              let baseHandle' = baseHandle
              (evalState (getPrivilege baseHandle' "NoUser") usersInBase)
                 `shouldBe` 
                    Right (False, False)
 
-      it "Get privilege for user who exist" $ do
+      it "Get privilege for a user that is in the database" $ do
              let baseHandle' = baseHandle
              (evalState (getPrivilege baseHandle' (userLogin user1)) usersInBase)
                 `shouldBe` 
