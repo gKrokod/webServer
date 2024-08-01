@@ -1,7 +1,8 @@
 module Handlers.LoggerSpec (spec) where
 
-import Test.Hspec (it, Spec(..), shouldNotBe, shouldBe)
 import Handlers.Logger
+
+import Test.Hspec (it, Spec(..), shouldNotBe, shouldBe)
 import qualified Data.Text as T
 import Control.Monad.State (State, execState, put)
 

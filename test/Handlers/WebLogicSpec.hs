@@ -3,34 +3,29 @@
 {-# LANGUAGE TypeApplications #-}
 module Handlers.WebLogicSpec (spec) where
 
-import Scheme
-import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4, image1,image2,image3)
-import Test.Hspec
 import Handlers.WebLogic
+
+import Test.Hspec (describe, it, Spec, shouldBe, shouldNotBe)
+import Scheme (User(..), Image(..), Category(..), News(..), Find(..), FilterItem(..))
+import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4, image1,image2,image3)
 import Scheme (ColumnType(..), SortOrder(..))
 import Web.WebType (userToWeb, categoryToWeb, newsToWeb)
 import Base.LocalTime (localtimeTemplate)
 import qualified Handlers.Logger 
 import qualified Handlers.Base
--- import qualified Logger 
-import Control.Monad.State
-import Test.QuickCheck
-import Data.Maybe
+import Control.Monad.State (State, evalState, get)
+import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Either (isLeft)
-import Network.Wai (defaultRequest, Request, rawPathInfo, queryString, requestHeaders, rawQueryString, queryString)
-import Network.Wai (getRequestBodyChunk, responseBuilder)
+import Network.Wai (defaultRequest, Request, rawPathInfo, queryString, requestHeaders, rawQueryString, queryString,getRequestBodyChunk, responseBuilder)
 import Network.Wai.Internal (Response(..))
 import Network.HTTP.Types (notFound404, status200, hContentType)
-import Data.Proxy
+import Data.Proxy (Proxy(..))
 import qualified Data.Text.Encoding as E
 import qualified Data.Text as T
-
 import Data.Binary.Builder as BU (Builder, fromByteString)
 import Data.ByteString.Base64 as B64
 import Data.Time (UTCTime(..), Day(..), fromGregorian )
-import Control.Monad.Identity
---
---
+import Control.Monad.Identity (runIdentity, Identity)
 --
 
 testTime :: UTCTime
@@ -48,6 +43,7 @@ test404 = responseBuilder notFound404 [] "Not ok. status 404\n"
 test200 :: Response
 test200 = responseBuilder status200 [] "All ok. status 200\n" 
 
+testBuilder :: Builder -> Response
 testBuilder = responseBuilder status200 []
 
 testImage :: Image -> Response

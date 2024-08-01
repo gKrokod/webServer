@@ -2,18 +2,19 @@
 {-# LANGUAGE TypeApplications #-}
 module Handlers.BaseSpec (spec) where
 
-import Test.Hspec
-import Scheme
 import Handlers.Base 
+
+import Test.Hspec (describe, it, Spec, shouldBe, shouldNotBe)
+import Scheme (User(..), Category (..), News(..))
 import Base.FillTables (user1, user2, user3, cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat9,cat8, news1,news2,news3,news4)
 import Base.LocalTime (localtimeTemplate)
 import Data.List(foldr1)
 import qualified Handlers.Logger 
 import qualified Logger 
-import Control.Monad.State
-import Control.Monad.Identity
+import Control.Monad.State (evalState, State, get, execState, modify)
+import Control.Monad.Identity (Identity, runIdentity)
 import qualified Data.Text as T
-import Test.QuickCheck
+import Test.QuickCheck (property)
 import Data.Time (UTCTime)
 import Data.Maybe (mapMaybe, listToMaybe)
 
