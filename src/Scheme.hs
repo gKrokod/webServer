@@ -1,31 +1,32 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -ddump-splices #-}
 {-# OPTIONS_GHC -ddump-to-file #-}
 
-{-# LANGUAGE TypeOperators #-} 
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE QuasiQuotes                #-}
-
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE DataKinds       #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DeriveAnyClass #-}
-
 module Scheme where
---
-import GHC.Generics (Generic)
-import qualified Database.Persist.TH as PTH
-import qualified Data.Text as T
-import Data.Time (UTCTime(..), Day(..))
-import Data.Aeson (ToJSON(..), FromJSON (..))
 
-PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persistLowerCase|
+--
+
+import Data.Aeson (FromJSON (..), ToJSON (..))
+import qualified Data.Text as T
+import Data.Time (Day (..), UTCTime (..))
+import qualified Database.Persist.TH as PTH
+import GHC.Generics (Generic)
+
+PTH.share
+  [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"]
+  [PTH.persistLowerCase|
  User sql=users
   name T.Text
   login T.Text
@@ -63,7 +64,7 @@ PTH.share [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"] [PTH.persi
   imageId ImageId
   Primary newsId imageId
   deriving Eq Show
-|] 
+|]
 
 data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages
   deriving stock (Eq, Show, Generic)
@@ -77,16 +78,17 @@ newtype Find = Find {subString :: T.Text}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-data FilterItem = FilterDataAt Day | FilterDataUntil Day | FilterDataSince Day
-                  | FilterAuthorName  T.Text
-                  | FilterCategoryLabel T.Text
-                  | FilterTitleFind T.Text
-                  | FilterContentFind T.Text
-                  | FilterPublishOrAuthor (Maybe T.Text)
+data FilterItem
+  = FilterDataAt Day
+  | FilterDataUntil Day
+  | FilterDataSince Day
+  | FilterAuthorName T.Text
+  | FilterCategoryLabel T.Text
+  | FilterTitleFind T.Text
+  | FilterContentFind T.Text
+  | FilterPublishOrAuthor (Maybe T.Text)
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
 data IsValidPassword = Valid | NotValid
-  deriving Show
-
-
+  deriving (Show)
