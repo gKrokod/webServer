@@ -22,8 +22,8 @@ spec :: Spec
 spec = do
   describe "Data should be limited (Panigate)" $ do
       let serverLimit = 15
-      let numberUserInBase = 27
-      let baseHandle  = Handle
+          numberUserInBase = 27
+          baseHandle  = Handle
             {pullAllUsers = \userOffset userLimit -> pure $ Right   
                                                     $ take (min userLimit serverLimit) 
                                                     $ drop userOffset 
@@ -32,8 +32,8 @@ spec = do
       it "Random offset and limit" $ do
         property $ \offset limit -> do
           let offset' = max 0 offset
-          let limit' =  max 0 limit
-          let baseHandle' = baseHandle {userOffset = offset', userLimit = limit'}
+              limit' =  max 0 limit
+              baseHandle' = baseHandle {userOffset = offset', userLimit = limit'}
           length <$> (runIdentity $ getAllUsers baseHandle')
            `shouldBe` 
               Right (foldr1 min [max 0 (numberUserInBase - userOffset baseHandle'), serverLimit, userLimit baseHandle'] )
@@ -43,8 +43,8 @@ spec = do
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
             }
-      let usersInBase = [user1, user2, user3] 
-      let baseHandle  = Handle
+          usersInBase = [user1, user2, user3] 
+          baseHandle  = Handle
             {
                logger = logHandle,
                findUserByLogin = undefined,
@@ -75,9 +75,9 @@ spec = do
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
             }
-      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+          categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
 -- "Man" "Woman" "Warrior" "Archer" "Neutral" "Evil" "Good" "Witch"
-      let baseHandle  = Handle
+          baseHandle  = Handle
             {
                logger = logHandle,
                findCategoryByLabel = \label  -> do
@@ -126,8 +126,8 @@ spec = do
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
             }
-      let newsInBase = [news1,news2,news3,news4]
-      let baseHandle  = Handle
+          newsInBase = [news1,news2,news3,news4]
+          baseHandle  = Handle
             {
                logger = logHandle,
                findCategoryByLabel = undefined, 
@@ -235,14 +235,14 @@ spec = do
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
             }
-      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+          categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
 -- "Man" "Woman" "Warrior" "Archer" "Neutral" "Evil" "Good" "Witch"
-      let giveParent label = case label of
+          giveParent label = case label of
                                "Man" -> categoryParent cat5
                                "Abstract" -> categoryParent cat2
                                "Evil" -> categoryParent cat7
                                _ -> undefined
-      let baseHandle  = Handle
+          baseHandle  = Handle
             {
                logger = logHandle,
                findCategoryByLabel = \label  -> do
@@ -259,7 +259,7 @@ spec = do
                                                       }  :: Handle (State [Category])
       it "Success: The category being edited exists, the new category label is not contained in the database, and the \"parent\" category is not changed." $ do 
           let baseHandle' = baseHandle 
-          let archerKey = giveParent "Man"  -- Archer Man
+              archerKey = giveParent "Man"  -- Archer Man
           (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
            `shouldBe`  True
           (Category "Archer" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
@@ -269,8 +269,8 @@ spec = do
 
       it "Success: The category being edited exists, the new category label is not contained in the database, the \"parent\" category is being edited." $ do 
           let baseHandle' = baseHandle 
-          let archerKey = giveParent "Man"   --  Man
-          let newArcherKey = giveParent "Abstract"  -- Abstract
+              archerKey = giveParent "Man"   --  Man
+              newArcherKey = giveParent "Abstract"  -- Abstract
           (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
            `shouldBe`  True
           (Category "Archer" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" (Just "Abstract")) categoriesInBase)
@@ -282,7 +282,7 @@ spec = do
 
       it "Failure: The category being edited does not exist, the new category label is not contained in the database, and the \"parent\" category is not changed." $ do 
           let baseHandle' = baseHandle 
-          let archerKey = giveParent "Man"   --  Man
+              archerKey = giveParent "Man"   --  Man
 
           (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
            `shouldBe`  True
@@ -293,8 +293,8 @@ spec = do
 
       it "Failure: The category being edited does not exist, the new category label is contained in the database, and the \"parent\" category is not changed." $ do 
           let baseHandle' = baseHandle
-          let archerKey = giveParent "Man"
-          let evilKey = giveParent "Evil"
+              archerKey = giveParent "Man"
+              evilKey = giveParent "Evil"
 
           (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
            `shouldBe`  True
@@ -307,7 +307,7 @@ spec = do
 
       it "Failure: The category being edited exists, the new category label is not contained in the database, and the \"parent\" category is not changed, error when working with database" $ do 
           let baseHandle' = baseHandle {findCategoryByLabel = const (pure $ Left undefined)}
-          let archerKey = giveParent "Man"  -- Archer Man
+              archerKey = giveParent "Man"  -- Archer Man
           (Category "Archer" archerKey) `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
            `shouldBe`  True
           (Category "Archer" archerKey) `elem` (execState (updateCategoryBase baseHandle' "Archer" "NewArcher" Nothing) categoriesInBase)
@@ -323,12 +323,12 @@ spec = do
              } 
               
 
-      let newsInBase = [news1,news2,news3,news4]
-      let categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
-      let usersInBase = [user1,user2,user3]
-      let base = (newsInBase, usersInBase, categoriesInBase)
+          newsInBase = [news1,news2,news3,news4]
+          categoriesInBase = [cat1,cat2,cat3,cat4,cat5,cat6,cat7,cat8,cat9]
+          usersInBase = [user1,user2,user3]
+          base = (newsInBase, usersInBase, categoriesInBase)
 
-      let baseHandle  = Handle
+          baseHandle  = Handle
               { 
            
                logger = logHandle,
@@ -407,12 +407,12 @@ spec = do
   describe "Get privilege (admin, publisher) for User from Base" $ do
 
       let usersInBase = [user1,user2,user3]
-      let logHandle = Handlers.Logger.Handle
+          logHandle = Handlers.Logger.Handle
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
             }
-      let usersInBase = [user1, user2, user3] 
-      let baseHandle  = Handle
+
+          baseHandle  = Handle
             {
                logger = logHandle,
                findUserByLogin = \login -> do

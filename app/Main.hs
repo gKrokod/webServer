@@ -61,7 +61,7 @@ makeSetup cfg = do
         { Handlers.Logger.levelLogger = Debug,
           Handlers.Logger.writeLog = Logger.writeLog
         }
-  let baseHandle = Handlers.Base.Handle
+      baseHandle = Handlers.Base.Handle
         { Handlers.Base.logger = logHandle,
           Handlers.Base.putUser = BB.putUser pginfo,
           Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
@@ -88,7 +88,7 @@ makeSetup cfg = do
           Handlers.Base.pullAllNews = BB.pullAllNews pginfo (cLimitData cfg),
           Handlers.Base.editNews = BB.editNews pginfo
       }
-  let handle = Handlers.WebLogic.Handle { 
+      handle = Handlers.WebLogic.Handle { 
           Handlers.WebLogic.logger = logHandle, 
           Handlers.WebLogic.base = baseHandle,
           Handlers.WebLogic.client = Handlers.WebLogic.Client Nothing Nothing Nothing,

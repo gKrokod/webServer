@@ -114,7 +114,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                      -- search substring
                      maybe (where_ (val True)) 
                            (\(Find text) -> let subtext = (%) ++. val text ++. (%)
-                                            in where_ (   (news ^. NewsTitle `like` subtext)
+                                            in where_ (   (news ^. NewsContent `like` subtext)
                                                       ||. (author ^. UserName `like` subtext)
                                                       ||. (categoryName ^. CategoryLabel `like` subtext)))
                            mbFind                  
