@@ -2,26 +2,16 @@
 
 module Handlers.WebLogic (Handle (..), Client (..), doAuthorization, doLogic) where
 
--- import Web.WebType (UserFromWeb(..), CategoryFromWeb (..), EditCategoryFromWeb(..), NewsFromWeb(..), EditNewsFromWeb(..),userToWeb, webToUser, categoryToWeb, webToCategory, webToEditCategory, webToNews, webToEditNews, newsToWeb, queryToPanigate, queryToSort, queryToFind, queryToFilters, headersToLoginAndPassword)
-
--- import Network.Wai (Request, Response, rawPathInfo, queryString, rawQueryString, responseBuilder)
-
--- import qualified Data.ByteString.Lazy as L
-
--- import Network.HTTP.Types (notFound404, status200, status201, Status, ResponseHeaders)
-
 import Control.Monad (when)
--- import Network.HTTP.Types.Header (RequestHeaders)
--- import Control.Exception (SomeException, displayException)
 
-import Control.Monad.Except
+import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Trans (lift)
 import Data.Binary.Builder (Builder)
-import Data.Bool
+import Data.Bool (bool)
 import qualified Data.ByteString as B
 import Data.ByteString.Char8 as BC (readInt)
-import Data.Maybe
-import Data.Proxy
+import Data.Maybe (fromMaybe, isNothing)
+import Data.Proxy (Proxy(..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Handlers.Base
