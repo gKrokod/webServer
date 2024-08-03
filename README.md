@@ -47,7 +47,7 @@ $ stack exec webServer-exe
 ## Documentation ##
 
 
-<details><summary>Data baser schema Structure of botReborn</summary> <image src="https://raw.githubusercontent.com/gKrokod/webServer/readme/config/scheme.png" alt="structure"></details>
+<details><summary>Structure of webServer</summary> <image src="config/webServer.svg" alt="structure"></details>
 
 <details><summary>Idea of organizing the program</summary>
   
@@ -111,47 +111,45 @@ $ stack exec webServer-exe
   
   1. cCreateAndFillTable
 
-	`"cCreateAndFillTable": []` - create and fill with test data the tables in the database necessary for the server to operate. Recommended for the first launcha and testing.
+	"cCreateAndFillTable": [] - create and fill with test data the tables in the database necessary for the server to operate. Recommended for the first launcha and testing.
 	
-	`"cCreateAndFillTable": null` - do not configure the database for work. Recommended for subsequent launches.
+	"cCreateAndFillTable": null - do not configure the database for work. Recommended for subsequent launches.
   
   2. cHostDB
     
     address to connect to the database,
-	e.g. `"cHostDB": "127.0.0.1"`
+	e.g. "cHostDB": "127.0.0.1"
    
   3. cLimitData
     
     Pagination values. Maximum number of elements returned in the list from the server, 
-	e.g. `"cLimitData": 13`
+	e.g. "cLimitData": 13
     
   4. cLogLvl
     
     Allows you to enable or disable the levels of logs displayed ("Debug" < "Warning" < "Error" < "Fatal").The minimum level is set,
-	e.g. `"cLogLvl": "Debug"`
+	e.g. "cLogLvl": "Debug"
 
   5. cNameDB
     
-    The name of the database that will be used for the connection, e.g.` "cNameDB": "_AlisaDataBase"`
+    The name of the database that will be used for the connection, e.g. "cNameDB": "_AlisaDataBase"
   
   6. cPasswordDB
     
-    The password of the database user that will be used to connect, e.g. `"cPasswordDB": "_AlisaPassword"`
+    The password of the database user that will be used to connect, e.g. "cPasswordDB": "_AlisaPassword"
   
   7. cPortDB
     
-	The port number through which the connection to the database will be made, e.g. `"cPortDB": "5432"`
+	The port number through which the connection to the database will be made, e.g. "cPortDB": "5432"
   
   8. cPortServer
     
-	The port number on which the web server will accept requests, e.g. `"cPortServer": 4221`
+	The port number on which the web server will accept requests, e.g. "cPortServer": 4221
 
   9. cUserDB
     
-	The username that will be used to connect to the database, e.g. `"cUserDB": "_Alisa"`
+	The username that will be used to connect to the database, e.g. "cUserDB": "_Alisa"
 </details>
-
-<details><summary>Data base schema</summary> <image src="https://raw.githubusercontent.com/gKrokod/webServer/readme/config/scheme.png" alt="Data base schema"></details>
 
 <details><summary>Data base schema</summary> <image src="config/scheme.png" alt="Data base schema"></details>
 
