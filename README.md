@@ -3,7 +3,7 @@
 
 ## What is webServer? ##
 
-## Distribution ##
+## dddfDistribution ##
 
 Place to get the latest botReborn: 
 + the git repository [GitHub](https://github.com/gKrokod/webServer).
