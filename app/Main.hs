@@ -2,7 +2,7 @@ module Main (main) where
 
 import qualified Base.Base as BB
 import qualified Base.Crypto
-import Config (ConfigDataBase, cLimitData, connectionString, loadConfig, whenMakeTables)
+import Config (ConfigDataBase, cLogLvl, cLimitData, connectionString, loadConfig, whenMakeTables)
 import Control.Exception (bracket_)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
@@ -56,7 +56,7 @@ makeSetup cfg = do
   Logger.writeLog ("Launch time: " <> (T.pack $ show t))
   let logHandle =
         Handlers.Logger.Handle
-          { Handlers.Logger.levelLogger = Debug,
+          { Handlers.Logger.levelLogger = cLogLvl cfg,
             Handlers.Logger.writeLog = Logger.writeLog
           }
       baseHandle =
