@@ -188,7 +188,7 @@ After that, you may want to test the web server. Shell scripts with CURL request
 Получить изображение с конкретным идентификатором в базе данных.
 
     Field		Type		Description
-    id		ByteString		Unique image identifier
+    id		Integer		Unique image identifier
     
 Пример запроса (см. папку `sh/images/get`):
  
