@@ -1,6 +1,4 @@
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/gKrokod/webServer)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/gKrokod/webServer)
-
 
 ## What is webServer? ##
 
@@ -13,7 +11,7 @@ Place to get the latest webServer:
 
 - the git repository [GitHub](https://github.com/gKrokod/webServer).
 
-## Installation ##
+## Installation and run##
 
 This project uses The Haskell Tool Stack. Go check it out if you don't have it locally installed https://docs.haskellstack.org/en/stable/ .
 Once you have installed The Haskell Tool stack, you need to make a configuration file `/config/db.cfg`  (the repository has a template file for this `/config/config.template`). 
@@ -44,39 +42,43 @@ and run (e.g. Linux)
 $ stack exec webServer-exe
 ```
 
-## Documentation ##
+After that, you may want to test the web server. Shell scripts with CURL requests will help you with this. They are located in the `sh` folder, e.g. `/sh/news/get/unknownUser.sh`). 
 
+## Documentation ##
 
 <details><summary>Structure of webServer</summary> <image src="config/webServer.svg" alt="structure"></details>
 
-<details><summary>Idea of organizing the program</summary>
-  
-  There is an object called "stack message" in the form of tuple data types
-  (Maybe Message, Maybe LastMessage), where
-  
-  * Maybe Message - new incoming message.
-  * Maybe LastMessage - last outcoming message.
+<details><summary>Description of the main elements of a web server</summary>
 
-  Possible stack message states:
-  1. (Nothing, Nothing) - initialization at program start.
-  2. (Just msg, Nothing) - receiving the first message.
-  3. (Nothing, Just msg) - the desired state, when the program has processed all incoming messages.
-  4. (Just newMsg, Just msg) - an intermediate state, when the program has already processed the message and a new one has arrived.
-  
-  Events that change the state of the stack message:
-  1. Initialization at program start.
-  2. New incoming message.
-  3. Processing the message.
-  
-  The goal of the program: to keep the stack message object in the state (Nothing, Just msg).
-  
-  There are 2 + n constantly running threads for this goal, where n is the number of users.
+ Для описание работы веб-сервера удобно оперировать следующими понятиями:
+
+- Новость.
+- Категория (синоним: рубрика).
+- Пользователь.
+- Изображение.
+- Клиент.
+			 
+ Теперь работу веб-сервера по назначению можно описать следующими тезисами:
+
+- новость создает и публикует конкретный пользователь у которого есть на это право.
+- каждая новость относится к определенной рубрике (категория) и имеет автора (пользователь).
+- новость может включать различное количество изображений.
+- клиент может по запросу получить от веб-сервера список новостей, пользователей, категорий и одно изображение.
+- если клиентом является известный пользователь ([basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication "basic authentication")), то у него появляются дополнительные права на:
+	
+		создание новости - если пользователь имеет права издателя.
+    	создание категории, редактирование категории, создание пользователя - если пользователь имеет права администратора.
+    	редактирование новости - если пользователь является автором новости.
+    
+  Для оперирование описанными понятиями в коде используется типы `News`, `Category`, `User`, `Image`, которые описаны в файле `src/Scheme.hs` и они же хранятся в базе данных (схема базы данных представлена ниже). Тип `Client` описан в файле `src/WebLogic.hs`, используется для авторизации, и в базе данных не хранится.
+
+  В базе данных хранятся хеши паролей с динамической солью (более детально в модуле `src/Base/Crypto.hs`)
   
 </details>
 
-<details><summary>Description of threads</summary>
+<details><summary>Web API</summary>
   
-  1. Main thread (main.hs / main, forever dispatcher)
+  1. /news (src/Handlers/WebLogic.hs, get news)
   
     The goal: to keep the stack message object in the state (Nothing, Just msg).
     
@@ -88,22 +90,110 @@ $ stack exec webServer-exe
       - run Bot threads if necessary. Run the Bot thread processing messages only 
       from the one user for each user in the database. Store a user in the database when
       first receiving a message from him.
-    
-  2. Watch thread (Handlers/Dispatcher.hs / watcherForNewMessage)
-   
-    The goal: stack message state (Just msg, _).
-    
-    Tasks: 
-    - Regularly reuest a new message from the selected client (console, telegram) 
-    when stack message state is (Nothing, _), i.e. no new incoming message.
-    
-  3. Bot treads (Handlers/Bot.hs / doWork)
-    
-    The goal: stack message state (Nothing, Just msg).
+  
+  2. /news/create (src/Handlers/WebLogic.hs, create news)
+  
+    The goal: to keep the stack message object in the state (Nothing, Just msg).
     
     Tasks:
-    - Process the message according to the underlying logic
-    when stack message state is (Just msg, _), i.e. there is new incoming message.
+      - Load parameters from configuration file.
+      - Create an environment for work.
+      - initialize the stack message object in the state (Nothing, Nothing).
+      - run the Watch thread.
+      - run Bot threads if necessary. Run the Bot thread processing messages only 
+      from the one user for each user in the database. Store a user in the database when
+      first receiving a message from him.  
+
+  3. /news/edit (src/Handlers/WebLogic.hs, edit news)
+  
+    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    
+    Tasks:
+      - Load parameters from configuration file.
+      - Create an environment for work.
+      - initialize the stack message object in the state (Nothing, Nothing).
+      - run the Watch thread.
+      - run Bot threads if necessary. Run the Bot thread processing messages only 
+      from the one user for each user in the database. Store a user in the database when
+      first receiving a message from him. 
+
+  4. /users (src/Handlers/WebLogic.hs, get users)
+  
+    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    
+    Tasks:
+      - Load parameters from configuration file.
+      - Create an environment for work.
+      - initialize the stack message object in the state (Nothing, Nothing).
+      - run the Watch thread.
+      - run Bot threads if necessary. Run the Bot thread processing messages only 
+      from the one user for each user in the database. Store a user in the database when
+      first receiving a message from him.
+  
+  5. /users/create (src/Handlers/WebLogic.hs, create user)
+  
+    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    
+    Tasks:
+      - Load parameters from configuration file.
+      - Create an environment for work.
+      - initialize the stack message object in the state (Nothing, Nothing).
+      - run the Watch thread.
+      - run Bot threads if necessary. Run the Bot thread processing messages only 
+      from the one user for each user in the database. Store a user in the database when
+      first receiving a message from him.  
+
+  6. /categories (src/Handlers/WebLogic.hs, get categories)
+  
+    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    
+    Tasks:
+      - Load parameters from configuration file.
+      - Create an environment for work.
+      - initialize the stack message object in the state (Nothing, Nothing).
+      - run the Watch thread.
+      - run Bot threads if necessary. Run the Bot thread processing messages only 
+      from the one user for each user in the database. Store a user in the database when
+      first receiving a message from him.
+  
+  7. /categories/create (src/Handlers/WebLogic.hs, create category)
+  
+    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    
+    Tasks:
+      - Load parameters from configuration file.
+      - Create an environment for work.
+      - initialize the stack message object in the state (Nothing, Nothing).
+      - run the Watch thread.
+      - run Bot threads if necessary. Run the Bot thread processing messages only 
+      from the one user for each user in the database. Store a user in the database when
+      first receiving a message from him.  
+
+  8. /categories/edit (src/Handlers/WebLogic.hs, edit category)
+  
+    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    
+    Tasks:
+      - Load parameters from configuration file.
+      - Create an environment for work.
+      - initialize the stack message object in the state (Nothing, Nothing).
+      - run the Watch thread.
+      - run Bot threads if necessary. Run the Bot thread processing messages only 
+      from the one user for each user in the database. Store a user in the database when
+      first receiving a message from him.
+  
+  9. /images  (src/Handlers/WebLogic.hs, get image)
+
+Получить изображение с конкретным идентификатором в базе данных.
+
+    Field	Type	 		Description
+    id		ByteString		Unique image identifier
+    
+Пример запроса (см. папку `sh/images/get`):
+ 
+	curl "127.0.0.1:4221/images?id=1" --output -    
+
+В заголовке ответа будет Content-Type, e.g. `Content-Type: image/jpeg`. В теле ответа будет изображение.
 
 </details>
 
@@ -149,6 +239,14 @@ $ stack exec webServer-exe
   9. cUserDB
     
 	The username that will be used to connect to the database, e.g. "cUserDB": "_Alisa"
+</details>
+
+<details><summary>How to create the required structure in the local database (apply migration)?</summary> 
+
+  Before starting the server, you must set the `cCreateAndFillTable` parameter in the `/config/db.cfg` configuration file as follows:
+	
+	> "cCreateAndFillTable": [] 
+
 </details>
 
 <details><summary>Data base schema</summary> <image src="config/scheme.png" alt="Data base schema"></details>
