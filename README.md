@@ -1,5 +1,6 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/gKrokod/webServer)
 
+
 ## What is webServer? ##
 
 webServer is a web server designed for publishing news. The web server is based on REST API - it accepts HTTP requests and returns responses in JSON format. 
@@ -11,7 +12,7 @@ Place to get the latest webServer:
 
 - the git repository [GitHub](https://github.com/gKrokod/webServer).
 
-## Installation and run##
+## Installation and run ##
 
 This project uses The Haskell Tool Stack. Go check it out if you don't have it locally installed https://docs.haskellstack.org/en/stable/ .
 Once you have installed The Haskell Tool stack, you need to make a configuration file `/config/db.cfg`  (the repository has a template file for this `/config/config.template`). 
@@ -186,7 +187,7 @@ After that, you may want to test the web server. Shell scripts with CURL request
 
 Получить изображение с конкретным идентификатором в базе данных.
 
-    Field	Type	 		Description
+    Field		Type		Description
     id		ByteString		Unique image identifier
     
 Пример запроса (см. папку `sh/images/get`):
