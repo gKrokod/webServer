@@ -3,8 +3,8 @@
 
 ## What is webServer? ##
 
-webServer is a web server designed for publishing news. The web server is based on REST API - it accepts HTTP requests and returns responses in JSON format. 
-The server stores the data necessary for work in the postgress database.
+webServer is a web server designed for publishing news. It is based on REST API and accepts HTTP requests and returns responses in JSON format.
+The server stores the data necessary for work in the PostgreSQL database.
 
 ## Distribution ##
 
@@ -42,8 +42,7 @@ and run (e.g. Linux)
 ```
 $ stack exec webServer-exe
 ```
-
-After that, you may want to test the web server. Shell scripts with CURL requests will help you with this. They are located in the `sh` folder, e.g. `/sh/news/get/unknownUser.sh`). 
+Once this has been completed, it would be advisable to test the web server. The use of shell scripts with CURL requests will facilitate this process. These scripts can be found in the `sh` folder, e.g. in the file `/sh/news/get/unknownUser.sh`. 
 
 ## Documentation ##
 
@@ -51,29 +50,29 @@ After that, you may want to test the web server. Shell scripts with CURL request
 
 <details><summary>Description of the main elements of a web server</summary>
 
- Для описание работы веб-сервера удобно оперировать следующими понятиями:
+To describe the operation of a web server, it is convenient to operate with the following concepts:
 
-- Новость.
-- Категория (синоним: рубрика).
-- Пользователь.
-- Изображение.
-- Клиент.
+- News.
+- Category (synonym: rubric).
+- User.
+- Image.
+- Client.
 			 
- Теперь работу веб-сервера по назначению можно описать следующими тезисами:
+ Now the work of the web server as intended can be described by the following theses:
 
-- новость создает и публикует конкретный пользователь у которого есть на это право.
-- каждая новость относится к определенной рубрике (категория) и имеет автора (пользователь).
-- новость может включать различное количество изображений.
-- клиент может по запросу получить от веб-сервера список новостей, пользователей, категорий и одно изображение.
-- если клиентом является известный пользователь ([basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication "basic authentication")), то у него появляются дополнительные права на:
+- news is created and published by a specific user who has the right to do so.
+- each news belongs to a certain rubric (category) and has an author (user).
+- news may include different number of images.
+- A client can get a list of news, users, categories and one image from the web server on request.
+- if the client is a known user ([basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication "basic authentication")), the client has additional rights to:
 	
-		создание новости - если пользователь имеет права издателя.
-    	создание категории, редактирование категории, создание пользователя - если пользователь имеет права администратора.
-    	редактирование новости - если пользователь является автором новости.
+		creating news - if the user has publisher rights.
+		category creation, category editing, user creation - if the user has administrator rights.
+		editing news - if the user is the author of the news.
     
-  Для оперирование описанными понятиями в коде используется типы `News`, `Category`, `User`, `Image`, которые описаны в файле `src/Scheme.hs` и они же хранятся в базе данных (схема базы данных представлена ниже). Тип `Client` описан в файле `src/WebLogic.hs`, используется для авторизации, и в базе данных не хранится.
+ To operate the described concepts in the code the types `News`, `Category`, `User`, `Image` are used, which are described in the file `src/Scheme.hs` and they are also stored in the database (the database scheme is shown below). Type `Client` is described in the file `src/WebLogic.hs`, it is used for authorisation and is not stored in the database.
 
-  В базе данных хранятся хеши паролей с динамической солью (более детально в модуле `src/Base/Crypto.hs`)
+  Password hashes with dynamic salt are stored in the database (more details in module `src/Base/Crypto.hs`)
   
 </details>
 
@@ -183,18 +182,18 @@ After that, you may want to test the web server. Shell scripts with CURL request
       from the one user for each user in the database. Store a user in the database when
       first receiving a message from him.
   
-  9. /images  (src/Handlers/WebLogic.hs, get image)
+  9**. /images  (src/Handlers/WebLogic.hs, get image)**
 
-Получить изображение с конкретным идентификатором в базе данных.
+Get an image with a specific Id in the database.
 
     Field		Type		Description
     id		Integer		Unique image identifier
     
-Пример запроса (см. папку `sh/images/get`):
+Example request (`sh/images/get` folder):
  
 	curl "127.0.0.1:4221/images?id=1" --output -    
 
-В заголовке ответа будет Content-Type, e.g. `Content-Type: image/jpeg`. В теле ответа будет изображение.
+The response header will be Content-Type, e.g.. `Content-Type: image/jpeg`. The body of the response will be the image.
 
 </details>
 
@@ -202,9 +201,9 @@ After that, you may want to test the web server. Shell scripts with CURL request
   
   1. cCreateAndFillTable
 
-	"cCreateAndFillTable": [] - create and fill with test data the tables in the database necessary for the server to operate. Recommended for the first launcha and testing.
+	"cCreateAndFillTable": [] - create and fill test data for the database tables. Recommended for the first launch.
 	
-	"cCreateAndFillTable": null - do not configure the database for work. Recommended for subsequent launches.
+	"cCreateAndFillTable": null, do not configure the database. Recommended for subsequent launches.
   
   2. cHostDB
     
