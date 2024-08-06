@@ -80,24 +80,52 @@ To describe the operation of a web server, it is convenient to operate with the 
   
   1. /news (src/Handlers/WebLogic.hs, get news)
   
-    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    Get list of news.
+
+    Field		Type		Description
+    panigate		PanigateFromWeb		  Optional. Panigate parameters.
+    sort		SortFromWeb		  Optional. Sort parameters.
+    find		FindFromWeb		  Optional. Search parameter.
+    filter		[FilterItem]	  Optional. Filter parameters.
+
+    The length of the resulting list of news can be limited in the request (see `PanigateFromWeb` type in the `src/Web/WebType.hs` module).
+
+    Field of PanigateFromWeb		Type		Description
+    offset      Int		Optional. Offset
+    limit       Int		Optional. Maximum number of news in the response
+      
+    The news list can be sorted in ascending and descending order by date, author, category, and number of images (see `SortFromWeb` type in the `src/Web/WebType.hs` module).
+
+    Field of SortFromWeb		Type		Description
+    columnType      Text 		sorting option: "DataNews" | "AuthorNews" | "CategoryName" |"QuantityImages"
+    sortOrder       Text		sorting type: "Ascending" | "Descending"
+
+    You can limit the list of requested news items to only those that contain the specified string in their title or content (see `FindFromWeb` type in the `src/Web/WebType.hs` module).
+
+    Field of FindFromWeb		Type		Description
+    subString      Text		search string
     
-    Tasks:
-      - Load parameters from configuration file.
-      - Create an environment for work.
-      - initialize the stack message object in the state (Nothing, Nothing).
-      - run the Watch thread.
-      - run Bot threads if necessary. Run the Bot thread processing messages only 
-      from the one user for each user in the database. Store a user in the database when
-      first receiving a message from him.
-  
+    You can filter the news list by author name, category name, date (since date, at date, until date), and by the presence of a specified substring in the title or content (see `FilterFromWeb` type in the `src/Web/WebType.hs` module).
+
+    Field of FilterItem Type		Description
+    contents  Text     		filter predicate (Day or text)
+    tag      Text		filter type: "FilterDataAt" | "FilterDataUntil" | "FilterDataSince" | "FilterAuthorName" | "FilterCategoryLabel" | "FilterTitleFind" | "FilterContentFind"
+    
+    Example request (`sh/news/get` folder):
+ 
+    curl -v 'login1:qpass1@127.0.0.1:4221/news?panigate=%7B"offset"%3A1%2C"limit"%3A7%7D&filter=%5B%7B"contents"%3A"2023-01-01"%2C"tag"%3A"FilterDataSince"%7D%2C%7B"contents"%3A"user"%2C"tag"%3A"FilterTitleFind"%7D%5D&sort=%7B"columnType"%3A"QuantityImages"%2C"sortOrder"%3A"Ascending"%7D&find=%7B"subString"%3A"and"%7D'
+	
+    The body of the response will contain the list of news, e.g.
+
+    [{"author":"user3","content":"Good is good. Photo 1 and 3","created":"2024-08-06T08:22:14.278486Z","images":["/images?id=1","/images?id=3"],"isPublisher":true,"labels":["Good","Warrior","NewMan","Woman","Abstract"],"title":"News 3 about Good from user 3"}]
+   
   2. /news/create (src/Handlers/WebLogic.hs, create news)
   
     Create a new news.  
     
     Information about a new news should be passed in the request body in JSON format (see `NewsFromWeb` type in the `src/Web/WebType.hs` module)
     
-    Field		Type		Description
+    Field of NewsFromWeb		Type		Description
     title      Text		Unique news identifier
     login      Text		Unique user identifier
     label      Text		Unique category identifier
@@ -105,7 +133,7 @@ To describe the operation of a web server, it is convenient to operate with the 
     images      [Image]  Image parameters: header and base64
     isPublish      Bool   true = Publish the news		
     
-    Field		Type		Description
+    Field of Image		Type		Description
     header      Text		
     base64      Text	content encoded in ([base64](https://ru.wikipedia.org/wiki/Base64))
 
@@ -133,25 +161,55 @@ To describe the operation of a web server, it is convenient to operate with the 
 
   3. /news/edit (src/Handlers/WebLogic.hs, edit news)
   
-    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    Edit a news.  
     
-    Tasks:
-      - Load parameters from configuration file.
-      - Create an environment for work.
-      - initialize the stack message object in the state (Nothing, Nothing).
-      - run the Watch thread.
-      - run Bot threads if necessary. Run the Bot thread processing messages only 
-      from the one user for each user in the database. Store a user in the database when
-      first receiving a message from him. 
+    Information about how and what news should be edited should be presented in the request body in JSON format (see `EditNewsFromWeb` type in the `src/Web/WebType.hs` module)
+    
+    Field of EditNewsFromWeb		Type		Description
+    title      Text		Unique news identifier
+    newTitle      Text		Optional. New value title
+    newLogin      Text		Optional. New value login
+    newLabel      Text		Optional. New value label
+    newContent      Text		Optional. new value content
+    images      [Image]  Optional. New images.
+    newIsPublish      Bool   Optional. New value isPublish
+    
+    Field of Image		Type		Description
+    header      Text		
+    base64      Text	content encoded in ([base64](https://ru.wikipedia.org/wiki/Base64))
+ 
+    Example request (`sh/news/edit` folder):
+    
+    curl -v -X POST login1:qpass1@127.0.0.1:4221/news/edit -H "Content-Type: application/json" -d '{"title":"News 4 about Evil from user 1", "newTitle":"Edit EDIT EDIT EDIT EDIT News 4", "newIsPublish":true,"newLogin":"login2","newLabel":"Good","newContent":"Edit Text about man now","images":[{"imageHeader":"edit image","imageBase64":"edit kartinka for news sh"}]}'
 
-  +++4. /users (src/Handlers/WebLogic.hs, get users)
+    If the news is successfully edited, the web server will respond with a response status message "200 OK", and a text in the body "All ok. status 200\n", e.g.
+
+    HTTP/1.1 200 OK
+    Transfer-Encoding: chunked
+    Date: Tue, 06 Aug 2024 19:12:56 GMT
+    Server: Warp/3.3.31
+
+    All ok. status 200
+
+    In case of an error, the web server will respond with a message with a response status of "404 Not Found", and a text in the body "Not ok. status 404\n", e.g.
+
+    HTTP/1.1 404 Not Found
+    Transfer-Encoding: chunked
+    Date: Tue, 06 Aug 2024 19:13:17 GMT
+    Server: Warp/3.3.31
+
+    Not ok. status 404 
+
+  4. /users (src/Handlers/WebLogic.hs, get users)
   
     Get list of users.
+
+    The length of the resulting list of users can be limited in the request (see `PanigateFromWeb` type in the `src/Web/WebType.hs` module).
 
     Field		Type		Description
     panigate		PanigateFromWeb		  Optional. Panigate parameters: offset and limit
     
-    Field		Type		Description
+    Field of PanigateFromWeb		Type		Description
     offset      Int		Optional. Offset
     limit       Int		Optional. Maximum number of users in the response
 
@@ -163,13 +221,13 @@ To describe the operation of a web server, it is convenient to operate with the 
 
     [{"created":"2024-08-06T08:22:14.273552Z","isAdmin":true,"isPublisher":true,"login":"login2","name":"user2"},{"created":"2024-08-06T08:22:14.273687Z","isAdmin":false,"isPublisher":true,"login":"login3","name":"user3"}]
   
-  +++5. /users/create (src/Handlers/WebLogic.hs, create user)
+  5. /users/create (src/Handlers/WebLogic.hs, create user)
   
     Create a new user.  
     
     Information about a new user should be passed in the request body in JSON format (see `UserFromWeb` type in the `src/Web/WebType.hs` module)
     
-    Field		Type		Description
+    Field of UserFromWeb		Type		Description
     name      Text		
     login      Text		Unique user identifier
     password      Text		
@@ -198,14 +256,16 @@ To describe the operation of a web server, it is convenient to operate with the 
     
     Not ok. status 404
 
-+++6. /categories (src/Handlers/WebLogic.hs, get categories)
+6. /categories (src/Handlers/WebLogic.hs, get categories)
   
     Get list of categories.
+
+    The length of the resulting list of categories can be limited in the request (see `PanigateFromWeb` type in the `src/Web/WebType.hs` module).
 
     Field		Type		Description
     panigate		PanigateFromWeb		  Optional. Panigate parameters: offset and limit
     
-    Field		Type		Description
+    Field of PanigateFromWeb		Type		Description
     offset      Int		Optional. Offset
     limit       Int		Optional. Maximum number of categories in the response
 
@@ -217,21 +277,21 @@ To describe the operation of a web server, it is convenient to operate with the 
 
     [{"label":"Man"},{"label":"Woman"},{"label":"Warrior"},{"label":"Archer"},{"label":"Neutral"},{"label":"Evil"},{"label":"Good"}]
   
-  +++7. /categories/create (src/Handlers/WebLogic.hs, create category)
+  7. /categories/create (src/Handlers/WebLogic.hs, create category)
   
     Create a new category.  
     
     Information about a new category should be passed in the request body in JSON format (see `CategoryFromWeb` type in the `src/Web/WebType.hs` module)
     
-    Field		Type		Description
+    Field of CategoryFromWeb		Type		Description
     label      Text		Unique category identifier
-    parent       Maybe Text		Optional. category identifier
+    parent       Text		Optional. category identifier
        
-    Example request (`sh/category/create` folder):
+    Example request (`sh/categories/create` folder):
     
     curl -v -X POST login1:qpass1@127.0.0.1:4221/categories/create -H "Content-Type: application/json" -d '{"label":"Angel","parent":"Abstract"}'
 
-    If the caregory are successfully created, the web server will respond with a response status message "200 OK", and a text in the body "All ok. status 200\n", e.g.
+    If the category are successfully created, the web server will respond with a response status message "200 OK", and a text in the body "All ok. status 200\n", e.g.
 
     HTTP/1.1 200 OK
     Transfer-Encoding: chunked
@@ -252,16 +312,41 @@ To describe the operation of a web server, it is convenient to operate with the 
 
   8. /categories/edit (src/Handlers/WebLogic.hs, edit category)
   
-    The goal: to keep the stack message object in the state (Nothing, Just msg).
+    Edit a category.  
     
-    Tasks:
-      - Load parameters from configuration file.
+    Information about how and what category should be edited should be presented in the request body in JSON format (see `EditCategoryFromWeb` type in the `src/Web/WebType.hs` module)
+    
+    Field of EditCategoryFromWeb		Type		Description
+    label      Text		Unique category identifier
+    newlabel     Text	Optional. New value label
+    parent       Text		Optional. New value parent
 
+    Example request (`sh/categories/edit` folder):
+    
+    curl -v -X POST login1:qpass1@127.0.0.1:4221/categories/edit -H "Content-Type: application/json" -d '{"label":"Man","newlabel":"NewMan","newparent":"Woman"}'
+
+    If the category is successfully edited, the web server will respond with a response status message "200 OK", and a text in the body "All ok. status 200\n", e.g.
+
+    HTTP/1.1 200 OK
+    Transfer-Encoding: chunked
+    Date: Tue, 06 Aug 2024 19:12:56 GMT
+    Server: Warp/3.3.31
+
+    All ok. status 200
+
+    In case of an error, the web server will respond with a message with a response status of "404 Not Found", and a text in the body "Not ok. status 404\n", e.g.
+
+    HTTP/1.1 404 Not Found
+    Transfer-Encoding: chunked
+    Date: Tue, 06 Aug 2024 19:13:17 GMT
+    Server: Warp/3.3.31
+
+    Not ok. status 404
   
-  +++9. /images  (src/Handlers/WebLogic.hs, get image)
+  9. /images  (src/Handlers/WebLogic.hs, get image)
 
     Get an image with a specific Id in the database.
-
+    
     Field		Type		Description
     id		Int		Unique image identifier
     
