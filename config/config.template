@@ -1,1 +1,1 @@
-{"cCreateAndFillTable":[],"cHostDB":"127.0.0.1","cLimitData":13,"cNameDB":"_AlisaDataBase","cPasswordDB":"_alisaPassword","cPortDB":"5432","cPortServer":4221,"cUserDB":"_alisa"}
+{"cCreateAndFillTable":[],"cHostDB":"127.0.0.1","cLimitData":13,"cNameDB":"_AlisaDataBase","cPasswordDB":"_alisaPassword","cPortDB":"5432","cPortServer":4221,"cUserDB":"_alisa","cLogLvl":"Debug"}
