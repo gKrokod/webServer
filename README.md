@@ -3,14 +3,14 @@
 
 ## What is webServer? ##
 
-webServer is a web server designed for publishing news. It is based on REST API and accepts HTTP requests and returns responses in JSON format.
-The server stores the data necessary for work in the PostgreSQL database.
+webServer is a web server designed for news publishing. It is based on the REST API and accepts HTTP requests and returns responses in JSON format.
+The server stores the data needed to work in the PostgreSQL database.
 
 ## Distribution ##
 
-Place to get the latest webServer: 
+Where to get the latest webServer: 
 
-- the git repository [GitHub](https://github.com/gKrokod/webServer).
+- The git repository [GitHub](https://github.com/gKrokod/webServer).
 
 ## Installation and run ##
 
@@ -50,7 +50,7 @@ Once this has been completed, it would be advisable to test the web server. The 
 
 <details><summary>Description of the main elements of a web server</summary>
 
-To describe the operation of a web server, it is convenient to operate with the following concepts:
+In order to describe the operation of a web server, it is useful to work with the following concepts:
 
 - News.
 - Category (synonym: rubric).
@@ -70,9 +70,9 @@ To describe the operation of a web server, it is convenient to operate with the 
 		category creation, category editing, user creation - if the user has administrator rights.
 		editing news - if the user is the author of the news.
     
- To operate the described concepts in the code the types `News`, `Category`, `User`, `Image` are used, which are described in the file `src/Scheme.hs` and they are also stored in the database (the database scheme is shown below). Type `Client` is described in the file `src/WebLogic.hs`, it is used for authorisation and is not stored in the database.
+To operate the described concepts in the code the types `News`, `Category`, `User`, `Image` are used, which are defined in the file `src/Scheme.hs` and they are also stored in the database (the database scheme is shown below). Type `Client` is defined in the file `src/WebLogic.hs` and is used for authorisation (it is not stored in the database).
 
-  Password hashes with dynamic salt are stored in the database (more details in module `src/Base/Crypto.hs`)
+Password hashes with dynamic salt are stored in the database (more details in module `src/Base/Crypto.hs`)
   
 </details>
 
@@ -283,7 +283,7 @@ The body of the response will contain the panigated list of catgories, e.g.
   
   7. /categories/create (src/Handlers/WebLogic.hs, create category)
   
- Create a new category.  
+Create a new category.  
     
 Information about a new category should be passed in the request body in JSON format (see `CategoryFromWeb` type in the `src/Web/WebType.hs` module)
     
@@ -408,7 +408,7 @@ The response header will be Content-Type, e.g.. `Content-Type: image/jpeg`. The 
 
 <details><summary>How to create the required structure in the local database (apply migration)?</summary> 
 
-  Before starting the server, you must set the `cCreateAndFillTable` parameter in the `/config/db.cfg` configuration file as follows:
+Before starting the server, please set the `cCreateAndFillTable` parameter in the `/config/db.cfg` configuration file as follows::
 	
 	> "cCreateAndFillTable": [] 
 
