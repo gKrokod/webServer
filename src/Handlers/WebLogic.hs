@@ -3,15 +3,14 @@
 module Handlers.WebLogic (Handle (..), Client (..), doAuthorization, doLogic) where
 
 import Control.Monad (when)
-
-import Control.Monad.Except (ExceptT(..), runExceptT)
+import Control.Monad.Except (ExceptT (..), runExceptT)
 import Control.Monad.Trans (lift)
 import Data.Binary.Builder (Builder)
 import Data.Bool (bool)
 import qualified Data.ByteString as B
 import Data.ByteString.Char8 as BC (readInt)
 import Data.Maybe (fromMaybe, isNothing)
-import Data.Proxy (Proxy(..))
+import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Handlers.Base
@@ -78,7 +77,7 @@ getClient h req = do
 doAuthorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
 doAuthorization h req = do
   let logHandle = logger h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Hello Autorization"
+  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "do Authorization"
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get request"
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show req)
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get headers"
@@ -115,10 +114,10 @@ endPointUsers h req = do
   case rawPathInfo req of
     "/users/create" -> do
       case client h of
-        Client (Just adminRole) _ _ -> createUser adminRole h req -- создание пользователя tolko for admin todo
+        Client (Just adminRole) _ _ -> createUser adminRole h req -- create User for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h) -- todo. replace 404 for another error
+          pure (response404 h)
     "/users" -> do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPanigate queryLimit
@@ -130,13 +129,8 @@ endPointUsers h req = do
       existingUsers (h {base = newBaseHandle}) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point Users not found"
-      pure (response404 h) -- todo. replace 404 for another error
-      --
-      --
+      pure (response404 h)
 
--- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category WEB"
--- body <- webToCategory <$> getBody h req -- :: (Either String CategoryFromWeb)
---
 existingUsers :: (Monad m) => Handle m -> Request -> m Response -- for ALl
 existingUsers h _req = do
   let logHandle = logger h
@@ -150,7 +144,6 @@ existingUsers h _req = do
     Right users -> pure . mkGoodResponse h . userToWeb $ users
 
 createUser :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response -- for Admin
--- createUser :: (Monad m) => Handle m -> Proxy Admin -> Request -> m (Response) -- for Admin
 createUser _ h req = do
   let logHandle = logger h
       baseHandle = base h
@@ -160,10 +153,9 @@ createUser _ h req = do
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h) -- "Not ok. User cannot be created. Status 404\n"
+      pure (response404 h)
     Right (UserFromWeb name_ login_ password_ admin_ publisher_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"
-      -- todo new password?
       tryCreateUser <- Handlers.Base.createUserBase baseHandle name_ login_ password_ admin_ publisher_
       case tryCreateUser of
         Right _ -> do
@@ -178,7 +170,7 @@ endPointImages h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Images"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    "/images" -> existingImages h req -- получение одной картинки
+    "/images" -> existingImages h req -- get one image
     _ -> do
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"
       pure (response404 h)
@@ -190,7 +182,6 @@ existingImages h req = do
       queryImage = queryString req
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give image with query string"
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryImage)
-  -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawQueryString req)
   case queryImage of
     [("id", Just n)] | idImage > 0 -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Good request image"
@@ -215,16 +206,16 @@ endPointCategories h req = do
   case rawPathInfo req of
     "/categories/create" -> do
       case client h of
-        Client (Just adminRole) _ _ -> createCategory adminRole h req -- создание категории
+        Client (Just adminRole) _ _ -> createCategory adminRole h req -- create a category for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure (response404 h) -- todo. replace 404 for another error
     "/categories/edit" -> do
       case client h of
-        Client (Just adminRole) _ _ -> updateCategory adminRole h req -- редактирование категории (названия и смена родительской)
+        Client (Just adminRole) _ _ -> updateCategory adminRole h req -- edit a category for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h) -- todo. replace 404 for another error
+          pure (response404 h)
     "/categories" -> do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPanigate queryLimit
@@ -244,7 +235,6 @@ existingCategories h _req = do
       baseHandle = base h
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All categories Web"
   categories <- Handlers.Base.getAllCategories baseHandle
-  -- proveryaj
   case categories of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
@@ -274,13 +264,10 @@ createCategory _ h req = do
           pure $ response404 h -- "Not ok.
 
 updateCategory :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response
--- todo move from Right Right to LVL DataBase edit category New label
 updateCategory _ h req = do
   let logHandle = logger h
       baseHandle = base h
-  -- let queryEditCategory = queryString req
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category WEB"
-  -- Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryEditCategory)
   body <- webToEditCategory <$> getBody h req -- :: (Either String EditCategoryFromWeb)
   case body of
     Left e -> do
@@ -312,17 +299,17 @@ endPointNews h req = do
   case rawPathInfo req of
     "/news/create" -> do
       case client h of
-        Client _ (Just publisherRole) _ -> createNews publisherRole h req -- создание новости
+        Client _ (Just publisherRole) _ -> createNews publisherRole h req -- create news for only publisher
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h) -- todo. replace 404 for another error
+          pure (response404 h) --
     "/news/edit" ->
       case client h of
         Client _ _ (Just author_) -> do
-          updateNews author_ h req -- редактирование новости
+          updateNews author_ h req -- edit news for only author
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h) -- todo. replace 404 for another error
+          pure (response404 h) --
     "/news" -> do
       -- get all news
       let queryLimit = queryString req
@@ -388,7 +375,6 @@ createNews _ h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode News WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
       pure (response404 h) -- "Not ok.
-      -- data NewsFromWeb = NewsFromWeb {title :: T.Text, login :: T.Text, label :: T.Text, content :: T.Text,
     Right (NewsFromWeb title_ login_ label_ content_ images_ publish_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"
       tryCreateNews <- Handlers.Base.createNewsBase baseHandle title_ login_ label_ content_ images_ publish_
@@ -400,7 +386,6 @@ createNews _ h req = do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
           pure $ response404 h -- "Not ok.
           --
-          ---updateNews 3 case in row
 
 updateNews :: (Monad m) => Author -> Handle m -> Request -> m Response
 updateNews author_ h req = do
@@ -434,7 +419,7 @@ updateNews author_ h req = do
             Right _ -> do
               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
               pure $ response200 h
-            _ -> pure $ response404 h -- "Not ok.  Left. delat log?
+            _ -> pure $ response404 h -- "Not ok.
         Right NotValid -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Fail"
           pure $ response404 h

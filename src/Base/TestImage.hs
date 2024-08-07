@@ -1,6 +1,6 @@
 module Base.TestImage (image404, testImage1, testImage2, testImage3, testImage) where
 
-import Scheme
+import Scheme (Image (..))
 
 -- image404 :: Image
 

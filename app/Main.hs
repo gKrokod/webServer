@@ -2,7 +2,7 @@ module Main (main) where
 
 import qualified Base.Base as BB
 import qualified Base.Crypto
-import Config (ConfigDataBase, cLogLvl, cLimitData, connectionString, loadConfig, whenMakeTables)
+import Config (ConfigDataBase, cLimitData, cLogLvl, connectionString, loadConfig, whenMakeTables)
 import Control.Exception (bracket_)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
@@ -18,7 +18,7 @@ import qualified Web.WebLogic as WW
 
 main :: IO ()
 main = do
-  -- Logger.writeLog "Welcome!"
+  Logger.writeLog "Welcome!"
   config <- loadConfig
   -- make Tables and Fill its if need
   whenMakeTables config $
@@ -53,7 +53,7 @@ makeSetup cfg = do
   Logger.writeLog "Setting up the server"
   let pginfo = connectionString cfg
   t <- getCurrentTime
-  Logger.writeLog ("Launch time: " <> (T.pack $ show t))
+  Logger.writeLog ("Launch time: " <> T.pack (show t))
   let logHandle =
         Handlers.Logger.Handle
           { Handlers.Logger.levelLogger = cLogLvl cfg,

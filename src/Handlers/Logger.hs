@@ -1,12 +1,13 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
+
 module Handlers.Logger (Handle (..), Log (..), logMessage) where
 
+import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Text as T
 import GHC.Generics (Generic)
-import Data.Aeson (FromJSON (..), ToJSON (..))
 
-data Log = Debug | Warning | Error | Fatal 
+data Log = Debug | Warning | Error | Fatal
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 

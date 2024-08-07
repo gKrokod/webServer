@@ -100,8 +100,6 @@ pullAllNews :: ConnectionString -> LimitData -> Offset -> Limit -> ColumnType ->
 pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbFind filters = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
-    -- try @SomeException (runDataBaseWithOutLog connString fetchAction)
-
     fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m [NewsOut]
     fetchAction = do
       titles <-
@@ -132,7 +130,6 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                 mbFind
               -- filters
               mapM_ (filterAction news author categoryName) filters
-              -- _ <- mapM (filterAction news author categoryName) filters
               -- sortBy column and order
               orderBy $ case columnType of
                 DataNews -> [order sortOrder (news ^. NewsCreated)]
@@ -145,7 +142,6 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
               -- return title
               pure (news ^. NewsTitle)
           )
-      -- mapM (fetchFullNews configLimit userOffset userLimit) titles
       mapM (fetchFullNews configLimit userLimit) titles
 
     filterAction n a c filter' = case filter' of
@@ -166,17 +162,13 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
           ( (n ^. NewsIsPublish ==. val True) -- publish all, not publish only author
               ||. (just (a ^. UserLogin) ==. val login)
           )
-    -- _ -> where_ (val True)
 
-    -- order a
     order :: (PersistField a) => SortOrder -> (SqlExpr (Value a) -> SqlExpr OrderBy)
     order a = case a of
       Ascending -> asc
       Descending -> desc
 
--- fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Offset -> Limit -> Title -> SqlPersistT m NewsOut
 fetchFullNews :: (MonadFail m, MonadIO m) => LimitData -> Limit -> Title -> SqlPersistT m NewsOut
--- fetchFullNews configLimit userOffset userLimit title = do
 fetchFullNews configLimit userLimit title = do
   (label : _) <- (fmap . fmap) entityVal fetchLabel
   lables <- fetchLables (categoryLabel label)
@@ -254,8 +246,6 @@ fetchFullNews configLimit userLimit title = do
     workerCategory = map (\(Entity _key value) -> categoryLabel value)
 
 findNewsByTitle :: ConnectionString -> Title -> IO (Either SomeException (Maybe News))
--- findNewsByTitle :: ConnectionString -> Title -> IO (Maybe News)
--- findUserByLogin connString login = runDataBaseWithLog connString fetchAction
 findNewsByTitle connString title = try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
@@ -287,8 +277,6 @@ editNews pginfo title time newTitle newLogin newLabel newContent newImages newPu
             replace keyNews newNews
             deleteImagesFromBankByNews keyNews
             keysImages <- insertMany newImages
-            -- insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
-            -- insertMany_ $ zipWith ImageBank (repeat keyNews) keysImages
             insertMany_ $ map (ImageBank keyNews) keysImages
             pure Change
           Nothing -> throw $ userError "function editNews fail (can't find news)"
@@ -314,8 +302,6 @@ putNews pginfo title time login label content images ispublish =
           (Just keyUsr, Just keyCat) -> do
             keyNews <- insert $ News title time keyUsr keyCat content ispublish
             keysImages <- insertMany images
-            -- insertMany_ $ zipWith ImageBank (cycle [keyNews]) keysImages
-            -- insertMany_ $ zipWith ImageBank (repeat keyNews) keysImages
             insertMany_ $ map (ImageBank keyNews) keysImages
             pure Put
           _ -> throw $ userError "function putNews fail"
@@ -323,9 +309,7 @@ putNews pginfo title time login label content images ispublish =
 
 ------------------------------------------------------------------------------------------------------------
 
--- for api news
 pullImage :: ConnectionString -> NumberImage -> IO (Either SomeException (Maybe Image))
--- getImage :: ConnectionString -> Int64 -> IO (Maybe Image)
 pullImage connString uid = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
@@ -360,9 +344,6 @@ pullAllUsers :: ConnectionString -> LimitData -> Offset -> Limit -> IO (Either S
 pullAllUsers connString configLimit userOffset userLimit = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
-    -- getAllUsers connString l = runDataBaseWithLog connString fetchAction
-
-    -- fetchAction ::  (MonadIO m) => SqlPersistT m [Entity User]
     fetchAction :: (MonadIO m) => SqlPersistT m [User]
     fetchAction =
       (fmap . fmap)

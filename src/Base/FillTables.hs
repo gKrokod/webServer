@@ -27,12 +27,9 @@ password2 = S.Password (makeHashPassword "qpass2" (read $(localtimeTemplate)))
 password3 = S.Password (makeHashPassword "qpass3" (read $(localtimeTemplate)))
 
 image1, image2, image3 :: S.Image
--- image1  = S.Image { imageHeader = "header1", imageBase64 = "base64 n 1" }
 image1 = testImage1 -- real image jpeg
 image2 = testImage2 -- real image jpeg
 image3 = testImage3 -- real image jpeg
--- image2  = S.Image "image/png" "base64 n 2"
--- image3  = S.Image "header3" "base64 n 3"
 
 cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9 :: S.Category
 cat1 = S.Category {S.categoryLabel = "Abstract", S.categoryParent = Nothing}

@@ -16,8 +16,6 @@
 
 module Scheme where
 
---
-
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Text as T
 import Data.Time (Day (..), UTCTime (..))

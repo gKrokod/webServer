@@ -27,8 +27,6 @@ type NewLabel = T.Text
 
 type NumberImage = Int64
 
--- type Header = T.Text
--- type Base64 = T.Text
 type Title = T.Text
 
 type Content = T.Text
@@ -42,8 +40,7 @@ type Limit = Int
 type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
 
 data Handle m = Handle
-  { -- API
-    logger :: Handlers.Logger.Handle m,
+  { logger :: Handlers.Logger.Handle m,
     userOffset :: Int, -- default
     userLimit :: Int, -- default
     sortColumnNews :: ColumnType, -- default
@@ -65,7 +62,6 @@ data Handle m = Handle
     putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (Either SomeException Success),
     putCategory :: Label -> Maybe Label -> m (Either SomeException Success),
     putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (Either SomeException Success),
-
     editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either SomeException Success),
     editCategory :: Label -> NewLabel -> Maybe Label -> m (Either SomeException Success)
   }
@@ -98,12 +94,10 @@ getPrivilege h login = do
   when (isLeft tryFindUser) (logMessage logHandle Error "function findUserByLogin fail")
   case tryFindUser of
     Left e -> pure . Left . T.pack . displayException $ e
-    -- todo spisok novostej
     Right (Just (User _ _ _ _ a p)) -> do
       logMessage logHandle Debug (T.pack $ "Privilege: Admin " <> show a <> " Publisher " <> show p)
       pure $ Right (a, p)
     _ -> do
-      -- Right Nothing - not found in base
       logMessage logHandle Debug "Privilege: Admin False False "
       pure $ Right (False, False)
 
@@ -256,7 +250,6 @@ updateCategoryBase h label newlabel parent = do
 
   existNew <- findCategoryByLabel h newlabel
   when (isLeft existNew) (logMessage logHandle Handlers.Logger.Error "function findCategoryByLabel fail")
-  -- let flag = label == newlabel
   let existNew' = if label == newlabel then Right Nothing else existNew
   case (sequence [exist, existNew'], parent) of
     (Left e, _) -> pure . Left . T.pack . displayException $ e
@@ -324,7 +317,7 @@ createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool
 createUserBase h name login pwd admin publish = do
   let logHandle = logger h
   logMessage logHandle Debug ("check user By login for  create: " <> login)
-  tryFind <- findUserByLogin h login -- todo
+  tryFind <- findUserByLogin h login
   case tryFind of
     Left e -> do
       logMessage logHandle Error "function findUserByLogin fail"
