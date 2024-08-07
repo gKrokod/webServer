@@ -22,7 +22,7 @@ main = do
   config <- loadConfig
   -- make Tables and Fill its if need
   whenMakeTables config $
-    -- Logger.writeLog "Create and fill tables in the database"
+    Logger.writeLog "Create and fill tables in the database"
       >> BB.makeAndFillTables (connectionString config)
   serverSetup <- makeSetup config
   run 4221 $ authorization serverSetup app
