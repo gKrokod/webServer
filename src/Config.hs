@@ -66,7 +66,7 @@ connectionString cfg =
         cPasswordDB cfg
       ]
 
--- -- for testing
+-- for debug
 -- createConfigFile :: IO ()
 -- createConfigFile = do
 --   let testConfig = MkConfigDataBase {

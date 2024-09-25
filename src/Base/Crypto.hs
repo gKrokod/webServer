@@ -7,6 +7,7 @@ import Data.Function (on)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Data.Time (UTCTime)
+import Types (PasswordUser (..))
 
 type Salt = T.Text
 
@@ -18,8 +19,8 @@ type SizeSaltAndPassword = Int
 
 type NumberIterations = Int
 
-makeHashPassword :: Password -> UTCTime -> Hash
-makeHashPassword pass time =
+makeHashPassword :: PasswordUser -> UTCTime -> Hash
+makeHashPassword (MkPasswordUser pass) time =
   let salt = timeToSalt time
    in salt <> makeHash pass salt
 
@@ -28,14 +29,12 @@ validPassword pass hash_ = (==) hash_ (salt <> makeHash pass salt)
   where
     salt = E.decodeUtf8 . B64.encodeBase64' . B.take sizeSalt . B64.decodeBase64Lenient . E.encodeUtf8 $ hash_
 
-----------------------------------------------------
+-----------------------Internal---------------------------
 sizeSalt, sizePassword :: SizeSaltAndPassword
--- todo add in config?
 sizeSalt = 16
 sizePassword = sizeSalt
 
 iterations :: NumberIterations
--- todo add in config?
 iterations = 4000
 
 makeHash :: Password -> Salt -> Hash
