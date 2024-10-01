@@ -592,13 +592,43 @@ spec = do
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
               Handlers.Logger.writeLog = \_ -> pure ()
             }
-
-        -- type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
         newsInBase =
-          [ MkNewsOut (MkTitle "news1") (read $(localtimeTemplate)) (MkName "user1") (map MkLabel ["Abstract", "Man"]) (MkContent "content1") (map MkURI_Image ["/images?id=1"]) True,
-            MkNewsOut (MkTitle "news2") (read $(localtimeTemplate)) (MkName "user2") (map MkLabel ["Abstract", "Woman"]) (MkContent "content2") [] True,
-            MkNewsOut (MkTitle "news3") (read $(localtimeTemplate)) (MkName "user3") (map MkLabel ["Abstract", "Woman", "Witch"]) (MkContent "content3") [] False,
-            MkNewsOut (MkTitle "news4") (read $(localtimeTemplate)) (MkName "user1") (map MkLabel ["Abstract", "Woman", "Queen"]) (MkContent "content4") (map MkURI_Image ["/images?id=2", "/images?id=3"]) True
+          [ MkNewsOut
+              { nTitle = MkTitle "news1",
+                nTime = read $(localtimeTemplate),
+                nAuthor = MkName "user1",
+                nCategories = map MkLabel ["Abstract", "Man"],
+                nContent = MkContent "content1",
+                nImages = [MkURI_Image "/images?id=1"],
+                nIsPublish = True
+              },
+            MkNewsOut
+              { nTitle = MkTitle "news2",
+                nTime = read $(localtimeTemplate),
+                nAuthor = MkName "user2",
+                nCategories = map MkLabel ["Abstract", "Woman"],
+                nContent = MkContent "content2",
+                nImages = [],
+                nIsPublish = True
+              },
+            MkNewsOut
+              { nTitle = MkTitle "news3",
+                nTime = read $(localtimeTemplate),
+                nAuthor = MkName "user3",
+                nCategories = map MkLabel ["Abstract", "Woman", "Witch"],
+                nContent = MkContent "content3",
+                nImages = [],
+                nIsPublish = False
+              },
+            MkNewsOut
+              { nTitle = MkTitle "news4",
+                nTime = read $(localtimeTemplate),
+                nAuthor = MkName "user1",
+                nCategories = map MkLabel ["Abstract", "Woman", "Queen"],
+                nContent = MkContent "content4",
+                nImages = map MkURI_Image ["/images?id=2", "/images?id=3"],
+                nIsPublish = True
+              }
           ]
 
         baseHandle =

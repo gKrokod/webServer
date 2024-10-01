@@ -4,7 +4,15 @@ import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 
-data NewsOut = MkNewsOut Title UTCTime Name [Label] Content [URI_Image] Bool
+data NewsOut = MkNewsOut
+  { nTitle :: Title,
+    nTime :: UTCTime,
+    nAuthor :: Name,
+    nCategories :: [Label],
+    nContent :: Content,
+    nImages :: [URI_Image],
+    nIsPublish :: Bool
+  }
 
 newtype Name = MkName {getName :: Text}
 

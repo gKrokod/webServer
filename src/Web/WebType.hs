@@ -106,17 +106,25 @@ data NewsToWeb = NewsToWeb
     labels :: [T.Text],
     content :: T.Text,
     images :: [T.Text],
-    isPublisher :: Bool
+    isPublish :: Bool
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON)
 
---
 newsToWeb :: [NewsOut] -> Builder
 newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
   where
     convertToWeb :: NewsOut -> NewsToWeb
-    convertToWeb (MkNewsOut (MkTitle t) d (MkName n) ls (MkContent c) im b) = NewsToWeb t d n (map getLabel ls) c (map getURI_Image im) b
+    convertToWeb newsOut =
+      NewsToWeb
+        { title = getTitle $ nTitle newsOut,
+          created = nTime newsOut,
+          author = getName $ nAuthor newsOut,
+          labels = map getLabel $ nCategories newsOut,
+          content = getContent $ nContent newsOut,
+          images = map getURI_Image $ nImages newsOut,
+          isPublish = nIsPublish newsOut
+        }
 
 data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int}
   deriving stock (Eq, Show, Generic)
