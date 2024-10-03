@@ -24,7 +24,7 @@ import Network.Wai (Request, defaultRequest, getRequestBodyChunk, queryString, r
 import Network.Wai.Internal (Response (..))
 import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
 import Test.Hspec (Spec, describe, it, shouldBe, shouldNotBe)
-import Types (Content (..), Label (..), Login (..), Name (..), NewsOut (..), NumberImage (..), Title (..), URI_Image (..))
+import Types (CategoryInternal (..), Content (..), Label (..), Login (..), Name (..), NewsEditInternal (..), NewsInternal (..), NewsOut (..), NumberImage (..), Title (..), URI_Image (..), UserInternal (..))
 import Web.WebType (categoryToWeb, newsToWeb, userToWeb)
 
 --
@@ -339,7 +339,7 @@ spec = do
                             if l == login then Just user else Nothing
                         )
                   ),
-              Handlers.Base.putUser = \name login pass time admin publish -> pure $ Right Handlers.Base.Put
+              Handlers.Base.putUser = \(UserInternal name login pass admin publish) time -> pure $ Right Handlers.Base.Put
             }
         webHandle =
           Handle
@@ -415,7 +415,7 @@ spec = do
                     if label `elem` categories
                       then Just undefined
                       else Nothing,
-              Handlers.Base.putCategory = \label parent -> pure $ Right Handlers.Base.Put
+              Handlers.Base.putCategory = \(CategoryInternal label parent) -> pure $ Right Handlers.Base.Put
             }
         webHandle =
           Handle
@@ -528,7 +528,7 @@ spec = do
                     if label `elem` categories
                       then Just undefined
                       else Nothing,
-              Handlers.Base.editCategory = \label newlabel parent -> pure $ Right Handlers.Base.Change
+              Handlers.Base.editCategory = \label (CategoryInternal newlabel parent) -> pure $ Right Handlers.Base.Change
             }
         webHandle =
           Handle
@@ -1165,7 +1165,7 @@ spec = do
               Handlers.Base.findNewsByTitle = const (pure $ Right Nothing),
               Handlers.Base.findUserByLogin = const (pure $ Right $ Just user1),
               Handlers.Base.findCategoryByLabel = const (pure . Right $ Just cat1),
-              Handlers.Base.putNews = \title time login label content images isPublish -> pure $ Right Handlers.Base.Put
+              Handlers.Base.putNews = \(NewsInternal title login label content images isPublish) time -> pure $ Right Handlers.Base.Put
             }
         webHandle =
           Handle
@@ -1226,7 +1226,7 @@ spec = do
                       else Nothing,
               Handlers.Base.findUserByLogin = const (pure $ Right $ Just user1),
               Handlers.Base.findCategoryByLabel = const (pure $ Right $ Just cat1),
-              Handlers.Base.editNews = \title time mbtitle mblogin mblabel mbcontent image mbp -> pure $ Right Handlers.Base.Change
+              Handlers.Base.editNews = \title time (NewsEditInternal mbtitle mblogin mblabel mbcontent image mbp) -> pure $ Right Handlers.Base.Change
             }
         webHandle =
           Handle

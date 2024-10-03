@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Base.Base where
 
 import qualified Base.Crypto
@@ -12,7 +14,7 @@ import Database.Persist.Postgresql (ConnectionString, Entity (..), rawExecute, t
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlConn)
 import Handlers.Base (Limit (..), Offset (..), Success (..))
 import Scheme (Category (..), ColumnType (..), EntityField (..), FilterItem (..), Find (..), Image (..), ImageBank (..), News (..), Password (..), SortOrder (..), Unique (..), User (..), migrateAll)
-import Types (Content (..), Label (..), Login (..), Name (..), NewLabel, NewsOut (..), NumberImage (..), PasswordUser (..), Title (..), URI_Image (..))
+import Types (CategoryInternal (..), Content (..), Label (..), Login (..), Name (..), NewsEditInternal (..), NewsInternal (..), NewsOut (..), NumberImage (..), PasswordUser (..), Title (..), URI_Image (..), UserInternal (..))
 
 --
 makeAndFillTables :: ConnectionString -> IO ()
@@ -253,8 +255,8 @@ findNewsByTitle connString title = try @SomeException (runDataBaseWithOutLog con
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
     fetchAction = (fmap . fmap) entityVal (getBy . UniqueNews . getTitle $ title)
 
-editNews :: ConnectionString -> Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> IO (Either SomeException Success)
-editNews pginfo title time newTitle newLogin newLabel newContent newImages newPublish =
+editNews :: ConnectionString -> Title -> UTCTime -> NewsEditInternal -> IO (Either SomeException Success)
+editNews pginfo title time (NewsEditInternal newTitle newLogin newLabel newContent newImages newPublish) =
   try @SomeException
     ( runDataBaseWithOutLog pginfo $ do
         oldNews <- getBy . UniqueNews . getTitle $ title
@@ -294,25 +296,25 @@ deleteImagesFromBankByNews key =
     imageBank <- from $ table @ImageBank
     where_ (imageBank ^. ImageBankNewsId ==. val key)
 
-putNews :: ConnectionString -> Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> IO (Either SomeException Success)
-putNews pginfo title time login label content images ispublish =
+putNews :: ConnectionString -> NewsInternal -> UTCTime -> IO (Either SomeException Success)
+putNews pginfo (NewsInternal {..}) time =
   try @SomeException
     ( runDataBaseWithOutLog pginfo $ do
-        keyUser <- (fmap . fmap) entityKey (getBy . UniqueUserLogin . getLogin $ login)
-        keyCategory <- (fmap . fmap) entityKey (getBy . UniqueCategoryLabel . getLabel $ label)
+        keyUser <- (fmap . fmap) entityKey (getBy . UniqueUserLogin . getLogin $ authorNews)
+        keyCategory <- (fmap . fmap) entityKey (getBy . UniqueCategoryLabel . getLabel $ labelNews)
         case (keyUser, keyCategory) of
           (Just keyUsr, Just keyCat) -> do
             keyNews <-
               insert $
                 News
-                  { newsTitle = getTitle title,
+                  { newsTitle = getTitle titleNews,
                     newsCreated = time,
                     newsUserId = keyUsr,
                     newsCategoryId = keyCat,
-                    newsContent = getContent content,
-                    newsIsPublish = ispublish
+                    newsContent = getContent contentNews,
+                    newsIsPublish = isPublishNews
                   }
-            keysImages <- insertMany images
+            keysImages <- insertMany imagesNews
             insertMany_ $ map (ImageBank keyNews) keysImages
             pure Put
           _ -> throw $ userError "function putNews fail"
@@ -328,21 +330,21 @@ pullImage connString (MkNumberImage uid) = do
     fetchAction = get (toSqlKey uid)
 
 --
-putUser :: ConnectionString -> Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> IO (Either SomeException Success)
-putUser pginfo name login pwd time admin publish = do
+putUser :: ConnectionString -> UserInternal -> UTCTime -> IO (Either SomeException Success)
+putUser pginfo (UserInternal {..}) time = do
   try @SomeException
     ( runDataBaseWithOutLog pginfo $ do
         -- runDataBaseWithLog pginfo $ do
-        pId <- insert $ Password {passwordQuasiPassword = getPasswordUser pwd}
+        pId <- insert $ Password {passwordQuasiPassword = getPasswordUser passwordUser}
         _ <-
           insert $
             User
-              { userName = getName name,
-                userLogin = getLogin login,
+              { userName = getName nameUser,
+                userLogin = getLogin loginUser,
                 userPasswordId = pId,
                 userCreated = time,
-                userIsAdmin = admin,
-                userIsPublisher = publish
+                userIsAdmin = isAdminUser,
+                userIsPublisher = isPublisherUser
               }
         pure Put
     )
@@ -373,16 +375,16 @@ pullAllUsers connString configLimit userOffset userLimit = do
 
 ------------------------------------------------------------------------------------------------------------
 
-putCategory :: ConnectionString -> Label -> Maybe Label -> IO (Either SomeException Success)
-putCategory pginfo label parent =
+putCategory :: ConnectionString -> CategoryInternal -> IO (Either SomeException Success)
+putCategory pginfo (CategoryInternal {..}) =
   try @SomeException
     ( runDataBaseWithOutLog pginfo $ do
         -- runDataBaseWithLog pginfo $ do
-        case parent of
+        case parentCategory of
           Nothing -> do
             insert_ $
               Category
-                { categoryLabel = getLabel label,
+                { categoryLabel = getLabel labelCategory,
                   categoryParent = Nothing
                 }
             pure Put
@@ -390,15 +392,16 @@ putCategory pginfo label parent =
             parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent
             insert_ $
               Category
-                { categoryLabel = getLabel label,
+                { categoryLabel = getLabel labelCategory,
                   categoryParent = parentId
                 }
             pure Put
     )
 
 --
-editCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO (Either SomeException Success)
-editCategory pginfo label newLabel parent = do
+editCategory :: ConnectionString -> Label -> CategoryInternal -> IO (Either SomeException Success)
+-- editCategory :: ConnectionString -> Label -> NewLabel -> Maybe Label -> IO (Either SomeException Success)
+editCategory pginfo label (CategoryInternal newLabel parent) = do
   try @SomeException
     ( runDataBaseWithOutLog pginfo $ do
         -- runDataBaseWithLog pginfo $ do
@@ -406,7 +409,7 @@ editCategory pginfo label newLabel parent = do
         case (labelId, parent) of
           (Just iD, Nothing) -> replace iD $ Category {categoryLabel = getLabel newLabel, categoryParent = Nothing}
           (Just iD, Just (MkLabel labelParent)) -> do
-            parentId <- (fmap . fmap) entityKey <$> getBy $ UniqueCategoryLabel labelParent
+            parentId <- (fmap . fmap) entityKey <$> getBy . UniqueCategoryLabel $ labelParent
             replace iD $ Category {categoryLabel = getLabel newLabel, categoryParent = parentId}
           _ -> throw $ userError "function editCategory fail (can't find category)" -- label don't exist
         pure Change
@@ -416,7 +419,6 @@ findCategoryByLabel :: ConnectionString -> Label -> IO (Either SomeException (Ma
 findCategoryByLabel connString label = try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
     -- findCategoryByLabel connString label = runDataBaseWithLog connString fetchAction
-
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe Category)
     fetchAction = (fmap . fmap) entityVal (getBy . UniqueCategoryLabel . getLabel $ label)
 

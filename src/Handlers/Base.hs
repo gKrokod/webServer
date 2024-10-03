@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Handlers.Base (getCopyRight, getAllNews, updateNews, createNewsBase, updateCategoryBase, createCategoryBase, getAllCategories, getImage, createUserBase, getAllUsers, getResultValid, getPrivilege, Handle (..), NewsOut, Title, Content, NewLabel, Label, Login, PasswordUser, Name, NumberImage, Success (..), URI_Image, Offset (..), Limit (..)) where
 
 import Control.Exception (SomeException, displayException)
@@ -9,7 +11,7 @@ import Data.Time (UTCTime)
 import Handlers.Logger (Log (..), logMessage)
 import qualified Handlers.Logger
 import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), IsValidPassword (..), News (..), SortOrder (..), User (..))
-import Types (Content (..), Label (..), Login (..), Name (..), NewLabel, NewsOut (..), NumberImage (..), PasswordUser (..), Title (..), URI_Image (..))
+import Types (CategoryInternal (..), Content (..), Label (..), Login (..), Name (..), NewLabel, NewsEditInternal (..), NewsInternal (..), NewsOut (..), NumberImage (..), PasswordUser (..), Title (..), URI_Image (..), UserInternal (..))
 
 data Success = Put | Change | Get deriving (Show, Eq)
 
@@ -39,11 +41,11 @@ data Handle m = Handle
     findUserByLogin :: Login -> m (Either SomeException (Maybe User)),
     findCategoryByLabel :: Label -> m (Either SomeException (Maybe Category)),
     findNewsByTitle :: Title -> m (Either SomeException (Maybe News)),
-    putUser :: Name -> Login -> PasswordUser -> UTCTime -> Bool -> Bool -> m (Either SomeException Success),
-    putCategory :: Label -> Maybe Label -> m (Either SomeException Success),
-    putNews :: Title -> UTCTime -> Login -> Label -> Content -> [Image] -> Bool -> m (Either SomeException Success),
-    editNews :: Title -> UTCTime -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either SomeException Success),
-    editCategory :: Label -> NewLabel -> Maybe Label -> m (Either SomeException Success)
+    putUser :: UserInternal -> UTCTime -> m (Either SomeException Success),
+    putCategory :: CategoryInternal -> m (Either SomeException Success),
+    putNews :: NewsInternal -> UTCTime -> m (Either SomeException Success),
+    editNews :: Title -> UTCTime -> NewsEditInternal -> m (Either SomeException Success),
+    editCategory :: Label -> CategoryInternal -> m (Either SomeException Success)
   }
 
 getCopyRight :: (Monad m) => Handle m -> Login -> Title -> m (Either T.Text IsValidPassword)
@@ -122,8 +124,8 @@ getImage h uid = do
       logMessage logHandle Debug "Image was found in database"
       pure $ Right image
 
-updateNews :: (Monad m) => Handle m -> Title -> Maybe Title -> Maybe Login -> Maybe Label -> Maybe Content -> [Image] -> Maybe Bool -> m (Either T.Text Success)
-updateNews h title newTitle newLogin newLabel newContent newImages newPublish = do
+updateNews :: (Monad m) => Handle m -> Title -> NewsEditInternal -> m (Either T.Text Success)
+updateNews h title newsEdit@(NewsEditInternal {..}) = do
   let logHandle = logger h
   logMessage logHandle Debug ("Checks attributes for update news with title " <> getTitle title)
   existTitle <-
@@ -131,9 +133,9 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
       (Left . T.pack . displayException)
       (maybe (Left "news don't exist") (\_ -> Right Change))
       <$> findNewsByTitle h title
-  existNewTitle <- checkNews newTitle
-  existUser <- checkUser newLogin
-  existCategory <- checkCategory newLabel
+  existNewTitle <- checkNews titleEditNews
+  existUser <- checkUser authorEditNews
+  existCategory <- checkCategory labelEditNews
 
   case sequence_ [existTitle, existNewTitle, existUser, existCategory] of
     Left e -> do
@@ -143,11 +145,11 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
         ( "Fail to update news with attributes: "
             <> (T.pack . show) title
             <> " "
-            <> (T.pack . show) newTitle
+            <> (T.pack . show) titleEditNews
             <> " "
-            <> (T.pack . show) newLogin
+            <> (T.pack . show) authorEditNews
             <> " "
-            <> (T.pack . show) newLabel
+            <> (T.pack . show) labelEditNews
             <> " "
         )
       logMessage logHandle Warning e
@@ -155,7 +157,7 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
     Right _ -> do
       logMessage logHandle Debug "Ok. Updates news..."
       t <- getTime h
-      tryEdit <- editNews h title t newTitle newLogin newLabel newContent newImages newPublish
+      tryEdit <- editNews h title t newsEdit
       when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't editNews")
       pure $ either (Left . T.pack . displayException) Right tryEdit
   where
@@ -192,36 +194,35 @@ updateNews h title newTitle newLogin newLabel newContent newImages newPublish = 
             tryFindNews
         )
 
---
-
-createNewsBase :: (Monad m) => Handle m -> Title -> Login -> Label -> Content -> [Image] -> Bool -> m (Either T.Text Success)
-createNewsBase h title login label content images ispublish = do
+--                                  }
+createNewsBase :: (Monad m) => Handle m -> NewsInternal -> m (Either T.Text Success)
+createNewsBase h news@(NewsInternal {..}) = do
   let logHandle = logger h
-  logMessage logHandle Debug ("Check news by title for create: " <> getTitle title)
-  existTitle <- findNewsByTitle h title
+  logMessage logHandle Debug ("Check news by title for create: " <> getTitle titleNews)
+  existTitle <- findNewsByTitle h titleNews
   when (isLeft existTitle) (logMessage logHandle Handlers.Logger.Error "function findNewsByTitle fail")
 
-  logMessage logHandle Debug ("Check user by login for create: " <> getLogin login)
-  existUser <- findUserByLogin h login
+  logMessage logHandle Debug ("Check user by login for create: " <> getLogin authorNews)
+  existUser <- findUserByLogin h authorNews
   when (isLeft existUser) (logMessage logHandle Handlers.Logger.Error "function findUserByLogin fail")
 
-  logMessage logHandle Debug ("Check category by label for create: " <> getLabel label)
-  existCategory <- findCategoryByLabel h label
+  logMessage logHandle Debug ("Check category by label for create: " <> getLabel labelNews)
+  existCategory <- findCategoryByLabel h labelNews
   when (isLeft existCategory) (logMessage logHandle Handlers.Logger.Error "function findCategoryByLabel fail")
 
   case (existTitle, existUser, existCategory) of
     (Right Nothing, Right (Just _user), Right (Just _category)) -> do
-      logMessage logHandle Debug ("Create news with title, login and label: " <> getTitle title <> " " <> getLogin login <> " " <> getLabel label)
+      logMessage logHandle Debug ("Create news with title, login and label: " <> getTitle titleNews <> " " <> getLogin authorNews <> " " <> getLabel labelNews)
       time <- getTime h
-      tryPut <- putNews h title time login label content images ispublish
+      tryPut <- putNews h news time
       when (isLeft tryPut) (logMessage logHandle Handlers.Logger.Error "function putNews fail")
       pure $ either (Left . T.pack . displayException) Right tryPut
     _ -> do
-      logMessage logHandle Warning ("Fail to create news with title, login and label: " <> getTitle title <> " " <> getLogin login <> " " <> getLabel label)
+      logMessage logHandle Warning ("Fail to create news with title, login and label: " <> getTitle titleNews <> " " <> getLogin authorNews <> " " <> getLabel labelNews)
       pure $ Left "fail to create news"
 
-updateCategoryBase :: (Monad m) => Handle m -> Label -> NewLabel -> Maybe Label -> m (Either T.Text Success)
-updateCategoryBase h label newlabel parent = do
+updateCategoryBase :: (Monad m) => Handle m -> Label -> CategoryInternal -> m (Either T.Text Success)
+updateCategoryBase h label newCat@(CategoryInternal newlabel parent) = do
   let logHandle = logger h
   logMessage logHandle Debug ("Check category for label for update: " <> getLabel label <> " " <> getLabel newlabel)
 
@@ -235,7 +236,7 @@ updateCategoryBase h label newlabel parent = do
     (Left e, _) -> pure . Left . T.pack . displayException $ e
     (Right [Just _, Nothing], Nothing) -> do
       logMessage logHandle Debug ("Create category without parent and label: " <> getLabel label)
-      tryEdit <- editCategory h label newlabel parent
+      tryEdit <- editCategory h label newCat
       when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't editCategory")
       pure $ either (Left . T.pack . displayException) Right tryEdit
     (Right [Just _, Nothing], Just labelParent) -> do
@@ -251,32 +252,32 @@ updateCategoryBase h label newlabel parent = do
           pure $ Left "Parent dont' exist"
         Right (Just _) -> do
           logMessage logHandle Debug "Parent exist"
-          tryEdit <- editCategory h label newlabel parent
+          tryEdit <- editCategory h label newCat
           when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't editCategory")
           pure $ either (Left . T.pack . displayException) Right tryEdit
     _ -> do
       logMessage logHandle Warning ("Abort. Category don't exist or .... Category: " <> getLabel label)
       pure $ Left "Category don't's exist or ..."
 
-createCategoryBase :: (Monad m) => Handle m -> Label -> Maybe Label -> m (Either T.Text Success)
-createCategoryBase h label parent = do
+createCategoryBase :: (Monad m) => Handle m -> CategoryInternal -> m (Either T.Text Success)
+createCategoryBase h cat@(CategoryInternal {..}) = do
   let logHandle = logger h
-  logMessage logHandle Debug ("Check category for label for create: " <> getLabel label)
-  exist <- findCategoryByLabel h label
-  case (exist, parent) of
+  logMessage logHandle Debug ("Check category for label for create: " <> getLabel labelCategory)
+  exist <- findCategoryByLabel h labelCategory
+  case (exist, parentCategory) of
     (Left e, _) -> do
       logMessage logHandle Error "function findCategoryByLabel fail"
       pure . Left . T.pack . displayException $ e
     (Right (Just _), _) -> do
-      logMessage logHandle Warning ("Category arleady taken: " <> getLabel label)
+      logMessage logHandle Warning ("Category arleady taken: " <> getLabel labelCategory)
       pure $ Left "Category arleady taken"
     (Right Nothing, Nothing) -> do
-      logMessage logHandle Debug ("Create category without parent and label: " <> getLabel label)
-      tryPut <- putCategory h label parent
+      logMessage logHandle Debug ("Create category without parent and label: " <> getLabel labelCategory)
+      tryPut <- putCategory h cat
       when (isLeft tryPut) (logMessage logHandle Handlers.Logger.Error "function putCategory fali")
       pure $ either (Left . T.pack . displayException) Right tryPut
     (Right Nothing, Just labelParent) -> do
-      logMessage logHandle Debug ("Create category with parent and label: " <> getLabel labelParent <> " " <> getLabel label)
+      logMessage logHandle Debug ("Create category with parent and label: " <> getLabel labelParent <> " " <> getLabel labelCategory)
       logMessage logHandle Debug ("Check parent: " <> getLabel labelParent)
       existLabel <- findCategoryByLabel h labelParent
       case existLabel of
@@ -288,28 +289,27 @@ createCategoryBase h label parent = do
           pure $ Left "Parent dont' exist"
         _ -> do
           logMessage logHandle Debug "Parent exist"
-          tryPut <- putCategory h label parent
+          tryPut <- putCategory h cat
           when (isLeft tryPut) (logMessage logHandle Handlers.Logger.Error "function putCategory fail")
           pure $ either (Left . T.pack . displayException) Right tryPut
 
---
-createUserBase :: (Monad m) => Handle m -> Name -> Login -> PasswordUser -> Bool -> Bool -> m (Either T.Text Success)
-createUserBase h name login pwd admin publish = do
+createUserBase :: (Monad m) => Handle m -> UserInternal -> m (Either T.Text Success)
+createUserBase h user@(UserInternal {..}) = do
   let logHandle = logger h
-  logMessage logHandle Debug ("check user By login for  create: " <> getLogin login)
-  tryFind <- findUserByLogin h login
+  logMessage logHandle Debug ("check user By login for  create: " <> getLogin loginUser)
+  tryFind <- findUserByLogin h loginUser
   case tryFind of
     Left e -> do
       logMessage logHandle Error "function findUserByLogin fail"
       pure . Left . T.pack . displayException $ e
     Right (Just _) -> do
-      logMessage logHandle Warning ("Login arleady taken: " <> getLogin login)
+      logMessage logHandle Warning ("Login arleady taken: " <> getLogin loginUser)
       pure $ Left "Login arleady taken"
     Right Nothing -> do
       logMessage logHandle Debug "Create user..."
       time <- getTime h
       --- crypto
-      let pwd' = makeHashPassword h pwd time -- for make QuasiPassword
-      tryCreate <- putUser h name login (MkPasswordUser pwd') time admin publish
+      let pwd' = makeHashPassword h passwordUser time -- for make QuasiPassword
+      tryCreate <- putUser h (user {passwordUser = MkPasswordUser pwd'}) time
       when (isLeft tryCreate) (logMessage logHandle Handlers.Logger.Error "Can't putUser")
       pure $ either (Left . T.pack . displayException) Right tryCreate

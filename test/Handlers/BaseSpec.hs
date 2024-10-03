@@ -17,7 +17,7 @@ import qualified Logger
 import Scheme (Category (..), News (..), User (..))
 import Test.Hspec (Spec, describe, it, shouldBe, shouldNotBe)
 import Test.QuickCheck (property)
-import Types (Content (..), Label (..), Login (..), Name (..), PasswordUser (..), Title (..))
+import Types (CategoryInternal (..), Content (..), Label (..), Login (..), Name (..), NewsEditInternal (..), NewsInternal (..), PasswordUser (..), Title (..), UserInternal (..))
 
 spec :: Spec
 spec = do
@@ -56,23 +56,23 @@ spec = do
             { logger = logHandle,
               findUserByLogin = undefined,
               getTime = pure (read $(localtimeTemplate)),
-              putUser = \(MkName name) (MkLogin login) pass time admin publish -> do
+              putUser = \(UserInternal (MkName name) (MkLogin login) pass admin publish) time -> do
                 modify (User name login undefined time admin publish :)
                 pure $ Right Put
             } ::
             Handle (State [User])
     it "Sucess: user does not exist in the database" $ do
       let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right Nothing)}
-      length (execState (createUserBase baseHandle' (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False) usersInBase)
+      length (execState (createUserBase baseHandle' (UserInternal (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False)) usersInBase)
         `shouldBe` succ (length usersInBase)
     it "Failure: user exists in the database" $ do
       let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right $ Just user1)}
-      length (execState (createUserBase baseHandle' (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False) usersInBase)
+      length (execState (createUserBase baseHandle' (UserInternal (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False)) usersInBase)
         `shouldNotBe` succ (length usersInBase)
 
     it "Failure: error when working with database" $ do
       let baseHandle' = baseHandle {findUserByLogin = const (pure $ Left undefined)}
-      length (execState (createUserBase baseHandle' (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False) usersInBase)
+      length (execState (createUserBase baseHandle' (UserInternal (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False)) usersInBase)
         `shouldNotBe` succ (length usersInBase)
 
   describe "Create Category" $ do
@@ -94,7 +94,7 @@ spec = do
                       then Just (Category label undefined)
                       else Nothing,
               getTime = pure (read $(localtimeTemplate)),
-              putCategory = \(MkLabel label) parent -> do
+              putCategory = \(CategoryInternal (MkLabel label) parent) -> do
                 modify (Category label undefined :)
                 pure $ Right Put
             } ::
@@ -102,27 +102,27 @@ spec = do
 
     it "Success: category does not exist in the database, category \"parent\" exists in the database" $ do
       let baseHandle' = baseHandle
-      length (execState (createCategoryBase baseHandle' (MkLabel "NewLabel") (Just $ MkLabel "Man")) categoriesInBase)
+      length (execState (createCategoryBase baseHandle' (CategoryInternal (MkLabel "NewLabel") (Just $ MkLabel "Man"))) categoriesInBase)
         `shouldBe` succ (length categoriesInBase)
 
     it "Failure: category already exists in the database, category \"parent\" exists in the database" $ do
       let baseHandle' = baseHandle
-      length (execState (createCategoryBase baseHandle' (MkLabel "Archer") (Just $ MkLabel "Man")) categoriesInBase)
+      length (execState (createCategoryBase baseHandle' (CategoryInternal (MkLabel "Archer") (Just $ MkLabel "Man"))) categoriesInBase)
         `shouldNotBe` succ (length categoriesInBase)
 
     it "Failure: category does not exist in the database, category \"parent\" does not exist in the database" $ do
       let baseHandle' = baseHandle
-      length (execState (createCategoryBase baseHandle' (MkLabel "NewLabel") (Just $ MkLabel "ManNew")) categoriesInBase)
+      length (execState (createCategoryBase baseHandle' (CategoryInternal (MkLabel "NewLabel") (Just $ MkLabel "ManNew"))) categoriesInBase)
         `shouldNotBe` succ (length categoriesInBase)
 
     it "Failure: category already exists in the database, category \"parent\" does not exist in the database" $ do
       let baseHandle' = baseHandle
-      length (execState (createCategoryBase baseHandle' (MkLabel "Man") (Just $ MkLabel "ManNew")) categoriesInBase)
+      length (execState (createCategoryBase baseHandle' (CategoryInternal (MkLabel "Man") (Just $ MkLabel "ManNew"))) categoriesInBase)
         `shouldNotBe` succ (length categoriesInBase)
 
     it "Failure: category does not exist in the database, category \"parent\" exists in the database, error when working with database" $ do
       let baseHandle' = baseHandle {findCategoryByLabel = const (pure $ Left undefined)}
-      length (execState (createCategoryBase baseHandle' (MkLabel "NewLabel") (Just $ MkLabel "Man")) categoriesInBase)
+      length (execState (createCategoryBase baseHandle' (CategoryInternal (MkLabel "NewLabel") (Just $ MkLabel "Man"))) categoriesInBase)
         `shouldNotBe` succ (length categoriesInBase)
 
   describe "Create News" $ do
@@ -139,7 +139,7 @@ spec = do
               findUserByLogin = undefined,
               findNewsByTitle = undefined,
               getTime = pure (read $(localtimeTemplate)),
-              putNews = \(MkTitle title) time login label (MkContent content) _images ispublish -> do
+              putNews = \(NewsInternal (MkTitle title) login label (MkContent content) _images ispublish) time -> do
                 modify (News title time undefined undefined content ispublish :)
                 pure $ Right Put
             } ::
@@ -152,7 +152,7 @@ spec = do
                 findUserByLogin = const (pure $ Right $ Just user1),
                 findCategoryByLabel = const (pure $ Right $ Just cat1)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)
         `shouldBe` succ (length newsInBase)
 
     it "Failure: title does not exist in the database, user exists in the database, category does not exist in the database" $ do
@@ -162,7 +162,7 @@ spec = do
                 findUserByLogin = const (pure $ Right $ Just user1),
                 findCategoryByLabel = const (pure $ Right Nothing)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatNew") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatNew") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
     it "Failure: title does not exist in the database, user does not exist in the database, category exists in the database" $ do
@@ -172,7 +172,7 @@ spec = do
                 findUserByLogin = const (pure $ Right Nothing),
                 findCategoryByLabel = const (pure $ Right $ Just cat1)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "NewTitle") (MkLogin "UserNew") (MkLabel "CatOld") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserNew") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
     it "Failure: title does not exist in the database, user does not exist in the database, category does not exist in the database" $ do
@@ -182,7 +182,7 @@ spec = do
                 findUserByLogin = const (pure $ Right Nothing),
                 findCategoryByLabel = const (pure $ Right Nothing)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "NewTitle") (MkLogin "UserNew") (MkLabel "CatNew") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserNew") (MkLabel "CatNew") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
     it "Failure: title already exists in the database, user exists in the database, category exists in the database" $ do
@@ -192,7 +192,7 @@ spec = do
                 findUserByLogin = const (pure $ Right $ Just user1),
                 findCategoryByLabel = const (pure $ Right $ Just cat1)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "OldTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "OldTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
     it "Failure: title already exists in the database, user exists in the database, category does not exist in the database" $ do
@@ -202,7 +202,7 @@ spec = do
                 findUserByLogin = const (pure $ Right $ Just user1),
                 findCategoryByLabel = const (pure $ Right Nothing)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "OldTitle") (MkLogin "UserOld") (MkLabel "CatNew") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "OldTitle") (MkLogin "UserOld") (MkLabel "CatNew") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
     it "Failure: title already exists in the database, user does not exist in the database, category exists in the database" $ do
@@ -212,7 +212,7 @@ spec = do
                 findUserByLogin = const (pure $ Right Nothing),
                 findCategoryByLabel = const (pure $ Right $ Just cat1)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "OldTitle") (MkLogin "UserNew") (MkLabel "CatOld") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "OldTitle") (MkLogin "UserNew") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
     it "Failure: title already exists in the database, user does not exist in the database, category does not exist in the database" $ do
@@ -222,7 +222,7 @@ spec = do
                 findUserByLogin = const (pure $ Right Nothing),
                 findCategoryByLabel = const (pure $ Right Nothing)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "OldTitle") (MkLogin "UserNew") (MkLabel "CatNew") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "OldTitle") (MkLogin "UserNew") (MkLabel "CatNew") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
     it "Success: title does not exist in the database, user exists in the database, category exists in the database, error when working with database" $ do
@@ -232,7 +232,7 @@ spec = do
                 findUserByLogin = const (pure $ Right $ Just user1),
                 findCategoryByLabel = const (pure $ Right $ Just cat1)
               }
-      length (execState (createNewsBase baseHandle' (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False) newsInBase)
+      length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)
         `shouldNotBe` succ (length newsInBase)
 
   describe "Edit Category" $ do
@@ -258,7 +258,7 @@ spec = do
                     if label `elem` categories
                       then Just (Category label undefined)
                       else Nothing,
-              editCategory = \(MkLabel label) (MkLabel newlabel) parent -> do
+              editCategory = \(MkLabel label) (CategoryInternal (MkLabel newlabel) parent) -> do
                 categories <- get
                 modify
                   ( map
@@ -276,9 +276,9 @@ spec = do
           archerKey = giveParent "Man" -- Archer Man
       Category "Archer" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
         `shouldBe` True
-      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "NewArcher") Nothing) categoriesInBase
+      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "NewArcher") Nothing)) categoriesInBase
         `shouldNotBe` True
-      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "NewArcher") Nothing) categoriesInBase
+      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "NewArcher") Nothing)) categoriesInBase
         `shouldBe` True
 
     it "Success: The category being edited exists, the new category label is not contained in the database, the \"parent\" category is being edited." $ do
@@ -287,11 +287,11 @@ spec = do
           newArcherKey = giveParent "Abstract" -- Abstract
       Category "Archer" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
         `shouldBe` True
-      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "NewArcher") (Just . MkLabel $ "Abstract")) categoriesInBase
+      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "NewArcher") (Just . MkLabel $ "Abstract"))) categoriesInBase
         `shouldNotBe` True
-      Category "NewArcher" newArcherKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "NewArcher") (Just . MkLabel $ "Abstract")) categoriesInBase
+      Category "NewArcher" newArcherKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "NewArcher") (Just . MkLabel $ "Abstract"))) categoriesInBase
         `shouldBe` True
-      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "NewArcher") (Just . MkLabel $ "Man")) categoriesInBase
+      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "NewArcher") (Just . MkLabel $ "Man"))) categoriesInBase
         `shouldBe` True
 
     it "Failure: The category being edited does not exist, the new category label is not contained in the database, and the \"parent\" category is not changed." $ do
@@ -301,7 +301,7 @@ spec = do
         `shouldBe` True
       Category "Archer1" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
         `shouldNotBe` True
-      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer1") (MkLabel "NewArcher") Nothing) categoriesInBase
+      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer1") (CategoryInternal (MkLabel "NewArcher") Nothing)) categoriesInBase
         `shouldNotBe` True
 
     it "Failure: The category being edited does not exist, the new category label is contained in the database, and the \"parent\" category is not changed." $ do
@@ -313,9 +313,9 @@ spec = do
         `shouldBe` True
       Category "Evil" evilKey `elem` categoriesInBase --  == cat7 `elem` categoriesInBase
         `shouldBe` True
-      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "Evil") Nothing) categoriesInBase
+      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "Evil") Nothing)) categoriesInBase
         `shouldBe` True
-      Category "Evil" evilKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "Evil") Nothing) categoriesInBase
+      Category "Evil" evilKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "Evil") Nothing)) categoriesInBase
         `shouldBe` True
 
     it "Failure: The category being edited exists, the new category label is not contained in the database, and the \"parent\" category is not changed, error when working with database" $ do
@@ -323,9 +323,9 @@ spec = do
           archerKey = giveParent "Man" -- Archer Man
       Category "Archer" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
         `shouldBe` True
-      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "NewArcher") Nothing) categoriesInBase
+      Category "Archer" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "NewArcher") Nothing)) categoriesInBase
         `shouldBe` True
-      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (MkLabel "NewArcher") Nothing) categoriesInBase
+      Category "NewArcher" archerKey `elem` execState (updateCategoryBase baseHandle' (MkLabel "Archer") (CategoryInternal (MkLabel "NewArcher") Nothing)) categoriesInBase
         `shouldNotBe` True
   --
   --
@@ -369,7 +369,7 @@ spec = do
                       then Just (Category label undefined)
                       else Nothing,
               getTime = pure (read $(localtimeTemplate)),
-              editNews = \titleOld time mbTitle mbLogin mbLabel mbContent images mbPublish -> pure $ Right Change
+              editNews = \titleOld time (NewsEditInternal mbTitle mbLogin mbLabel mbContent images mbPublish) -> pure $ Right Change
             } ::
             Handle (State ([News], [User], [Category]))
 
@@ -379,12 +379,14 @@ spec = do
         ( updateNews
             baseHandle'
             (MkTitle $ newsTitle news1)
-            (Just . MkTitle $ "New Title for news1")
-            Nothing
-            Nothing
-            Nothing
-            []
-            Nothing
+            ( NewsEditInternal
+                (Just . MkTitle $ "New Title for news1")
+                Nothing
+                Nothing
+                Nothing
+                []
+                Nothing
+            )
         )
         base
         `shouldBe` Right Change
@@ -394,12 +396,14 @@ spec = do
         ( updateNews
             baseHandle'
             (MkTitle $ newsTitle news1)
-            (Just . MkTitle $ "New Title for news1")
-            (Just . MkLogin $ userLogin user2)
-            Nothing
-            Nothing
-            []
-            Nothing
+            ( NewsEditInternal
+                (Just . MkTitle $ "New Title for news1")
+                (Just . MkLogin $ userLogin user2)
+                Nothing
+                Nothing
+                []
+                Nothing
+            )
         )
         base
         `shouldBe` Right Change
@@ -409,12 +413,14 @@ spec = do
         ( updateNews
             baseHandle'
             (MkTitle $ newsTitle news1)
-            (Just . MkTitle $ "New Title for news1")
-            Nothing
-            (Just . MkLabel $ categoryLabel cat1)
-            Nothing
-            []
-            Nothing
+            ( NewsEditInternal
+                (Just . MkTitle $ "New Title for news1")
+                Nothing
+                (Just . MkLabel $ categoryLabel cat1)
+                Nothing
+                []
+                Nothing
+            )
         )
         base
         `shouldBe` Right Change
@@ -424,12 +430,14 @@ spec = do
         ( updateNews
             baseHandle'
             (MkTitle "")
-            (Just . MkTitle $ "New Title for news1")
-            Nothing
-            Nothing
-            Nothing
-            []
-            Nothing
+            ( NewsEditInternal
+                (Just . MkTitle $ "New Title for news1")
+                Nothing
+                Nothing
+                Nothing
+                []
+                Nothing
+            )
         )
         base
         `shouldNotBe` Right Change
@@ -439,12 +447,14 @@ spec = do
         ( updateNews
             baseHandle'
             (MkTitle $ newsTitle news1)
-            (Just . MkTitle $ newsTitle news2)
-            Nothing
-            Nothing
-            Nothing
-            []
-            Nothing
+            ( NewsEditInternal
+                (Just . MkTitle $ newsTitle news2)
+                Nothing
+                Nothing
+                Nothing
+                []
+                Nothing
+            )
         )
         base
         `shouldNotBe` Right Change
@@ -454,27 +464,32 @@ spec = do
         ( updateNews
             baseHandle'
             (MkTitle $ newsTitle news1)
-            (Just . MkTitle $ "New Title for news1")
-            (Just . MkLogin $ "")
-            Nothing
-            Nothing
-            []
-            Nothing
+            ( NewsEditInternal
+                (Just . MkTitle $ "New Title for news1")
+                (Just . MkLogin $ "")
+                Nothing
+                Nothing
+                []
+                Nothing
+            )
         )
         base
         `shouldNotBe` Right Change
     it "Failure: The news being edited exists, the new news title is not contained in the database, the new category is not contained in the database" $ do
+      -- updateNews :: (Monad m) => Handle m -> Title -> NewsEditInternal -> m (Either T.Text Success)
       let baseHandle' = baseHandle
       evalState
         ( updateNews
             baseHandle'
             (MkTitle $ newsTitle news1)
-            (Just . MkTitle $ "New Title for news1")
-            Nothing
-            (Just . MkLabel $ "")
-            Nothing
-            []
-            Nothing
+            ( NewsEditInternal
+                (Just . MkTitle $ "New Title for news1")
+                Nothing
+                (Just . MkLabel $ "")
+                Nothing
+                []
+                Nothing
+            )
         )
         base
         `shouldNotBe` Right Change
