@@ -36,6 +36,7 @@ library
       Handlers.WebLogic
       Logger
       Scheme
+      Types
       Web.WebLogic
       Web.WebType
   other-modules:

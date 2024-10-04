@@ -18,11 +18,10 @@ import qualified Handlers.Logger
 import Network.HTTP.Types (Query)
 import Network.Wai (Request, Response, queryString, rawPathInfo, requestHeaders)
 import Scheme (FilterItem (FilterPublishOrAuthor), Image, IsValidPassword (..))
+import Types (CategoryInternal (..), Content (..), Label (..), Login (..), Name (..), NewsEditInternal (..), NewsInternal (..), NumberImage (..), PasswordUser (..), Title (..), UserInternal (..))
 import Web.WebType (CategoryFromWeb (..), EditCategoryFromWeb (..), EditNewsFromWeb (..), NewsFromWeb (..), UserFromWeb (..), categoryToWeb, headersToLoginAndPassword, newsToWeb, queryToFilters, queryToFind, queryToPanigate, queryToSort, userToWeb, webToCategory, webToEditCategory, webToEditNews, webToNews, webToUser)
 
-type Login = T.Text
-
-type Author = T.Text
+type Author = Login
 
 data ClientRole = AdminRole | PublisherRole
   deriving (Eq, Show)
@@ -59,8 +58,8 @@ getClient h req = do
       Nothing -> pure $ Client Nothing Nothing Nothing
       Just (login_, password_) -> do
         --
-        (isAdmin_, isPublisher_) <- ExceptT $ Handlers.Base.getPrivilege baseHandle login_
-        valid <- ExceptT $ Handlers.Base.getResultValid baseHandle login_ password_
+        (isAdmin_, isPublisher_) <- ExceptT $ Handlers.Base.getPrivilege baseHandle (MkLogin login_)
+        valid <- ExceptT $ Handlers.Base.getResultValid baseHandle (MkLogin login_) (MkPasswordUser password_)
         case valid of
           NotValid -> do
             lift $ Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
@@ -72,7 +71,7 @@ getClient h req = do
               Client
                 (bool Nothing (Just Proxy) isAdmin_)
                 (bool Nothing (Just Proxy) isPublisher_)
-                (Just login_)
+                (Just (MkLogin login_))
 
 doAuthorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
 doAuthorization h req = do
@@ -156,7 +155,17 @@ createUser _ h req = do
       pure (response404 h)
     Right (UserFromWeb name_ login_ password_ admin_ publisher_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"
-      tryCreateUser <- Handlers.Base.createUserBase baseHandle name_ login_ password_ admin_ publisher_
+      tryCreateUser <-
+        Handlers.Base.createUserBase
+          baseHandle
+          ( UserInternal
+              { nameUser = MkName name_,
+                loginUser = MkLogin login_,
+                passwordUser = MkPasswordUser password_,
+                isAdminUser = admin_,
+                isPublisherUser = publisher_
+              }
+          )
       case tryCreateUser of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create User success WEB"
@@ -185,7 +194,7 @@ existingImages h req = do
   case queryImage of
     [("id", Just n)] | idImage > 0 -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Good request image"
-      eImage <- Handlers.Base.getImage baseHandle idImage
+      eImage <- Handlers.Base.getImage baseHandle (MkNumberImage idImage)
       case eImage of
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
@@ -254,7 +263,14 @@ createCategory _ h req = do
       pure (response404 h) -- "Not ok.
     Right (CategoryFromWeb label_ parent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create category"
-      tryCreateCategory <- Handlers.Base.createCategoryBase baseHandle label_ parent_
+      tryCreateCategory <-
+        Handlers.Base.createCategoryBase
+          baseHandle
+          ( CategoryInternal
+              { labelCategory = MkLabel label_,
+                parentCategory = fmap MkLabel parent_
+              }
+          )
       case tryCreateCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category success WEB"
@@ -276,7 +292,15 @@ updateCategory _ h req = do
       pure (response404 h) -- "Not ok.
     Right (EditCategoryFromWeb label_ (Just newlabel_) newparent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category Just newlabel parent"
-      tryEditCategory <- Handlers.Base.updateCategoryBase baseHandle label_ newlabel_ newparent_
+      tryEditCategory <-
+        Handlers.Base.updateCategoryBase
+          baseHandle
+          (MkLabel label_)
+          ( CategoryInternal
+              { labelCategory = MkLabel newlabel_,
+                parentCategory = fmap MkLabel newparent_
+              }
+          )
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
@@ -284,7 +308,15 @@ updateCategory _ h req = do
         Left _ -> pure $ response404 h -- "Not ok.
     Right (EditCategoryFromWeb label_ Nothing newparent_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category without new label"
-      tryEditCategory <- Handlers.Base.updateCategoryBase baseHandle label_ label_ newparent_
+      tryEditCategory <-
+        Handlers.Base.updateCategoryBase
+          baseHandle
+          (MkLabel label_)
+          ( CategoryInternal
+              { labelCategory = MkLabel label_,
+                parentCategory = fmap MkLabel newparent_
+              }
+          )
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
@@ -323,7 +355,7 @@ endPointNews h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show sortWeb)
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show findWeb)
-      let filterPublishOrAuthor = FilterPublishOrAuthor (author $ client h)
+      let filterPublishOrAuthor = FilterPublishOrAuthor (fmap getLogin $ author $ client h)
       mapM_
         (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show)
         (filterPublishOrAuthor : filtersWeb)
@@ -360,7 +392,7 @@ endPointNews h req = do
     setFilters h' q =
       let baseHandle = base h'
           filters = queryToFilters q
-          filterVisible = FilterPublishOrAuthor (author $ client h) -- publish or author visible news
+          filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ client h) -- publish or author visible news
           newBaseHandle = baseHandle {Handlers.Base.filtersNews = filterVisible : filters}
        in h' {base = newBaseHandle}
 
@@ -377,7 +409,18 @@ createNews _ h req = do
       pure (response404 h) -- "Not ok.
     Right (NewsFromWeb title_ login_ label_ content_ images_ publish_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"
-      tryCreateNews <- Handlers.Base.createNewsBase baseHandle title_ login_ label_ content_ images_ publish_
+      tryCreateNews <-
+        Handlers.Base.createNewsBase
+          baseHandle
+          ( NewsInternal
+              { titleNews = MkTitle title_,
+                authorNews = MkLogin login_,
+                labelNews = MkLabel label_,
+                contentNews = MkContent content_,
+                imagesNews = images_,
+                isPublishNews = publish_
+              }
+          )
       case tryCreateNews of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create News success WEB"
@@ -400,7 +443,7 @@ updateNews author_ h req = do
       pure (response404 h) -- "Not ok.
     Right (EditNewsFromWeb title_ newTitle_ newLogin_ newLabel_ newContent_ newImages_ newIsPublish_) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."
-      checkCopyright <- Handlers.Base.getCopyRight baseHandle author_ title_
+      checkCopyright <- Handlers.Base.getCopyRight baseHandle author_ (MkTitle title_)
       case checkCopyright of
         Right Valid -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Ok"
@@ -408,13 +451,15 @@ updateNews author_ h req = do
           tryEditNews <-
             Handlers.Base.updateNews
               baseHandle
-              title_
-              newTitle_
-              newLogin_
-              newLabel_
-              newContent_
-              (fromMaybe [] newImages_)
-              newIsPublish_
+              (MkTitle title_)
+              ( NewsEditInternal
+                  (fmap MkTitle newTitle_)
+                  (fmap MkLogin newLogin_)
+                  (fmap MkLabel newLabel_)
+                  (fmap MkContent newContent_)
+                  (fromMaybe [] newImages_)
+                  newIsPublish_
+              )
           case tryEditNews of
             Right _ -> do
               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"

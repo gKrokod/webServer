@@ -7,6 +7,7 @@ import Base.LocalTime (localtimeTemplate)
 import Base.TestImage (testImage1, testImage2, testImage3)
 import Database.Persist.Postgresql (toSqlKey)
 import qualified Scheme as S
+import Types (PasswordUser (..))
 
 user1, user2, user3 :: S.User
 user1 =
@@ -22,9 +23,9 @@ user2 = S.User "user2" "login2" (toSqlKey 2) (read $(localtimeTemplate)) True Tr
 user3 = S.User "user3" "login3" (toSqlKey 3) (read $(localtimeTemplate)) False True
 
 password1, password2, password3 :: S.Password
-password1 = S.Password {S.passwordQuasiPassword = makeHashPassword "qpass1" (read $(localtimeTemplate))}
-password2 = S.Password (makeHashPassword "qpass2" (read $(localtimeTemplate)))
-password3 = S.Password (makeHashPassword "qpass3" (read $(localtimeTemplate)))
+password1 = S.Password {S.passwordQuasiPassword = makeHashPassword (MkPasswordUser "qpass1") (read $(localtimeTemplate))}
+password2 = S.Password (makeHashPassword (MkPasswordUser "qpass2") (read $(localtimeTemplate)))
+password3 = S.Password (makeHashPassword (MkPasswordUser "qpass3") (read $(localtimeTemplate)))
 
 image1, image2, image3 :: S.Image
 image1 = testImage1 -- real image jpeg

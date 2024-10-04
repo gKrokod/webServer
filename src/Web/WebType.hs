@@ -15,6 +15,7 @@ import qualified Data.Text.Encoding as E
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), SortOrder (..), User (..))
+import Types (Content (..), Label (..), Name (..), NewsOut (..), Title (..), URI_Image (..))
 
 data UserToWeb = UserToWeb
   { name :: T.Text,
@@ -105,22 +106,25 @@ data NewsToWeb = NewsToWeb
     labels :: [T.Text],
     content :: T.Text,
     images :: [T.Text],
-    isPublisher :: Bool
+    isPublish :: Bool
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON)
 
---
-
--- type NewsOut = (Title, UTCTime, Name, [Label], Content, [URI_Image], Bool)
-type NewsOut = (T.Text, UTCTime, T.Text, [T.Text], T.Text, [T.Text], Bool)
-
---
 newsToWeb :: [NewsOut] -> Builder
 newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
   where
     convertToWeb :: NewsOut -> NewsToWeb
-    convertToWeb (t, d, n, ls, c, im, b) = NewsToWeb t d n ls c im b
+    convertToWeb newsOut =
+      NewsToWeb
+        { title = getTitle $ nTitle newsOut,
+          created = nTime newsOut,
+          author = getName $ nAuthor newsOut,
+          labels = map getLabel $ nCategories newsOut,
+          content = getContent $ nContent newsOut,
+          images = map getURI_Image $ nImages newsOut,
+          isPublish = nIsPublish newsOut
+        }
 
 data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int}
   deriving stock (Eq, Show, Generic)
