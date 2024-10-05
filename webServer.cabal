@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -31,9 +31,39 @@ library
       Base.LocalTime
       Base.TestImage
       Config
-      Handlers.Base
+      Handlers.Base.Api
+      Handlers.Base.Authorization
+      Handlers.Base.Base
+      Handlers.Base.Category.Create.Api
+      Handlers.Base.Category.Get.Api
+      Handlers.Base.Category.Update.Api
+      Handlers.Base.Image.Get.Api
+      Handlers.Base.News.Create.Api
+      Handlers.Base.News.Get.Api
+      Handlers.Base.News.Update.Api
+      Handlers.Base.User.Create.Api
+      Handlers.Base.User.Get.Api
       Handlers.Logger
-      Handlers.WebLogic
+      Handlers.Router
+      Handlers.Web.Api
+      Handlers.Web.Category.CategoryApi
+      Handlers.Web.Category.Create.Api
+      Handlers.Web.Category.Get.Api
+      Handlers.Web.Category.Types
+      Handlers.Web.Category.Update.Api
+      Handlers.Web.Image.Get.Api
+      Handlers.Web.Image.ImageApi
+      Handlers.Web.Image.Types
+      Handlers.Web.News.Create.Api
+      Handlers.Web.News.Get.Api
+      Handlers.Web.News.NewsApi
+      Handlers.Web.News.Types
+      Handlers.Web.News.Update.Api
+      Handlers.Web.User.Create.Api
+      Handlers.Web.User.Get.Api
+      Handlers.Web.User.Types
+      Handlers.Web.User.UserApi
+      Handlers.Web.Web
       Logger
       Scheme
       Types
