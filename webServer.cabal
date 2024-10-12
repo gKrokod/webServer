@@ -134,19 +134,15 @@ test-suite webServer-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Base.BaseSpec
-      Base.CryptoSpec
-      Base.FillTablesSpec
-      Base.LocalTimeSpec
-      Base.TestImageSpec
-      ConfigSpec
-      Handlers.BaseSpec
+      Handlers.Database.AuthorizationSpec
+      Handlers.Database.Category.CreateSpec
+      Handlers.Database.Category.UpdateSpec
+      Handlers.Database.News.CreateSpec
+      Handlers.Database.News.UpdateSpec
+      Handlers.Database.User.CreateSpec
+      Handlers.Database.User.GetSpec
       Handlers.LoggerSpec
-      Handlers.WebLogicSpec
-      LoggerSpec
-      SchemeSpec
-      Web.WebLogicSpec
-      Web.WebTypeSpec
+      Handlers.RouterSpec
       Paths_webServer
   autogen-modules:
       Paths_webServer

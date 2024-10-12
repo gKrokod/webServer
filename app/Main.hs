@@ -5,7 +5,7 @@ import Control.Exception (bracket_)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
-import qualified Database.Crypto
+-- import qualified Database.Crypto
 import qualified Handlers.Database.Base
 import Handlers.Logger (Log (Debug))
 import qualified Handlers.Logger
@@ -66,7 +66,7 @@ makeSetup cfg = do
             Handlers.Database.Base.putUser = DA.putUser pginfo,
             Handlers.Database.Base.findUserByLogin = DA.findUserByLogin pginfo,
             Handlers.Database.Base.getTime = getCurrentTime,
-            Handlers.Database.Base.makeHashPassword = Database.Crypto.makeHashPassword,
+            Handlers.Database.Base.makeHashPassword = DA.makeHashPassword,
             Handlers.Database.Base.validPassword = DA.validPassword pginfo,
             Handlers.Database.Base.validCopyRight = DA.validCopyRight pginfo,
             -- default setup

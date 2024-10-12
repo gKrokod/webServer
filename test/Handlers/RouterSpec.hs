@@ -2,32 +2,32 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Handlers.WebLogicSpec (spec) where
+module Handlers.RouterSpec (spec) where
 
-import Base.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, user1, user2, user3)
-import Base.LocalTime (localtimeTemplate)
+import Handlers.Router (doLogic, doAuthorization)
+
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, user1, user2, user3)
+import Database.Data.LocalTime (localtimeTemplate)
 import Control.Monad.Identity (Identity, runIdentity)
 import Control.Monad.State (State, evalState, get, gets)
 import Data.Binary.Builder as BU (Builder, fromByteString)
 import Data.ByteString.Base64 as B64
-import Data.Either (isLeft)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Data.Time (Day (..), UTCTime (..), fromGregorian)
-import qualified Handlers.Base
+import qualified Handlers.Database.Base as DB
+import qualified Handlers.Web.Base as WB
 import qualified Handlers.Logger
-import Handlers.WebLogic
 import Network.HTTP.Types (hContentType, notFound404, status200)
-import Network.Wai (Request, defaultRequest, getRequestBodyChunk, queryString, rawPathInfo, rawQueryString, requestHeaders, responseBuilder)
+import Network.Wai (defaultRequest, queryString, rawPathInfo, requestHeaders, responseBuilder)
 import Network.Wai.Internal (Response (..))
 import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
 import Test.Hspec (Spec, describe, it, shouldBe, shouldNotBe)
-import Types (CategoryInternal (..), Content (..), Label (..), Login (..), Name (..), NewsEditInternal (..), NewsInternal (..), NewsOut (..), NumberImage (..), Title (..), URI_Image (..), UserInternal (..))
+import Types (Content (..), Label (..), Login (..), Name (..), NumberImage (..), Title (..), URI_Image (..))
 import Web.WebType (categoryToWeb, newsToWeb, userToWeb)
-
---
+import Handlers.Web.Base (CategoryInternal (..), UserInternal (..),NewsEditInternal (..), NewsInternal (..), NewsOut (..))
 
 spec :: Spec
 spec = do
@@ -47,9 +47,9 @@ spec = do
 
         usersInBase = [user1, user2, user3]
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.findUserByLogin = \(MkLogin login) ->
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.findUserByLogin = \(MkLogin login) ->
                 gets
                   ( Right
                       . listToMaybe
@@ -58,22 +58,22 @@ spec = do
                             if l == login then Just user else Nothing
                         )
                   ),
-              Handlers.Base.validPassword = \login password -> pure $ Right True
+              DB.validPassword = \login password -> pure $ Right True
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              response404 = test404
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.response404 = test404
             } ::
-            Handle (State [User])
+            WB.Handle (State [User])
 
     it "Unknown user does not received privileges" $ do
       let req' = req {requestHeaders = []}
           webHandle' = webHandle
 
-      client <$> evalState (doAuthorization webHandle' req') usersInBase
-        `shouldBe` Right (Client Nothing Nothing Nothing)
+      WB.client <$> evalState (doAuthorization webHandle' req') usersInBase
+        `shouldBe` Right (WB.Client Nothing Nothing Nothing)
 
     it "A user with a valid password receives their privileges" $ do
       let req1 = req {requestHeaders = [("Authorization", "Basic bG9naW4xOnFwYXNzMQ==")]} -- user1
@@ -81,25 +81,25 @@ spec = do
           req3 = req {requestHeaders = [("Authorization", "Basic bG9naW4zOnFwYXNzMw==")]} -- user3
           webHandle' = webHandle
 
-      client <$> evalState (doAuthorization webHandle' req1) usersInBase
-        `shouldBe` Right (Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)) -- user1
-      client <$> evalState (doAuthorization webHandle' req2) usersInBase
-        `shouldBe` Right (Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)) -- user2
-      client <$> evalState (doAuthorization webHandle' req3) usersInBase
-        `shouldBe` Right (Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)) -- user3
+      WB.client <$> evalState (doAuthorization webHandle' req1) usersInBase
+        `shouldBe` Right (WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)) -- user1
+      WB.client <$> evalState (doAuthorization webHandle' req2) usersInBase
+        `shouldBe` Right (WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)) -- user2
+      WB.client <$> evalState (doAuthorization webHandle' req3) usersInBase
+        `shouldBe` Right (WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)) -- user3
     it "A user with an invalid password does not receive his privileges" $ do
       let req1 = req {requestHeaders = [("Authorization", "Basic bG9naW4xOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user1
           req2 = req {requestHeaders = [("Authorization", "Basic bG9naW4yOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user2
           req3 = req {requestHeaders = [("Authorization", "Basic bG9naW4zOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user3
-          baseHandle' = baseHandle {Handlers.Base.validPassword = \login password -> pure $ Right False}
-          webHandle' = webHandle {base = baseHandle'}
+          baseHandle' = baseHandle {DB.validPassword = \login password -> pure $ Right False}
+          webHandle' = webHandle {WB.base = baseHandle'}
 
-      client <$> evalState (doAuthorization webHandle' req1) usersInBase
-        `shouldNotBe` Right (Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)) -- user1
-      client <$> evalState (doAuthorization webHandle' req2) usersInBase
-        `shouldNotBe` Right (Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)) -- user2
-      client <$> evalState (doAuthorization webHandle' req3) usersInBase
-        `shouldNotBe` Right (Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)) -- user3
+      WB.client <$> evalState (doAuthorization webHandle' req1) usersInBase
+        `shouldNotBe` Right (WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)) -- user1
+      WB.client <$> evalState (doAuthorization webHandle' req2) usersInBase
+        `shouldNotBe` Right (WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)) -- user2
+      WB.client <$> evalState (doAuthorization webHandle' req3) usersInBase
+        `shouldNotBe` Right (WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)) -- user3
   describe "EndPoint: /users" $ do
     let req = defaultRequest
         req' = req {rawPathInfo = "/users", queryString = [("panigate", Just "{\"offset\":0,\"limit\":7}")]}
@@ -112,45 +112,45 @@ spec = do
 
         usersInBase = [user1, user2, user3]
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.pullAllUsers = \(Handlers.Base.MkOffset offset) (Handlers.Base.MkLimit limit) -> get >>= pure . Right . take limit . drop offset
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.pullAllUsers = \(DB.MkOffset offset) (DB.MkLimit limit) -> get >>= pure . Right . take limit . drop offset
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              mkGoodResponse = testBuilder
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.mkGoodResponse = testBuilder
             } ::
-            Handle (State [User])
+            WB.Handle (State [User])
 
     it "All clients can get a list of users" $ do
       --
       let baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
-          clientAdminUser4 = Client Nothing Nothing Nothing
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3
               }
           webHandle4 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser4
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser4
               }
 
       evalState (doLogic webHandle1 req') usersInBase
@@ -165,12 +165,12 @@ spec = do
     it "Client can panigate" $ do
       let req' = req {rawPathInfo = "/users", queryString = [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
           baseHandle' = baseHandle
-          client' = Client Nothing Nothing Nothing
+          client' = WB.Client Nothing Nothing Nothing
 
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client'
+              { WB.base = baseHandle',
+                WB.client = client'
               }
 
       evalState (doLogic webHandle' req') usersInBase
@@ -189,44 +189,44 @@ spec = do
         categoriesInBase = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]
 
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.pullAllCategories = \(Handlers.Base.MkOffset offset) (Handlers.Base.MkLimit limit) -> get >>= pure . Right . take limit . drop offset
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.pullAllCategories = \(DB.MkOffset offset) (DB.MkLimit limit) -> get >>= pure . Right . take limit . drop offset
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              mkGoodResponse = testBuilder
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.mkGoodResponse = testBuilder
             } ::
-            Handle (State [Category])
+            WB.Handle (State [Category])
 
     it "All clients can get a list of category" $ do
       let baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
-          clientAdminUser4 = Client Nothing Nothing Nothing
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3
               }
           webHandle4 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser4
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser4
               }
 
       evalState (doLogic webHandle1 req') categoriesInBase
@@ -241,12 +241,12 @@ spec = do
     it "Client can panigate" $ do
       let req' = req {rawPathInfo = "/categories", queryString = [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
           baseHandle' = baseHandle
-          client' = Client Nothing Nothing Nothing
+          client' = WB.Client Nothing Nothing Nothing
 
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client'
+              { WB.base = baseHandle',
+                WB.client = client'
               }
 
       evalState (doLogic webHandle' req') categoriesInBase
@@ -267,44 +267,44 @@ spec = do
         imagesInBase = [image1, image2, image3]
 
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.pullImage = \(MkNumberImage num) -> get >>= pure . Right . Just . flip (!!) (fromIntegral num)
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.pullImage = \(MkNumberImage num) -> get >>= pure . Right . Just . flip (!!) (fromIntegral num)
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              mkResponseForImage = testImage
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.mkResponseForImage = testImage
             } ::
-            Handle (State [Image])
+            WB.Handle (State [Image])
 
     it "All clients can get a image" $ do
       let baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
-          clientAdminUser4 = Client Nothing Nothing Nothing
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1
+              {WB.base = baseHandle',
+               WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser2
+              {WB.base = baseHandle',
+               WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser3
+              {WB.base = baseHandle',
+               WB.client = clientAdminUser3
               }
           webHandle4 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser4
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser4
               }
 
       evalState (doLogic webHandle1 req') imagesInBase
@@ -327,10 +327,10 @@ spec = do
 
         usersInBase = [user1, user2, user3]
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.getTime = pure (read $(localtimeTemplate)),
-              Handlers.Base.findUserByLogin = \(MkLogin login) ->
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.findUserByLogin = \(MkLogin login) ->
                 gets
                   ( Right
                       . listToMaybe
@@ -339,26 +339,26 @@ spec = do
                             if l == login then Just user else Nothing
                         )
                   ),
-              Handlers.Base.putUser = \(UserInternal name login pass admin publish) time -> pure $ Right Handlers.Base.Put
+              DB.putUser = \(UserInternal name login pass admin publish) time -> pure $ Right DB.Put
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              response404 = test404,
-              response200 = test200
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.response404 = test404,
+              WB.response200 = test200
             } ::
-            Handle (State [User])
+            WB.Handle (State [User])
 
     it "Admin can create new user" $ do
       let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq
               }
 
       evalState (doLogic webHandle' req') usersInBase
@@ -367,27 +367,27 @@ spec = do
     it "Non-admin can't create a new user" $ do
       let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq
               }
 
       evalState (doLogic webHandle' req') usersInBase
         `shouldNotBe` test200
 
     it "Admin can't create a new user with login that already exists in the databse" $ do
-      let clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           oldUser = E.encodeUtf8 . userLogin $ user1
           bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
           baseHandle' = baseHandle
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq
               }
 
       evalState (doLogic webHandle' req') usersInBase
@@ -405,36 +405,36 @@ spec = do
         categoriesInBase = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]
 
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.getTime = pure (read $(localtimeTemplate)),
-              Handlers.Base.findCategoryByLabel = \(MkLabel label) -> do
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.findCategoryByLabel = \(MkLabel label) -> do
                 categories <- gets (map categoryLabel)
                 pure $
                   Right $
                     if label `elem` categories
                       then Just undefined
                       else Nothing,
-              Handlers.Base.putCategory = \(CategoryInternal label parent) -> pure $ Right Handlers.Base.Put
+              DB.putCategory = \(CategoryInternal label parent) -> pure $ Right DB.Put
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              response404 = test404,
-              response200 = test200
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.response404 = test404,
+              WB.response200 = test200
             } ::
-            Handle (State [Category])
+            WB.Handle (State [Category])
 
     it "Admin can create a new category" $ do
       let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq
               }
 
       evalState (doLogic webHandle' req') categoriesInBase
@@ -443,41 +443,41 @@ spec = do
     it "Non-admin can't create a new category" $ do
       let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq
               }
 
       evalState (doLogic webHandle' req') categoriesInBase
         `shouldNotBe` test200
 
     it "Admin can't create a new category with label that already exists in the database" $ do
-      let clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           oldLabel = E.encodeUtf8 . categoryLabel $ cat1
           bodyReq = "{\"label\":\"" <> oldLabel <> "\",\"parent\":\"Abstract\"}"
           baseHandle' = baseHandle
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq
               }
 
       evalState (doLogic webHandle' req') categoriesInBase
         `shouldNotBe` test200
 
     it "Admin can't create a new category with parent that does not exis in the database" $ do
-      let clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           bodyReq = "{\"parent\":\"NOCATEGORYLABEL\",\"label\":\"NewLabel\"}"
           baseHandle' = baseHandle
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq
               }
 
       evalState (doLogic webHandle' req') categoriesInBase
@@ -487,18 +487,18 @@ spec = do
       let bodyReq1 = "{\"label\":\"Angel\",\"parent\":null}"
           bodyReq2 = "{\"label\":\"Angel\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq2
               }
 
       evalState (doLogic webHandle1 req') categoriesInBase
@@ -518,50 +518,50 @@ spec = do
         categoriesInBase = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]
 
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.getTime = pure (read $(localtimeTemplate)),
-              Handlers.Base.findCategoryByLabel = \(MkLabel label) -> do
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.findCategoryByLabel = \(MkLabel label) -> do
                 categories <- gets (map categoryLabel)
                 pure $
                   Right $
                     if label `elem` categories
                       then Just undefined
                       else Nothing,
-              Handlers.Base.editCategory = \label (CategoryInternal newlabel parent) -> pure $ Right Handlers.Base.Change
+              DB.editCategory = \label (CategoryInternal newlabel parent) -> pure $ Right DB.Change
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              response404 = test404,
-              response200 = test200
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.response404 = test404,
+              WB.response200 = test200
             } ::
-            Handle (State [Category])
+            WB.Handle (State [Category])
 
     it "Admin can edit a category" $ do
       let bodyReq1 = "{\"label\":\"Man\",\"newLabel\":\"NewMan\",\"newparent\":\"Woman\"}"
           bodyReq2 = "{\"label\":\"Man\",\"newLabel\":\"NewMan\"}"
           bodyReq3 = "{\"label\":\"Man\",\"newparent\":\"Woman\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq2
               }
           webHandle3 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1,
-                getBody = const . pure $ bodyReq3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1,
+                WB.getBody = const . pure $ bodyReq3
               }
 
       evalState (doLogic webHandle1 req') categoriesInBase
@@ -574,12 +574,12 @@ spec = do
     it "Non-admin can't edit a category" $ do
       let bodyReq = "{\"label\":\"Man\",\"newLabel\":\"NewMan\",\"newparent\":\"Woman\"}"
           baseHandle' = baseHandle
-          clientAdminUser3 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser3,
-                getBody = const . pure $ bodyReq
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3,
+                WB.getBody = const . pure $ bodyReq
               }
       evalState (doLogic webHandle' req') categoriesInBase
         `shouldNotBe` test200
@@ -632,49 +632,49 @@ spec = do
           ]
 
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.sortColumnNews = DataNews,
-              Handlers.Base.sortOrderNews = Descending,
-              Handlers.Base.findSubString = Nothing,
-              Handlers.Base.filtersNews = [],
-              Handlers.Base.pullAllNews = \(Handlers.Base.MkOffset offset) (Handlers.Base.MkLimit limit) columnType sortOrder find filters -> get >>= pure . Right . take limit . drop offset
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.sortColumnNews = DataNews,
+              DB.sortOrderNews = Descending,
+              DB.findSubString = Nothing,
+              DB.filtersNews = [],
+              DB.pullAllNews = \(DB.MkOffset offset) (DB.MkLimit limit) columnType sortOrder find filters -> get >>= pure . Right . take limit . drop offset
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              mkGoodResponse = testBuilder
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.mkGoodResponse = testBuilder
             } ::
-            Handle (State [NewsOut])
+            WB.Handle (State [NewsOut])
 
     it "All clients can get list of news" $ do
       --
       let baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
-          clientAdminUser4 = Client Nothing Nothing Nothing
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3
               }
           webHandle4 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser4
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser4
               }
 
       evalState (doLogic webHandle1 req') newsInBase
@@ -689,12 +689,12 @@ spec = do
     it "Client can panigate" $ do
       let req' = req {rawPathInfo = "/news", queryString = [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
           baseHandle' = baseHandle
-          client' = Client Nothing Nothing Nothing
+          client' = WB.Client Nothing Nothing Nothing
 
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client'
+              { WB.base = baseHandle',
+                WB.client = client'
               }
 
       evalState (doLogic webHandle' req') newsInBase
@@ -703,7 +703,7 @@ spec = do
     it "Check default news settings" $ do
       let baseHandle' =
             baseHandle
-              { Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters ->
+              { DB.pullAllNews = \offset limit columnType sortOrder find filters ->
                   pure . Right $
                     [ MkNewsOut
                         (MkTitle $ typeToText columnType)
@@ -716,18 +716,18 @@ spec = do
                     ]
               }
 
-          client1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          client2 = Client Nothing Nothing Nothing
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client2 = WB.Client Nothing Nothing Nothing
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = client1
+              { WB.base = baseHandle',
+                WB.client = client1
               }
 
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = client2
+              { WB.base = baseHandle',
+                WB.client = client2
               }
 
       evalState (doLogic webHandle1 req') newsInBase
@@ -768,7 +768,7 @@ spec = do
 
           baseHandle' =
             baseHandle
-              { Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters ->
+              { DB.pullAllNews = \offset limit columnType sortOrder find filters ->
                   pure . Right $
                     [ MkNewsOut
                         (MkTitle $ typeToText columnType)
@@ -781,11 +781,11 @@ spec = do
                     ]
               }
 
-          client1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client1
+              { WB.base = baseHandle',
+                WB.client = client1
               }
 
       evalState (doLogic webHandle' req1) newsInBase
@@ -895,7 +895,7 @@ spec = do
 
           baseHandle' =
             baseHandle
-              { Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters ->
+              { DB.pullAllNews = \offset limit columnType sortOrder find filters ->
                   pure . Right $
                     [ MkNewsOut
                         (MkTitle $ typeToText columnType)
@@ -908,11 +908,11 @@ spec = do
                     ]
               }
 
-          client1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client1
+              { WB.base = baseHandle',
+                WB.client = client1
               }
 
       evalState (doLogic webHandle' req') newsInBase
@@ -959,7 +959,7 @@ spec = do
 
           baseHandle' =
             baseHandle
-              { Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters ->
+              { DB.pullAllNews = \offset limit columnType sortOrder find filters ->
                   pure . Right $
                     [ MkNewsOut
                         (MkTitle $ typeToText columnType)
@@ -972,11 +972,11 @@ spec = do
                     ]
               }
 
-          client1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client1
+              { WB.base = baseHandle',
+                WB.client = client1
               }
 
       evalState (doLogic webHandle' req1) newsInBase
@@ -1041,7 +1041,7 @@ spec = do
 
           baseHandle' =
             baseHandle
-              { Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters ->
+              { DB.pullAllNews = \offset limit columnType sortOrder find filters ->
                   pure . Right $
                     [ MkNewsOut
                         (MkTitle $ typeToText columnType)
@@ -1054,11 +1054,11 @@ spec = do
                     ]
               }
 
-          client1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client1
+              { WB.base = baseHandle',
+                WB.client = client1
               }
 
       evalState (doLogic webHandle' req1) newsInBase
@@ -1098,7 +1098,7 @@ spec = do
 
           baseHandle' =
             baseHandle
-              { Handlers.Base.pullAllNews = \offset limit columnType sortOrder find filters ->
+              { DB.pullAllNews = \offset limit columnType sortOrder find filters ->
                   pure . Right $
                     [ MkNewsOut
                         (MkTitle $ typeToText columnType)
@@ -1111,11 +1111,11 @@ spec = do
                     ]
               }
 
-          client1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = client1
+              { WB.base = baseHandle',
+                WB.client = client1
               }
 
       -- data NewsOut = MkNewsOut Title UTCTime Name [Label] Content [URI_Image] Bool
@@ -1159,42 +1159,42 @@ spec = do
             }
 
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.getTime = pure (read $(localtimeTemplate)),
-              Handlers.Base.findNewsByTitle = const (pure $ Right Nothing),
-              Handlers.Base.findUserByLogin = const (pure $ Right $ Just user1),
-              Handlers.Base.findCategoryByLabel = const (pure . Right $ Just cat1),
-              Handlers.Base.putNews = \(NewsInternal title login label content images isPublish) time -> pure $ Right Handlers.Base.Put
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.findNewsByTitle = const (pure $ Right Nothing),
+              DB.findUserByLogin = const (pure $ Right $ Just user1),
+              DB.findCategoryByLabel = const (pure . Right $ Just cat1),
+              DB.putNews = \(NewsInternal title login label content images isPublish) time -> pure $ Right DB.Put
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              response404 = test404,
-              response200 = test200,
-              getBody = const . pure $ bodyReq
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.response404 = test404,
+              WB.response200 = test200,
+              WB.getBody = const . pure $ bodyReq
             } ::
-            Handle Identity
+            WB.Handle Identity
 
     it "Publisher can create news" $ do
       let baseHandle' = baseHandle
-          clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
       runIdentity (doLogic webHandle' req')
         `shouldBe` test200
 
     it "Non-publisher can't create news" $ do
       let baseHandle' = baseHandle
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
           webHandle' =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
 
       runIdentity (doLogic webHandle' req')
@@ -1215,50 +1215,50 @@ spec = do
         newsInBase = [news1, news2, news3, news4]
 
         baseHandle =
-          Handlers.Base.Handle
-            { Handlers.Base.logger = logHandle,
-              Handlers.Base.findNewsByTitle = \title -> do
+          DB.Handle
+            { DB.logger = logHandle,
+              DB.findNewsByTitle = \title -> do
                 titles <- gets (map (MkTitle . newsTitle))
                 pure $
                   Right $
                     if title `elem` titles
                       then Just undefined
                       else Nothing,
-              Handlers.Base.findUserByLogin = const (pure $ Right $ Just user1),
-              Handlers.Base.findCategoryByLabel = const (pure $ Right $ Just cat1),
-              Handlers.Base.editNews = \title time (NewsEditInternal mbtitle mblogin mblabel mbcontent image mbp) -> pure $ Right Handlers.Base.Change
+              DB.findUserByLogin = const (pure $ Right $ Just user1),
+              DB.findCategoryByLabel = const (pure $ Right $ Just cat1),
+              DB.editNews = \title time (NewsEditInternal mbtitle mblogin mblabel mbcontent image mbp) -> pure $ Right DB.Change
             }
         webHandle =
-          Handle
-            { logger = logHandle,
-              base = baseHandle,
-              response200 = test200,
-              response404 = test404,
-              getBody = const . pure $ bodyReq
+          WB.Handle
+            { WB.logger = logHandle,
+              WB.base = baseHandle,
+              WB.response200 = test200,
+              WB.response404 = test404,
+              WB.getBody = const . pure $ bodyReq
             } ::
-            Handle (State [News])
+            WB.Handle (State [News])
 
     it "Author can edit news" $ do
-      let baseHandle' = baseHandle {Handlers.Base.validCopyRight = \login title -> pure $ Right True}
+      let baseHandle' = baseHandle {DB.validCopyRight = \login title -> pure $ Right True}
 
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
 
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3
               }
 
       evalState (doLogic webHandle1 req') newsInBase
@@ -1269,32 +1269,32 @@ spec = do
         `shouldBe` test200
 
     it "Non-author can't edit news" $ do
-      let baseHandle' = baseHandle {Handlers.Base.validCopyRight = \login title -> pure $ Right False}
+      let baseHandle' = baseHandle {DB.validCopyRight = \login title -> pure $ Right False}
 
-          clientAdminUser1 = Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
-          clientAdminUser4 = Client Nothing Nothing Nothing
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3
               }
           webHandle4 =
             webHandle
-              { base = baseHandle',
-                client = clientAdminUser4
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser4
               }
 
       evalState (doLogic webHandle1 req') newsInBase
