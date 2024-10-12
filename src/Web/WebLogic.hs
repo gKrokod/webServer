@@ -1,10 +1,10 @@
 module Web.WebLogic (getBody, response404, response200, mkGoodResponse, mkResponseForImage, response404WithImage) where
 
-import Base.TestImage (image404)
 import Data.Binary.Builder (Builder, fromByteString)
 import Data.ByteString (ByteString)
 import Data.ByteString.Base64 as B64
 import qualified Data.Text.Encoding as E
+import Database.Data.TestImage (image404)
 import Network.HTTP.Types (notFound404, status200)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, getRequestBodyChunk, responseBuilder)

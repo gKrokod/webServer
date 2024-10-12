@@ -10,10 +10,10 @@ import qualified Data.ByteString as B
 import Data.Maybe (isNothing)
 import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
-import Handlers.Base.Api (getPrivilege, getResultValid)
+import Handlers.Database.Api (getPrivilege, getResultValid)
 import qualified Handlers.Logger
 import Handlers.Web.Api (endPointCategories, endPointImages, endPointNews, endPointUsers)
-import Handlers.Web.Web (Client (..), Handle (..))
+import Handlers.Web.Base (Client (..), Handle (..))
 import Network.Wai (Request, Response, rawPathInfo, requestHeaders)
 import Scheme (IsValidPassword (..))
 import Types (Login (..), PasswordUser (..))

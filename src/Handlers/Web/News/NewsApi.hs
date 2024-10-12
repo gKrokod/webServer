@@ -3,12 +3,12 @@ module Handlers.Web.News.NewsApi (endPointNews) where
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
-import qualified Handlers.Base.Base
+import qualified Handlers.Database.Base
 import qualified Handlers.Logger
-import Handlers.Web.News.Create.Api (createNews)
-import Handlers.Web.News.Get.Api (existingNews)
-import Handlers.Web.News.Update.Api (updateNews)
-import Handlers.Web.Web (Client (..), Handle (..))
+import Handlers.Web.Base (Client (..), Handle (..))
+import Handlers.Web.News.Create (createNews)
+import Handlers.Web.News.Get (existingNews)
+import Handlers.Web.News.Update (updateNews)
 import Network.HTTP.Types (Query)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Scheme (FilterItem (FilterPublishOrAuthor))
@@ -63,21 +63,21 @@ endPointNews h req = do
     setPanigate h' q =
       let baseHandle = base h'
           (userOffset, userLimit) = queryToPanigate q
-          newBaseHandle = baseHandle {Handlers.Base.Base.userOffset = userOffset, Handlers.Base.Base.userLimit = userLimit}
+          newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
        in h' {base = newBaseHandle}
 
     setSort :: (Monad m) => Handle m -> Query -> Handle m
     setSort h' q =
       let baseHandle = base h'
           (userSortColumn, userSortOrder) = queryToSort q
-          newBaseHandle = baseHandle {Handlers.Base.Base.sortColumnNews = userSortColumn, Handlers.Base.Base.sortOrderNews = userSortOrder}
+          newBaseHandle = baseHandle {Handlers.Database.Base.sortColumnNews = userSortColumn, Handlers.Database.Base.sortOrderNews = userSortOrder}
        in h' {base = newBaseHandle}
 
     setFind :: (Monad m) => Handle m -> Query -> Handle m
     setFind h' q =
       let baseHandle = base h'
           mbFind = queryToFind q
-          newBaseHandle = baseHandle {Handlers.Base.Base.findSubString = mbFind}
+          newBaseHandle = baseHandle {Handlers.Database.Base.findSubString = mbFind}
        in h' {base = newBaseHandle}
 
     setFilters :: (Monad m) => Handle m -> Query -> Handle m
@@ -85,5 +85,5 @@ endPointNews h req = do
       let baseHandle = base h'
           filters = queryToFilters q
           filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ client h) -- publish or author visible news
-          newBaseHandle = baseHandle {Handlers.Base.Base.filtersNews = filterVisible : filters}
+          newBaseHandle = baseHandle {Handlers.Database.Base.filtersNews = filterVisible : filters}
        in h' {base = newBaseHandle}

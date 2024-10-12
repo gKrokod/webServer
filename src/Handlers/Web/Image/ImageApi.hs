@@ -3,8 +3,8 @@ module Handlers.Web.Image.ImageApi (endPointImages) where
 
 import qualified Data.Text.Encoding as E
 import qualified Handlers.Logger
-import Handlers.Web.Image.Get.Api (existingImages)
-import Handlers.Web.Web (Handle (..))
+import Handlers.Web.Base (Handle (..))
+import Handlers.Web.Image.Get (existingImages)
 import Network.Wai (Request, Response, rawPathInfo)
 
 endPointImages :: (Monad m) => Handle m -> Request -> m Response

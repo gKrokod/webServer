@@ -3,12 +3,12 @@ module Handlers.Web.Category.CategoryApi (endPointCategories) where
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
-import qualified Handlers.Base.Base
+import qualified Handlers.Database.Base
 import qualified Handlers.Logger
-import Handlers.Web.Category.Create.Api (createCategory)
-import Handlers.Web.Category.Get.Api (existingCategories)
-import Handlers.Web.Category.Update.Api (updateCategory)
-import Handlers.Web.Web (Client (..), Handle (..))
+import Handlers.Web.Base (Client (..), Handle (..))
+import Handlers.Web.Category.Create (createCategory)
+import Handlers.Web.Category.Get (existingCategories)
+import Handlers.Web.Category.Update (updateCategory)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Web.WebType (queryToPanigate)
 
@@ -38,7 +38,7 @@ endPointCategories h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))
 
-      let newBaseHandle = baseHandle {Handlers.Base.Base.userOffset = userOffset, Handlers.Base.Base.userLimit = userLimit}
+      let newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
       existingCategories (h {base = newBaseHandle}) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"

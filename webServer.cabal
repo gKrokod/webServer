@@ -25,45 +25,51 @@ source-repository head
 
 library
   exposed-modules:
-      Base.Base
-      Base.Crypto
-      Base.FillTables
-      Base.LocalTime
-      Base.TestImage
       Config
-      Handlers.Base.Api
-      Handlers.Base.Authorization
-      Handlers.Base.Base
-      Handlers.Base.Category.Create.Api
-      Handlers.Base.Category.Get.Api
-      Handlers.Base.Category.Update.Api
-      Handlers.Base.Image.Get.Api
-      Handlers.Base.News.Create.Api
-      Handlers.Base.News.Get.Api
-      Handlers.Base.News.Update.Api
-      Handlers.Base.User.Create.Api
-      Handlers.Base.User.Get.Api
+      Database.Api
+      Database.Authorization
+      Database.Crypto
+      Database.Data.FillTables
+      Database.Data.LocalTime
+      Database.Data.TestImage
+      Database.Queries.Category
+      Database.Queries.Image
+      Database.Queries.News
+      Database.Queries.User
+      Database.Verb
+      Handlers.Database.Api
+      Handlers.Database.Authorization
+      Handlers.Database.Base
+      Handlers.Database.Category.Create
+      Handlers.Database.Category.Get
+      Handlers.Database.Category.Update
+      Handlers.Database.Image.Get
+      Handlers.Database.News.Create
+      Handlers.Database.News.Get
+      Handlers.Database.News.Update
+      Handlers.Database.User.Create
+      Handlers.Database.User.Get
       Handlers.Logger
       Handlers.Router
       Handlers.Web.Api
+      Handlers.Web.Base
       Handlers.Web.Category.CategoryApi
-      Handlers.Web.Category.Create.Api
-      Handlers.Web.Category.Get.Api
+      Handlers.Web.Category.Create
+      Handlers.Web.Category.Get
       Handlers.Web.Category.Types
-      Handlers.Web.Category.Update.Api
-      Handlers.Web.Image.Get.Api
+      Handlers.Web.Category.Update
+      Handlers.Web.Image.Get
       Handlers.Web.Image.ImageApi
       Handlers.Web.Image.Types
-      Handlers.Web.News.Create.Api
-      Handlers.Web.News.Get.Api
+      Handlers.Web.News.Create
+      Handlers.Web.News.Get
       Handlers.Web.News.NewsApi
       Handlers.Web.News.Types
-      Handlers.Web.News.Update.Api
-      Handlers.Web.User.Create.Api
-      Handlers.Web.User.Get.Api
+      Handlers.Web.News.Update
+      Handlers.Web.User.Create
+      Handlers.Web.User.Get
       Handlers.Web.User.Types
       Handlers.Web.User.UserApi
-      Handlers.Web.Web
       Logger
       Scheme
       Types

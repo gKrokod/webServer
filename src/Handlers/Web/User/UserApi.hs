@@ -3,11 +3,11 @@ module Handlers.Web.User.UserApi (endPointUsers) where
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
-import qualified Handlers.Base.Base
+import qualified Handlers.Database.Base
 import qualified Handlers.Logger
-import Handlers.Web.User.Create.Api (createUser)
-import Handlers.Web.User.Get.Api (existingUsers)
-import Handlers.Web.Web (Client (..), Handle (..))
+import Handlers.Web.Base (Client (..), Handle (..))
+import Handlers.Web.User.Create (createUser)
+import Handlers.Web.User.Get (existingUsers)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Web.WebType (queryToPanigate)
 
@@ -31,7 +31,7 @@ endPointUsers h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))
 
-      let newBaseHandle = baseHandle {Handlers.Base.Base.userOffset = userOffset, Handlers.Base.Base.userLimit = userLimit}
+      let newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
       existingUsers (h {base = newBaseHandle}) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point Users not found"

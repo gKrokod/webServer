@@ -14,7 +14,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
-import Handlers.Web.Web (NewsOut (..))
+import Handlers.Web.Base (NewsOut (..))
 import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), SortOrder (..), User (..))
 import Types (Content (..), Label (..), Name (..), Title (..), URI_Image (..))
 
