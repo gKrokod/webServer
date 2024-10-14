@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Handlers.Web.Category.Update (updateCategory) where
 
@@ -17,41 +18,41 @@ updateCategory _ h req = do
   let logHandle = logger h
       baseHandle = base h
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category WEB"
-  body <- webToEditCategory <$> getBody h req -- :: (Either String EditCategoryFromWeb)
+  body <- webToEditCategory <$> getBody h req 
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit Category WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h) -- "Not ok.
-    Right (EditCategoryFromWeb label_ (Just newlabel_) newparent_) -> do
+      pure (response404 h) 
+    Right (EditCategoryFromWeb {newlabel = (Just newlabel'), ..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category Just newlabel parent"
       tryEditCategory <-
         updateCategoryBase
           baseHandle
-          (MkLabel label_)
+          (MkLabel label)
           ( CategoryInternal
-              { labelCategory = MkLabel newlabel_,
-                parentCategory = fmap MkLabel newparent_
+              { labelCategory = MkLabel newlabel',
+                parentCategory = fmap MkLabel newparent
               }
           )
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
           pure $ response200 h
-        Left _ -> pure $ response404 h -- "Not ok.
-    Right (EditCategoryFromWeb label_ Nothing newparent_) -> do
+        Left _ -> pure $ response404 h 
+    Right (EditCategoryFromWeb {newlabel = Nothing, ..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category without new label"
       tryEditCategory <-
         updateCategoryBase
           baseHandle
-          (MkLabel label_)
+          (MkLabel label)
           ( CategoryInternal
-              { labelCategory = MkLabel label_,
-                parentCategory = fmap MkLabel newparent_
+              { labelCategory = MkLabel label,
+                parentCategory = fmap MkLabel newparent
               }
           )
       case tryEditCategory of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
           pure $ response200 h
-        Left _ -> pure $ response404 h -- "Not ok.
+        Left _ -> pure $ response404 h 

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -60,7 +60,6 @@ library
       Handlers.Web.Category.Update
       Handlers.Web.Image.Get
       Handlers.Web.Image.ImageApi
-      Handlers.Web.Image.Types
       Handlers.Web.News.Create
       Handlers.Web.News.Get
       Handlers.Web.News.NewsApi
@@ -71,7 +70,7 @@ library
       Handlers.Web.User.Types
       Handlers.Web.User.UserApi
       Logger
-      Scheme
+      Schema
       Types
       Web.WebLogic
       Web.WebType

@@ -11,14 +11,14 @@ import Handlers.Web.Category.Types (CategoryInternal (..))
 import Handlers.Web.News.Types (NewsEditInternal (..), NewsInternal (..), NewsOut (..))
 import Handlers.Web.User.Types (UserInternal (..))
 import Network.Wai (Request, Response)
-import Scheme (Image)
+import Schema (Image)
 import Types (Login (..))
 
 data ClientRole = AdminRole | PublisherRole
   deriving (Eq, Show)
 
 data Client = Client
-  { clienAdminToken :: Maybe (Proxy 'AdminRole),
+  { clientAdminToken :: Maybe (Proxy 'AdminRole),
     clientPublisherToken :: Maybe (Proxy 'PublisherRole),
     author :: Maybe Login
   }

@@ -23,7 +23,7 @@ import qualified Handlers.Logger
 import Network.HTTP.Types (hContentType, notFound404, status200)
 import Network.Wai (defaultRequest, queryString, rawPathInfo, requestHeaders, responseBuilder)
 import Network.Wai.Internal (Response (..))
-import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
+import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
 import Test.Hspec (Spec, describe, it, shouldBe, shouldNotBe)
 import Types (Content (..), Label (..), Login (..), Name (..), NumberImage (..), Title (..), URI_Image (..))
 import Web.WebType (categoryToWeb, newsToWeb, userToWeb)

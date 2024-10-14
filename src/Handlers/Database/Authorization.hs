@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Handlers.Database.Authorization (getPrivilege, getCopyRight, getResultValid) where
 
 import Control.Exception (displayException)
@@ -7,7 +8,7 @@ import Data.Either (isLeft)
 import qualified Data.Text as T
 import Handlers.Database.Base (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
-import Scheme (IsValidPassword (..), User (..))
+import Schema (IsValidPassword (..), User (..))
 import Types (Login (..), PasswordUser (..), Title (..))
 
 getCopyRight :: (Monad m) => Handle m -> Login -> Title -> m (Either T.Text IsValidPassword)
@@ -38,9 +39,9 @@ getPrivilege h login = do
   when (isLeft tryFindUser) (logMessage logHandle Error "function findUserByLogin fail")
   case tryFindUser of
     Left e -> pure . Left . T.pack . displayException $ e
-    Right (Just (User _ _ _ _ a p)) -> do
-      logMessage logHandle Debug (T.pack $ "Privilege: Admin " <> show a <> " Publisher " <> show p)
-      pure $ Right (a, p)
+    Right (Just (User {..})) -> do
+      logMessage logHandle Debug (T.pack $ "Privilege: Admin " <> show userIsAdmin <> " Publisher " <> show userIsPublisher)
+      pure $ Right (userIsAdmin, userIsPublisher)
     _ -> do
       logMessage logHandle Debug "Privilege: Admin False False "
       pure $ Right (False, False)

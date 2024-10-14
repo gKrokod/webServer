@@ -21,13 +21,13 @@ endPointCategories h req = do
   case rawPathInfo req of
     "/categories/create" -> do
       case client h of
-        Client (Just adminRole) _ _ -> createCategory adminRole h req -- create a category for only admin
+        Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole h req -- create a category for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h) -- todo. replace 404 for another error
+          pure (response404 h)
     "/categories/edit" -> do
       case client h of
-        Client (Just adminRole) _ _ -> updateCategory adminRole h req -- edit a category for only admin
+        Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole h req -- edit a category for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure (response404 h)

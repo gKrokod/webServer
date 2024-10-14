@@ -8,7 +8,7 @@ import Database.Esqueleto.Experimental (Value (..), from, innerJoin, on, select,
 import Database.Persist.Postgresql (ConnectionString)
 import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
-import Scheme (EntityField (..), News (..), Password (..), User (..))
+import Schema (EntityField (..), News (..), Password (..), User (..))
 import Types (Login (..), PasswordUser (..), Title (..))
 
 validCopyRight :: ConnectionString -> Login -> Title -> IO (Either SomeException Bool)

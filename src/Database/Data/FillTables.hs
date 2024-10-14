@@ -6,7 +6,7 @@ import Database.Crypto (makeHashPassword)
 import Database.Data.LocalTime (localtimeTemplate)
 import Database.Data.TestImage (testImage1, testImage2, testImage3)
 import Database.Persist.Postgresql (toSqlKey)
-import qualified Scheme as S
+import qualified Schema as S
 import Types (PasswordUser (..))
 
 user1, user2, user3 :: S.User
@@ -28,9 +28,9 @@ password2 = S.Password (makeHashPassword (MkPasswordUser "qpass2") (read $(local
 password3 = S.Password (makeHashPassword (MkPasswordUser "qpass3") (read $(localtimeTemplate)))
 
 image1, image2, image3 :: S.Image
-image1 = testImage1 -- real image jpeg
-image2 = testImage2 -- real image jpeg
-image3 = testImage3 -- real image jpeg
+image1 = testImage1 
+image2 = testImage2 
+image3 = testImage3
 
 cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9 :: S.Category
 cat1 = S.Category {S.categoryLabel = "Abstract", S.categoryParent = Nothing}

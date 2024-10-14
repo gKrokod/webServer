@@ -14,7 +14,7 @@
 {-# OPTIONS_GHC -ddump-splices #-}
 {-# OPTIONS_GHC -ddump-to-file #-}
 
-module Scheme where
+module Schema where
 
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Text as T

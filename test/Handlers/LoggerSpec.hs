@@ -1,5 +1,4 @@
 module Handlers.LoggerSpec (spec) where
-
   
 import Control.Monad.State (State, execState, put)
 import qualified Data.Text as T

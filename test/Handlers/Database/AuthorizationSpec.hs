@@ -5,7 +5,7 @@ import Test.Hspec
 import Handlers.Database.Base (Handle (..))
 import qualified Handlers.Logger
 import Database.Data.FillTables (user1, user2, user3)
-import Scheme (User(..))
+import Schema (User(..))
 import Control.Monad.State (State,  evalState, gets)
 import Types (Login(..))
 import Data.Maybe (listToMaybe, mapMaybe)

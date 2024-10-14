@@ -58,7 +58,6 @@ updateNewsBase h title newsEdit@(NewsEditInternal {..}) = do
             (maybe (Left "Fail update news. User don't exist!") (\_ -> Right Change))
             tryFindUser
         )
-    --
     checkCategory Nothing = pure (Right Change)
     checkCategory (Just label) = do
       tryFindCategory <- findCategoryByLabel h label

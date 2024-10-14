@@ -3,7 +3,7 @@ module Handlers.Database.User.GetSpec  where
 import Handlers.Database.User.Get (getAllUsers)
 
 import Test.Hspec
-import Scheme (User(..))
+import Schema (User(..))
 import Control.Monad.Identity (Identity(..))
 import Test.QuickCheck (property)
 import Handlers.Database.Base (Handle (..), Offset (..), Limit (..))

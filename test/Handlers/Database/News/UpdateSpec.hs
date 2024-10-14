@@ -8,7 +8,7 @@ import Database.Data.LocalTime (localtimeTemplate)
 import qualified Handlers.Logger
 import Database.Data.FillTables (news1, news2, news3, news4, user1, user2, user3, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9)
 import Handlers.Web.Base (NewsEditInternal (..))
-import Scheme (News(..), Category(..), User(..))
+import Schema (News(..), Category(..), User(..))
 import Control.Monad.State (State, evalState, get)
 import Types (Title(..),  Label(..), Login(..))
 

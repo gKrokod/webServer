@@ -8,7 +8,7 @@ import Database.Data.TestImage (image404)
 import Network.HTTP.Types (notFound404, status200)
 import Network.HTTP.Types.Header (hContentType)
 import Network.Wai (Request, Response, getRequestBodyChunk, responseBuilder)
-import Scheme (Image (..))
+import Schema (Image (..))
 
 getBody :: Request -> IO ByteString
 getBody = getRequestBodyChunk

@@ -5,7 +5,6 @@ import Control.Exception (bracket_)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
--- import qualified Database.Crypto
 import qualified Handlers.Database.Base
 import Handlers.Logger (Log (Debug))
 import qualified Handlers.Logger
@@ -14,7 +13,7 @@ import qualified Handlers.Web.Base
 import qualified Logger
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Scheme (ColumnType (..), SortOrder (..))
+import Schema (ColumnType (..), SortOrder (..))
 import qualified Web.WebLogic as WL
 
 main :: IO ()
@@ -69,14 +68,12 @@ makeSetup cfg = do
             Handlers.Database.Base.makeHashPassword = DA.makeHashPassword,
             Handlers.Database.Base.validPassword = DA.validPassword pginfo,
             Handlers.Database.Base.validCopyRight = DA.validCopyRight pginfo,
-            -- default setup
             Handlers.Database.Base.userOffset = 0,
             Handlers.Database.Base.userLimit = maxBound,
             Handlers.Database.Base.sortColumnNews = DataNews,
             Handlers.Database.Base.sortOrderNews = Descending,
             Handlers.Database.Base.findSubString = Nothing,
             Handlers.Database.Base.filtersNews = [],
-            -- default *
             Handlers.Database.Base.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
             Handlers.Database.Base.findCategoryByLabel = DA.findCategoryByLabel pginfo,
             Handlers.Database.Base.putCategory = DA.putCategory pginfo,
@@ -92,7 +89,10 @@ makeSetup cfg = do
         Handlers.Web.Base.Handle
           { Handlers.Web.Base.logger = logHandle,
             Handlers.Web.Base.base = baseHandle,
-            Handlers.Web.Base.client = Handlers.Web.Base.Client Nothing Nothing Nothing,
+            Handlers.Web.Base.client = Handlers.Web.Base.Client 
+               {Handlers.Web.Base.clientAdminToken = Nothing,
+                Handlers.Web.Base.clientPublisherToken = Nothing,
+                Handlers.Web.Base.author = Nothing},
             Handlers.Web.Base.response404 = WL.response404,
             Handlers.Web.Base.response200 = WL.response200,
             Handlers.Web.Base.mkGoodResponse = WL.mkGoodResponse,

@@ -3,7 +3,7 @@ module Handlers.Database.Image.Get (getImage) where
 import qualified Data.Text as T
 import Handlers.Database.Base (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
-import Scheme (Image (..))
+import Schema (Image (..))
 import Types (NumberImage (..))
 
 getImage :: (Monad m) => Handle m -> NumberImage -> m (Either T.Text Image)

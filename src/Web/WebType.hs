@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Web.WebType where
 
@@ -15,7 +16,7 @@ import qualified Data.Text.Encoding as E
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import Handlers.Web.Base (NewsOut (..))
-import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), SortOrder (..), User (..))
+import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), SortOrder (..), User (..))
 import Types (Content (..), Label (..), Name (..), Title (..), URI_Image (..))
 
 data UserToWeb = UserToWeb
@@ -42,7 +43,12 @@ userToWeb :: [User] -> Builder
 userToWeb = fromLazyByteString . encode @[UserToWeb] . map convertToWeb
   where
     convertToWeb :: User -> UserToWeb
-    convertToWeb (User n l _ c a p) = UserToWeb n l c a p
+    convertToWeb (User {..}) = UserToWeb
+      { name = userName,
+        login = userLogin,
+        created = userCreated,
+        isAdmin = userIsAdmin,
+        isPublisher = userIsPublisher}
 
 webToUser :: B.ByteString -> Either String UserFromWeb
 webToUser = eitherDecodeStrict @UserFromWeb
@@ -63,7 +69,7 @@ categoryToWeb :: [Category] -> Builder
 categoryToWeb = fromLazyByteString . encode @[CategoryToWeb] . map convertToWeb
   where
     convertToWeb :: Category -> CategoryToWeb
-    convertToWeb (Category l _p) = CategoryToWeb l
+    convertToWeb c = CategoryToWeb { label = categoryLabel c }
 
 webToCategory :: B.ByteString -> Either String CategoryFromWeb
 webToCategory = eitherDecodeStrict @CategoryFromWeb
@@ -131,7 +137,7 @@ data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-webToPanigate :: B.ByteString -> Either String PanigateFromWeb -- from (ByteString, Maybe ByteString)
+webToPanigate :: B.ByteString -> Either String PanigateFromWeb 
 webToPanigate = eitherDecodeStrict @PanigateFromWeb
 
 type Offset = Int
@@ -191,8 +197,6 @@ queryToFilters = convertFromWeb . mapMaybe (\(x, y) -> if x == "filter" then y e
       _ -> []
     convertFromWeb _ = []
 
--- headersToLoginAndPassword :: [Header]-> (T.Text, T.Text)
--- headersToLoginAndPassword :: [(HeaderName, ByteString)]-> (T.Text, T.Text)
 headersToLoginAndPassword :: [(CI B.ByteString, B.ByteString)] -> Maybe (T.Text, T.Text)
 headersToLoginAndPassword ((header, loginpass) : xs)
   | header == "Authorization"
@@ -200,7 +204,6 @@ headersToLoginAndPassword ((header, loginpass) : xs)
       Just $ splitLoginPass (B.drop 6 loginpass)
   | otherwise = headersToLoginAndPassword xs
   where
-    -- ByteString length >= 6 . proofs early
     splitLoginPass :: B.ByteString -> (T.Text, T.Text)
     splitLoginPass xs' =
       let colon = fromIntegral $ fromEnum ':'

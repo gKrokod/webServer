@@ -1,7 +1,7 @@
 module Handlers.Web.News.Types (NewsInternal (..), NewsEditInternal (..), NewsOut (..)) where
 
 import Data.Time (UTCTime)
-import Scheme (Image (..))
+import Schema (Image (..))
 import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..))
 
 data NewsInternal = NewsInternal

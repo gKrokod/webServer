@@ -1,4 +1,3 @@
--- {-# LANGUAGE DataKinds #-}
 module Handlers.Web.User.UserApi (endPointUsers) where
 
 import qualified Data.Text as T
@@ -20,7 +19,7 @@ endPointUsers h req = do
   case rawPathInfo req of
     "/users/create" -> do
       case client h of
-        Client (Just adminRole) _ _ -> createUser adminRole h req -- create User for only admin
+        Client { clientAdminToken = (Just adminRole)} -> createUser adminRole h req -- create User for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure (response404 h)

@@ -9,7 +9,7 @@ import Database.Data.LocalTime (localtimeTemplate)
 import qualified Handlers.Logger
 import Database.Data.FillTables (user1, user2, user3)
 import Handlers.Web.Base (UserInternal (..))
-import Scheme (User(..))
+import Schema (User(..))
 import Control.Monad.State (State, execState, modify)
 import Types (Name(..), Login(..),PasswordUser (..) )
 

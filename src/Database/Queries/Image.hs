@@ -6,7 +6,7 @@ import Database.Esqueleto.Experimental (get)
 import Database.Persist.Postgresql (ConnectionString, toSqlKey)
 import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
-import Scheme (Image (..))
+import Schema (Image (..))
 import Types (NumberImage (..))
 
 pullImage :: ConnectionString -> NumberImage -> IO (Either SomeException (Maybe Image))

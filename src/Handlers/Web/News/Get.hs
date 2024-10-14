@@ -15,5 +15,5 @@ existingNews h _req = do
   case news of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure $ response404 h -- "Not ok.
+      pure $ response404 h 
     Right news' -> pure . mkGoodResponse h . newsToWeb $ news'

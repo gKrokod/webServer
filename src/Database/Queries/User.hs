@@ -11,7 +11,7 @@ import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
 import Handlers.Web.Base (UserInternal (..))
-import Scheme (Password (..), Unique (..), User (..))
+import Schema (Password (..), Unique (..), User (..))
 import Types (Login (..), Name (..), PasswordUser (..))
 
 putUser :: ConnectionString -> UserInternal -> UTCTime -> IO (Either SomeException Success)

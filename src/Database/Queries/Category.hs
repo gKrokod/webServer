@@ -10,7 +10,7 @@ import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
 import Handlers.Web.Base (CategoryInternal (..))
-import Scheme (Category (..), Unique (..))
+import Schema (Category (..), Unique (..))
 import Types (Label (..))
 
 type LimitData = Int
@@ -54,7 +54,6 @@ putCategory :: ConnectionString -> CategoryInternal -> IO (Either SomeException 
 putCategory pginfo (CategoryInternal {..}) =
   try @SomeException
     ( runDataBaseWithOutLog pginfo $ do
-        -- runDataBaseWithLog pginfo $ do
         case parentCategory of
           Nothing -> do
             insert_ $

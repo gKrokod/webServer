@@ -12,7 +12,7 @@ import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
 import Handlers.Web.Base (NewsEditInternal (..), NewsInternal (..), NewsOut (..))
-import Scheme (Category (..), ColumnType (..), EntityField (..), FilterItem (..), Find (..), Image (..), ImageBank (..), News (..), SortOrder (..), Unique (..), User (..))
+import Schema (Category (..), ColumnType (..), EntityField (..), FilterItem (..), Find (..), Image (..), ImageBank (..), News (..), SortOrder (..), Unique (..), User (..))
 import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..))
 
 type LimitData = Int
@@ -66,7 +66,6 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
       mapM (fetchFullNews configLimit userLimit . MkTitle) titles
 
     filterAction n a c filter' = case filter' of
-      -- FilterDataAt day -> where_ (( utctDay <$> (n ^. NewsCreated) ) ==. val (day))
       FilterDataAt day ->
         where_
           ( (n ^. NewsCreated >=. val (UTCTime day 0))

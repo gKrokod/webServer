@@ -7,7 +7,7 @@ import qualified Handlers.Logger
 import Handlers.Web.Category.Types (CategoryInternal (..))
 import Handlers.Web.News.Types (NewsEditInternal (..), NewsInternal (..), NewsOut (..))
 import Handlers.Web.User.Types (UserInternal (..))
-import Scheme (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
+import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
 import Types (Label (..), Login (..), NumberImage (..), PasswordUser (..), Title (..))
 
 data Success = Put | Change | Get deriving (Show, Eq)

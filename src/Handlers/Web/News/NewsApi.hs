@@ -1,4 +1,3 @@
--- {-# LANGUAGE DataKinds #-}
 module Handlers.Web.News.NewsApi (endPointNews) where
 
 import qualified Data.Text as T
@@ -11,7 +10,7 @@ import Handlers.Web.News.Get (existingNews)
 import Handlers.Web.News.Update (updateNews)
 import Network.HTTP.Types (Query)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
-import Scheme (FilterItem (FilterPublishOrAuthor))
+import Schema (FilterItem (FilterPublishOrAuthor))
 import Types (Login (..))
 import Web.WebType (queryToFilters, queryToFind, queryToPanigate, queryToSort)
 
@@ -23,13 +22,13 @@ endPointNews h req = do
   case rawPathInfo req of
     "/news/create" -> do
       case client h of
-        Client _ (Just publisherRole) _ -> createNews publisherRole h req -- create news for only publisher
+        Client {clientPublisherToken = (Just publisherRole)} -> createNews publisherRole h req -- create news for only publisher
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h) --
+          pure (response404 h)
     "/news/edit" ->
       case client h of
-        Client _ _ (Just author_) -> do
+        Client {author = (Just author_)} -> do
           updateNews author_ h req -- edit news for only author
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"

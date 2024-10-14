@@ -26,8 +26,7 @@ createUserBase h user@(UserInternal {..}) = do
     Right Nothing -> do
       logMessage logHandle Debug "Create user..."
       time <- getTime h
-      --- crypto
-      let pwd' = makeHashPassword h passwordUser time -- for make QuasiPassword
+      let pwd' = makeHashPassword h passwordUser time
       tryCreate <- putUser h (user {passwordUser = MkPasswordUser pwd'}) time
       when (isLeft tryCreate) (logMessage logHandle Handlers.Logger.Error "Can't putUser")
       pure $ either (Left . T.pack . displayException) Right tryCreate

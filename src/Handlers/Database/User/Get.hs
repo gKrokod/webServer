@@ -6,7 +6,7 @@ import Data.Either (isLeft)
 import qualified Data.Text as T
 import Handlers.Database.Base (Handle (..), Limit (..), Offset (..))
 import Handlers.Logger (Log (..), logMessage)
-import Scheme (User (..))
+import Schema (User (..))
 
 getAllUsers :: (Monad m) => Handle m -> m (Either T.Text [User])
 getAllUsers h = do
