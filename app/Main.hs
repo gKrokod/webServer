@@ -1,20 +1,20 @@
 module Main (main) where
 
-import qualified Base.Base as BB
-import qualified Base.Crypto
 import Config (ConfigDataBase, cLimitData, cLogLvl, connectionString, loadConfig, whenMakeTables)
 import Control.Exception (bracket_)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
-import qualified Handlers.Base
+import qualified Database.Api as DA
+import qualified Handlers.Database.Base
 import Handlers.Logger (Log (Debug))
 import qualified Handlers.Logger
-import qualified Handlers.WebLogic
+import Handlers.Router (doAuthorization, doLogic)
+import qualified Handlers.Web.Base
 import qualified Logger
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Scheme (ColumnType (..), SortOrder (..))
-import qualified Web.WebLogic as WW
+import Schema (ColumnType (..), SortOrder (..))
+import qualified Web.WebLogic as WL
 
 main :: IO ()
 main = do
@@ -23,26 +23,26 @@ main = do
   -- make Tables and Fill its if need
   whenMakeTables config $
     Logger.writeLog "Create and fill tables in the database"
-      >> BB.makeAndFillTables (connectionString config)
+      >> DA.makeAndFillTables (connectionString config)
   serverSetup <- makeSetup config
   run 4221 $ authorization serverSetup app
 
-type ServerSetup m = Handlers.WebLogic.Handle m
+type ServerSetup m = Handlers.Web.Base.Handle m
 
 app :: ServerSetup IO -> Application
 app h req f =
   bracket_
-    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "Open app")
-    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "Close app")
-    (Handlers.WebLogic.doLogic h req >>= f)
+    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "Open app")
+    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "Close app")
+    (doLogic h req >>= f)
 
 authorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Application
 authorization h nextApp req respond =
   bracket_
-    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "OpenAuth app")
-    (Handlers.Logger.logMessage (Handlers.WebLogic.logger h) Handlers.Logger.Debug "CloseAuth app")
+    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "OpenAuth app")
+    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "CloseAuth app")
     ( do
-        check <- Handlers.WebLogic.doAuthorization h req
+        check <- doAuthorization h req
         case check of
           Left fail' -> respond fail'
           Right h' -> nextApp h' req respond
@@ -60,43 +60,44 @@ makeSetup cfg = do
             Handlers.Logger.writeLog = Logger.writeLog
           }
       baseHandle =
-        Handlers.Base.Handle
-          { Handlers.Base.logger = logHandle,
-            Handlers.Base.putUser = BB.putUser pginfo,
-            Handlers.Base.findUserByLogin = BB.findUserByLogin pginfo,
-            Handlers.Base.getTime = getCurrentTime,
-            Handlers.Base.makeHashPassword = Base.Crypto.makeHashPassword,
-            Handlers.Base.validPassword = BB.validPassword pginfo,
-            Handlers.Base.validCopyRight = BB.validCopyRight pginfo,
-            -- default setup
-            Handlers.Base.userOffset = 0,
-            Handlers.Base.userLimit = maxBound,
-            Handlers.Base.sortColumnNews = DataNews,
-            Handlers.Base.sortOrderNews = Descending,
-            Handlers.Base.findSubString = Nothing,
-            Handlers.Base.filtersNews = [],
-            -- default *
-            Handlers.Base.pullAllUsers = BB.pullAllUsers pginfo (cLimitData cfg),
-            Handlers.Base.findCategoryByLabel = BB.findCategoryByLabel pginfo,
-            Handlers.Base.putCategory = BB.putCategory pginfo,
-            Handlers.Base.editCategory = BB.editCategory pginfo,
-            Handlers.Base.pullAllCategories = BB.pullAllCategories pginfo (cLimitData cfg),
-            Handlers.Base.pullImage = BB.pullImage pginfo,
-            Handlers.Base.putNews = BB.putNews pginfo,
-            Handlers.Base.findNewsByTitle = BB.findNewsByTitle pginfo,
-            Handlers.Base.pullAllNews = BB.pullAllNews pginfo (cLimitData cfg),
-            Handlers.Base.editNews = BB.editNews pginfo
+        Handlers.Database.Base.Handle
+          { Handlers.Database.Base.logger = logHandle,
+            Handlers.Database.Base.putUser = DA.putUser pginfo,
+            Handlers.Database.Base.findUserByLogin = DA.findUserByLogin pginfo,
+            Handlers.Database.Base.getTime = getCurrentTime,
+            Handlers.Database.Base.makeHashPassword = DA.makeHashPassword,
+            Handlers.Database.Base.validPassword = DA.validPassword pginfo,
+            Handlers.Database.Base.validCopyRight = DA.validCopyRight pginfo,
+            Handlers.Database.Base.userOffset = 0,
+            Handlers.Database.Base.userLimit = maxBound,
+            Handlers.Database.Base.sortColumnNews = DataNews,
+            Handlers.Database.Base.sortOrderNews = Descending,
+            Handlers.Database.Base.findSubString = Nothing,
+            Handlers.Database.Base.filtersNews = [],
+            Handlers.Database.Base.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
+            Handlers.Database.Base.findCategoryByLabel = DA.findCategoryByLabel pginfo,
+            Handlers.Database.Base.putCategory = DA.putCategory pginfo,
+            Handlers.Database.Base.editCategory = DA.editCategory pginfo,
+            Handlers.Database.Base.pullAllCategories = DA.pullAllCategories pginfo (cLimitData cfg),
+            Handlers.Database.Base.pullImage = DA.pullImage pginfo,
+            Handlers.Database.Base.putNews = DA.putNews pginfo,
+            Handlers.Database.Base.findNewsByTitle = DA.findNewsByTitle pginfo,
+            Handlers.Database.Base.pullAllNews = DA.pullAllNews pginfo (cLimitData cfg),
+            Handlers.Database.Base.editNews = DA.editNews pginfo
           }
       handle =
-        Handlers.WebLogic.Handle
-          { Handlers.WebLogic.logger = logHandle,
-            Handlers.WebLogic.base = baseHandle,
-            Handlers.WebLogic.client = Handlers.WebLogic.Client Nothing Nothing Nothing,
-            Handlers.WebLogic.response404 = WW.response404,
-            Handlers.WebLogic.response200 = WW.response200,
-            Handlers.WebLogic.mkGoodResponse = WW.mkGoodResponse,
-            Handlers.WebLogic.mkResponseForImage = WW.mkResponseForImage,
-            Handlers.WebLogic.response404WithImage = WW.response404WithImage,
-            Handlers.WebLogic.getBody = WW.getBody
+        Handlers.Web.Base.Handle
+          { Handlers.Web.Base.logger = logHandle,
+            Handlers.Web.Base.base = baseHandle,
+            Handlers.Web.Base.client = Handlers.Web.Base.Client 
+               {Handlers.Web.Base.clientAdminToken = Nothing,
+                Handlers.Web.Base.clientPublisherToken = Nothing,
+                Handlers.Web.Base.author = Nothing},
+            Handlers.Web.Base.response404 = WL.response404,
+            Handlers.Web.Base.response200 = WL.response200,
+            Handlers.Web.Base.mkGoodResponse = WL.mkGoodResponse,
+            Handlers.Web.Base.mkResponseForImage = WL.mkResponseForImage,
+            Handlers.Web.Base.response404WithImage = WL.response404WithImage,
+            Handlers.Web.Base.getBody = WL.getBody
           }
   pure handle

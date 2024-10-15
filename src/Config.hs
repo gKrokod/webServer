@@ -3,12 +3,9 @@
 
 module Config (ConfigDataBase (..), loadConfig, connectionString, whenMakeTables) where
 
--- module Config (ConfigDataBase (..), loadConfig, connectionString, whenMakeTables, createConfigFile) where -- for debug
-
 import Control.Exception (SomeException, displayException, throwIO, try)
 import Control.Monad (when)
 import Data.Aeson (FromJSON (..), ToJSON (..), eitherDecode)
--- import Data.Aeson (FromJSON (..), ToJSON (..), eitherDecode, encode)  -- for debug
 import qualified Data.ByteString.Lazy as L
 import Data.Maybe (isJust)
 import qualified Data.Text as T
@@ -65,21 +62,3 @@ connectionString cfg =
         " password=",
         cPasswordDB cfg
       ]
-
--- for debug
--- createConfigFile :: IO ()
--- createConfigFile = do
---   let testConfig = MkConfigDataBase {
---       cHostDB = "127.0.0.1"
---     , cPortDB = "5432"
---     , cUserDB = "bob"
---     , cNameDB = "bobdb"
---     , cPasswordDB = "1"
---     , cLimitData = 5
---     , cPortServer = 4221
---     , cLogLvl = Debug
---    -- , cCreateAndFillTable = Nothing --Just DoIt
---     , cCreateAndFillTable = Just DoIt
---   }
---   let configToJSON = encode testConfig :: L.ByteString
---   L.writeFile "config/db1.cfg" configToJSON

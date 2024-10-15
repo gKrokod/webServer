@@ -25,17 +25,52 @@ source-repository head
 
 library
   exposed-modules:
-      Base.Base
-      Base.Crypto
-      Base.FillTables
-      Base.LocalTime
-      Base.TestImage
       Config
-      Handlers.Base
+      Database.Api
+      Database.Authorization
+      Database.Crypto
+      Database.Data.FillTables
+      Database.Data.LocalTime
+      Database.Data.TestImage
+      Database.Queries.Category
+      Database.Queries.Image
+      Database.Queries.News
+      Database.Queries.User
+      Database.Verb
+      Handlers.Database.Api
+      Handlers.Database.Authorization
+      Handlers.Database.Base
+      Handlers.Database.Category.Create
+      Handlers.Database.Category.Get
+      Handlers.Database.Category.Update
+      Handlers.Database.Image.Get
+      Handlers.Database.News.Create
+      Handlers.Database.News.Get
+      Handlers.Database.News.Update
+      Handlers.Database.User.Create
+      Handlers.Database.User.Get
       Handlers.Logger
-      Handlers.WebLogic
+      Handlers.Router
+      Handlers.Web.Api
+      Handlers.Web.Base
+      Handlers.Web.Category.CategoryApi
+      Handlers.Web.Category.Create
+      Handlers.Web.Category.Get
+      Handlers.Web.Category.Types
+      Handlers.Web.Category.Update
+      Handlers.Web.Image.Get
+      Handlers.Web.Image.ImageApi
+      Handlers.Web.News.Create
+      Handlers.Web.News.Get
+      Handlers.Web.News.NewsApi
+      Handlers.Web.News.Types
+      Handlers.Web.News.Update
+      Handlers.Web.User.Create
+      Handlers.Web.User.Get
+      Handlers.Web.User.Types
+      Handlers.Web.User.UserApi
       Logger
-      Scheme
+      Schema
       Types
       Web.WebLogic
       Web.WebType
@@ -98,19 +133,15 @@ test-suite webServer-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Base.BaseSpec
-      Base.CryptoSpec
-      Base.FillTablesSpec
-      Base.LocalTimeSpec
-      Base.TestImageSpec
-      ConfigSpec
-      Handlers.BaseSpec
+      Handlers.Database.AuthorizationSpec
+      Handlers.Database.Category.CreateSpec
+      Handlers.Database.Category.UpdateSpec
+      Handlers.Database.News.CreateSpec
+      Handlers.Database.News.UpdateSpec
+      Handlers.Database.User.CreateSpec
+      Handlers.Database.User.GetSpec
       Handlers.LoggerSpec
-      Handlers.WebLogicSpec
-      LoggerSpec
-      SchemeSpec
-      Web.WebLogicSpec
-      Web.WebTypeSpec
+      Handlers.RouterSpec
       Paths_webServer
   autogen-modules:
       Paths_webServer

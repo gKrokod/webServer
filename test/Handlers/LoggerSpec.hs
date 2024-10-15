@@ -1,5 +1,5 @@
 module Handlers.LoggerSpec (spec) where
-
+  
 import Control.Monad.State (State, execState, put)
 import qualified Data.Text as T
 import Handlers.Logger
@@ -7,8 +7,6 @@ import Test.Hspec (Spec (..), it, shouldBe, shouldNotBe)
 
 spec :: Spec
 spec = do
-  -- describe "Handlers.Logger" $ do
-
   it "Logger write log message if level log message >=  level from Config" $ do
     let logHandle' =
           Handlers.Logger.Handle
