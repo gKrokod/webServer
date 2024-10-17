@@ -22,6 +22,8 @@ import Data.Time (Day (..), UTCTime (..))
 import qualified Database.Persist.TH as PTH
 import GHC.Generics (Generic)
 
+-- crate table of migrations number
+
 PTH.share
   [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"]
   [PTH.persistLowerCase|
