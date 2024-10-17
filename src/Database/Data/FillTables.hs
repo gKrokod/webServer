@@ -28,8 +28,8 @@ password2 = S.Password (makeHashPassword (MkPasswordUser "qpass2") (read $(local
 password3 = S.Password (makeHashPassword (MkPasswordUser "qpass3") (read $(localtimeTemplate)))
 
 image1, image2, image3 :: S.Image
-image1 = testImage1 
-image2 = testImage2 
+image1 = testImage1
+image2 = testImage2
 image3 = testImage3
 
 cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9 :: S.Category

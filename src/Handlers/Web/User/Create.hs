@@ -18,7 +18,7 @@ createUser _ h req = do
   let logHandle = logger h
       baseHandle = base h
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "create User WEB"
-  body <- webToUser <$> getBody h req 
+  body <- webToUser <$> getBody h req
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User WEB"
@@ -43,4 +43,4 @@ createUser _ h req = do
           pure (response200 h)
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ response404 h 
+          pure $ response404 h

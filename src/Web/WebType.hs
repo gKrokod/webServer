@@ -43,12 +43,14 @@ userToWeb :: [User] -> Builder
 userToWeb = fromLazyByteString . encode @[UserToWeb] . map convertToWeb
   where
     convertToWeb :: User -> UserToWeb
-    convertToWeb (User {..}) = UserToWeb
-      { name = userName,
-        login = userLogin,
-        created = userCreated,
-        isAdmin = userIsAdmin,
-        isPublisher = userIsPublisher}
+    convertToWeb (User {..}) =
+      UserToWeb
+        { name = userName,
+          login = userLogin,
+          created = userCreated,
+          isAdmin = userIsAdmin,
+          isPublisher = userIsPublisher
+        }
 
 webToUser :: B.ByteString -> Either String UserFromWeb
 webToUser = eitherDecodeStrict @UserFromWeb
@@ -69,7 +71,7 @@ categoryToWeb :: [Category] -> Builder
 categoryToWeb = fromLazyByteString . encode @[CategoryToWeb] . map convertToWeb
   where
     convertToWeb :: Category -> CategoryToWeb
-    convertToWeb c = CategoryToWeb { label = categoryLabel c }
+    convertToWeb c = CategoryToWeb {label = categoryLabel c}
 
 webToCategory :: B.ByteString -> Either String CategoryFromWeb
 webToCategory = eitherDecodeStrict @CategoryFromWeb
@@ -137,7 +139,7 @@ data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-webToPanigate :: B.ByteString -> Either String PanigateFromWeb 
+webToPanigate :: B.ByteString -> Either String PanigateFromWeb
 webToPanigate = eitherDecodeStrict @PanigateFromWeb
 
 type Offset = Int
