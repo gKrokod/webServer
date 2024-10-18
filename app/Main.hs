@@ -21,6 +21,9 @@ main = do
   Logger.writeLog "Welcome!"
   config <- loadConfig
   -- make Tables and Fill its if need
+  -- Delete all tables, create again and fill test data?
+  -- another just simply apply migratePlan
+  --
   whenMakeTables config $
     Logger.writeLog "Create and fill tables in the database"
       >> DA.makeAndFillTables (connectionString config)

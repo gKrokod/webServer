@@ -22,10 +22,8 @@ import Data.Time (Day (..), UTCTime (..))
 import qualified Database.Persist.TH as PTH
 import GHC.Generics (Generic)
 
--- crate table of migrations number
-
 PTH.share
-  [PTH.mkPersist PTH.sqlSettings, PTH.mkMigrate "migrateAll"]
+  [PTH.mkPersist PTH.sqlSettings, PTH.mkEntityDefList "createTablesForEntity"]
   [PTH.persistLowerCase|
  User sql=users
   name T.Text
@@ -43,7 +41,6 @@ PTH.share
   label T.Text
   parent CategoryId Maybe
   UniqueCategoryLabel label
-  -- deriving Generic
   deriving Eq Show 
  News sql=news
   title T.Text
@@ -57,9 +54,8 @@ PTH.share
  Image sql=images
   header T.Text
   base64 T.Text
-  -- UniqueImage header base64
   deriving Eq Show Generic FromJSON ToJSON
- ImageBank sql=images_bank -- for tests.
+ ImageBank sql=images_bank
   newsId NewsId
   imageId ImageId
   Primary newsId imageId
@@ -77,7 +73,6 @@ data SortOrder = Ascending | Descending
 newtype Find = Find {subString :: T.Text}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
-
 data FilterItem
   = FilterDataAt Day
   | FilterDataUntil Day
@@ -92,3 +87,4 @@ data FilterItem
 
 data IsValidPassword = Valid | NotValid
   deriving (Show)
+
