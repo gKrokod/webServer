@@ -1,9 +1,7 @@
 module Main (main) where
 
-import Config (ConfigDataBase, cLimitData, cLogLvl, connectionString, loadConfig, whenFillTestData)
+import Config (ConfigDataBase (..), connectionString, loadConfig)
 import Control.Exception (bracket_)
-import Control.Monad (when)
-import Data.Either (isLeft)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
@@ -21,18 +19,14 @@ import qualified Web.WebLogic as WL
 main :: IO ()
 main = do
   Logger.writeLog "Welcome!"
+
   config <- loadConfig
 
   DA.migrationEngine (connectionString config)
 
-  whenFillTestData config $ do
-    Logger.writeLog "You have chosen: to insert test data in the database"
-    tryInsertTestData <- DA.insertTestData (connectionString config)
-    when (isLeft tryInsertTestData) (Logger.writeLog "Can't insert test data")
-
   serverSetup <- makeSetup config
 
-  run 4221 $ authorization serverSetup app
+  run (cPortServer config) $ authorization serverSetup app
 
 type ServerSetup m = Handlers.Web.Base.Handle m
 

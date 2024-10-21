@@ -7,6 +7,7 @@ import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Text as T
 import Data.Time (Day (..))
 import Database.Migrations.Migrationv0 (Category (..), EntityField (..), Image (..), ImageBank (..), News (..), Password (..), Unique (..), User (..))
+-- import Database.Migrations.Migrationv5 (User(..), Password (..), Unique (..))
 import GHC.Generics (Generic)
 
 data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages

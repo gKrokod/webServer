@@ -6,6 +6,7 @@ import Database.Crypto (makeHashPassword)
 import Database.Data.LocalTime (localtimeTemplate)
 import Database.Data.TestImage (testImage1, testImage2, testImage3)
 import Database.Persist.Postgresql (toSqlKey)
+-- import qualified Database.Migrations.Migrationv0 as S
 import qualified Schema as S
 import Types (PasswordUser (..))
 
