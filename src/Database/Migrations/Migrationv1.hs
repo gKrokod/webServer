@@ -11,8 +11,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -ddump-splices #-}
-{-# OPTIONS_GHC -ddump-to-file #-}
 
 module Database.Migrations.Migrationv1 (migrateVer1, TestMigrate (..)) where
 

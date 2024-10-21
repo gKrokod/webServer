@@ -1,13 +1,12 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 
-module Schema (User (..), Password (..), Category (..), News (..), Image (..), ImageBank (..), IsValidPassword (..), FilterItem (..), ColumnType (..), SortOrder (..), Find (..), Unique (..), EntityField (..)) where
+module Schema (User (..), Password (..), Category (..), News (..), Image (..), ImageBank (..), IsValidPassword (..), FilterItem (..), ColumnType (..), SortOrder (..), Unique (..), Find (..), EntityField (..)) where
 
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Text as T
 import Data.Time (Day (..))
-import Database.Migrations.Migrationv0 (Category (..), EntityField (..), Image (..), ImageBank (..), News (..), Password (..), Unique (..), User (..))
--- import Database.Migrations.Migrationv5 (User(..), Password (..), Unique (..))
+import Database.Migrations.Migrationv5 (Category (..), EntityField (..), Image (..), ImageBank (..), News (..), Password (..), Unique (..), User (..))
 import GHC.Generics (Generic)
 
 data ColumnType = DataNews | AuthorNews | CategoryName | QuantityImages

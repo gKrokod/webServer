@@ -12,8 +12,9 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Database.Migrations.Migrationv5 (migrateVer5, User (..), Password (..), Unique (..), EntityField (..)) where
+module Database.Migrations.Migrationv5 (migrateVer5, User (..), Password (..), Category (..), News (..), Image (..), ImageBank (..), Unique (..), EntityField (..)) where
 
+import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Text as T
 import Data.Time (UTCTime (..))
 import Database.Migrations.Type (MyMigration (..))
@@ -21,6 +22,7 @@ import Database.Persist.Class (EntityField (..), Unique (..))
 import Database.Persist.Sql.Migration (addMigration)
 import Database.Persist.TH (migrateModels)
 import qualified Database.Persist.TH as PTH
+import GHC.Generics (Generic)
 
 PTH.share
   [PTH.mkPersist PTH.sqlSettings, PTH.mkEntityDefList "addNewColumn"]
@@ -38,6 +40,29 @@ PTH.share
  Password sql=passwords
    quasiPassword T.Text
    deriving Eq Show
+ Category sql=categories
+  label T.Text
+  parent CategoryId Maybe
+  UniqueCategoryLabel label
+  deriving Eq Show 
+ News sql=news
+  title T.Text
+  created UTCTime
+  userId UserId
+  categoryId CategoryId
+  content T.Text
+  isPublish Bool
+  UniqueNews title
+  deriving Eq Show
+ Image sql=images
+  header T.Text
+  base64 T.Text
+  deriving Eq Show Generic FromJSON ToJSON
+ ImageBank sql=images_bank
+  newsId NewsId
+  imageId ImageId
+  Primary newsId imageId
+  deriving Eq Show
 |]
 
 migrateVer5 :: MyMigration
