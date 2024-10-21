@@ -1,13 +1,11 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 
-module Config (ConfigDataBase (..), loadConfig, connectionString, whenMakeTables) where
+module Config (ConfigDataBase (..), loadConfig, connectionString, whenFillTestData) where
 
 import Control.Exception (SomeException, displayException, throwIO, try)
-import Control.Monad (when)
 import Data.Aeson (FromJSON (..), ToJSON (..), eitherDecode)
 import qualified Data.ByteString.Lazy as L
-import Data.Maybe (isJust)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E (encodeUtf8)
 import Database.Persist.Postgresql (ConnectionString)
@@ -23,17 +21,19 @@ data ConfigDataBase = MkConfigDataBase
     cLimitData :: Int,
     cPortServer :: Int,
     cLogLvl :: Log,
-    cCreateAndFillTable :: Maybe DoIt
+    cFillTestData :: DoItOrSkip
   }
   deriving stock (Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-data DoIt = DoIt
-  deriving stock (Show, Generic)
+data DoItOrSkip = DoIt | Skip
+  deriving stock (Show, Generic, Eq)
   deriving anyclass (ToJSON, FromJSON)
 
-whenMakeTables :: (Applicative f) => ConfigDataBase -> f () -> f ()
-whenMakeTables = when . isJust . cCreateAndFillTable
+whenFillTestData :: (Applicative f) => ConfigDataBase -> f () -> f ()
+whenFillTestData cfg action
+  | cFillTestData cfg == DoIt = action
+  | otherwise = pure ()
 
 loadConfigDB :: IO (Either String ConfigDataBase)
 loadConfigDB =

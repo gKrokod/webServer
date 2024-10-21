@@ -364,11 +364,11 @@ The response header will be Content-Type, e.g.. `Content-Type: image/jpeg`. The 
 
 <details><summary>Parameters of the configuration file</summary>
   
-  1. cCreateAndFillTable
+  1. cFillTestData
 
-	"cCreateAndFillTable": [] - create and fill test data for the database tables. Recommended for the first launch.
+	"cFillTestData": "DoIt" - fill test data for the database tables. Recommended for the first launch.
 	
-	"cCreateAndFillTable": null, do not configure the database. Recommended for subsequent launches.
+	"cFillTestData": "Skip", do not fill test data. Recommended for subsequent launches.
   
   2. cHostDB
     
@@ -408,9 +408,7 @@ The response header will be Content-Type, e.g.. `Content-Type: image/jpeg`. The 
 
 <details><summary>How to create the required structure in the local database (apply migration)?</summary> 
 
-Before starting the server, please set the `cCreateAndFillTable` parameter in the `/config/db.cfg` configuration file as follows::
-	
-	> "cCreateAndFillTable": [] 
+Migrations will be perfomed automatically
 
 </details>
 

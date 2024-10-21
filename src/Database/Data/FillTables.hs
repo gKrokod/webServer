@@ -5,22 +5,23 @@ module Database.Data.FillTables (user1, user2, user3, password1, password2, pass
 import Database.Crypto (makeHashPassword)
 import Database.Data.LocalTime (localtimeTemplate)
 import Database.Data.TestImage (testImage1, testImage2, testImage3)
+import qualified Database.Migrations.Migrationv0 as SOLD
 import Database.Persist.Postgresql (toSqlKey)
 import qualified Schema as S
 import Types (PasswordUser (..))
 
-user1, user2, user3 :: S.User
+user1, user2, user3 :: SOLD.User
 user1 =
-  S.User
-    { S.userName = "user1",
-      S.userLogin = "login1",
-      S.userPasswordId = toSqlKey 1,
-      S.userCreated = read $(localtimeTemplate),
-      S.userIsAdmin = True,
-      S.userIsPublisher = False
+  SOLD.User
+    { SOLD.userName = "user1",
+      SOLD.userLogin = "login1",
+      SOLD.userPasswordId = toSqlKey 1,
+      SOLD.userCreated = read $(localtimeTemplate),
+      SOLD.userIsAdmin = True,
+      SOLD.userIsPublisher = False
     }
-user2 = S.User "user2" "login2" (toSqlKey 2) (read $(localtimeTemplate)) True True
-user3 = S.User "user3" "login3" (toSqlKey 3) (read $(localtimeTemplate)) False True
+user2 = SOLD.User "user2" "login2" (toSqlKey 2) (read $(localtimeTemplate)) True True
+user3 = SOLD.User "user3" "login3" (toSqlKey 3) (read $(localtimeTemplate)) False True
 
 password1, password2, password3 :: S.Password
 password1 = S.Password {S.passwordQuasiPassword = makeHashPassword (MkPasswordUser "qpass1") (read $(localtimeTemplate))}
@@ -28,8 +29,8 @@ password2 = S.Password (makeHashPassword (MkPasswordUser "qpass2") (read $(local
 password3 = S.Password (makeHashPassword (MkPasswordUser "qpass3") (read $(localtimeTemplate)))
 
 image1, image2, image3 :: S.Image
-image1 = testImage1 
-image2 = testImage2 
+image1 = testImage1
+image2 = testImage2
 image3 = testImage3
 
 cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9 :: S.Category

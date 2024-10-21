@@ -48,7 +48,7 @@ doLogic h req = do
       | B.isPrefixOf "/images" path -> endPointImages h req
       | otherwise -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-          pure (response404 h) 
+          pure (response404 h)
 
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
@@ -58,25 +58,31 @@ getClient h req = do
   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
   runExceptT $ do
     case secureData of
-      Nothing -> pure $ Client {
-        clientAdminToken = Nothing,
-        clientPublisherToken = Nothing,
-        author = Nothing} 
+      Nothing ->
+        pure $
+          Client
+            { clientAdminToken = Nothing,
+              clientPublisherToken = Nothing,
+              author = Nothing
+            }
       Just (login_, password_) -> do
         (isAdmin_, isPublisher_) <- ExceptT $ getPrivilege baseHandle (MkLogin login_)
         valid <- ExceptT $ getResultValid baseHandle (MkLogin login_) (MkPasswordUser password_)
         case valid of
           NotValid -> do
             lift $ Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
-            pure $ Client {
-              clientAdminToken = Nothing,
-              clientPublisherToken = Nothing,
-              author = Nothing}
+            pure $
+              Client
+                { clientAdminToken = Nothing,
+                  clientPublisherToken = Nothing,
+                  author = Nothing
+                }
           Valid -> do
             lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
             lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get privilege"
-            pure $ Client {
-              clientAdminToken = bool Nothing (Just Proxy) isAdmin_,
-              clientPublisherToken = bool Nothing (Just Proxy) isPublisher_,
-              author = Just . MkLogin $ login_}
-
+            pure $
+              Client
+                { clientAdminToken = bool Nothing (Just Proxy) isAdmin_,
+                  clientPublisherToken = bool Nothing (Just Proxy) isPublisher_,
+                  author = Just . MkLogin $ login_
+                }

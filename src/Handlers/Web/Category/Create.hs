@@ -18,12 +18,12 @@ createCategory _ h req = do
   let logHandle = logger h
       baseHandle = base h
   Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create Category WEB"
-  body <- webToCategory <$> getBody h req  
+  body <- webToCategory <$> getBody h req
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Category WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h) 
+      pure (response404 h)
     Right (CategoryFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create category"
       tryCreateCategory <-
@@ -40,4 +40,4 @@ createCategory _ h req = do
           pure $ response200 h
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ response404 h 
+          pure $ response404 h

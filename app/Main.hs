@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Config (ConfigDataBase, cLimitData, cLogLvl, connectionString, loadConfig, whenMakeTables)
+import Config (ConfigDataBase (..), connectionString, loadConfig)
 import Control.Exception (bracket_)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
@@ -19,13 +19,14 @@ import qualified Web.WebLogic as WL
 main :: IO ()
 main = do
   Logger.writeLog "Welcome!"
+
   config <- loadConfig
-  -- make Tables and Fill its if need
-  whenMakeTables config $
-    Logger.writeLog "Create and fill tables in the database"
-      >> DA.makeAndFillTables (connectionString config)
+
+  DA.migrationEngine (connectionString config)
+
   serverSetup <- makeSetup config
-  run 4221 $ authorization serverSetup app
+
+  run (cPortServer config) $ authorization serverSetup app
 
 type ServerSetup m = Handlers.Web.Base.Handle m
 
@@ -89,10 +90,12 @@ makeSetup cfg = do
         Handlers.Web.Base.Handle
           { Handlers.Web.Base.logger = logHandle,
             Handlers.Web.Base.base = baseHandle,
-            Handlers.Web.Base.client = Handlers.Web.Base.Client 
-               {Handlers.Web.Base.clientAdminToken = Nothing,
-                Handlers.Web.Base.clientPublisherToken = Nothing,
-                Handlers.Web.Base.author = Nothing},
+            Handlers.Web.Base.client =
+              Handlers.Web.Base.Client
+                { Handlers.Web.Base.clientAdminToken = Nothing,
+                  Handlers.Web.Base.clientPublisherToken = Nothing,
+                  Handlers.Web.Base.author = Nothing
+                },
             Handlers.Web.Base.response404 = WL.response404,
             Handlers.Web.Base.response200 = WL.response200,
             Handlers.Web.Base.mkGoodResponse = WL.mkGoodResponse,

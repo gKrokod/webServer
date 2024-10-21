@@ -1,13 +1,11 @@
-module Handlers.Database.User.GetSpec  where
+module Handlers.Database.User.GetSpec where
 
+import Control.Monad.Identity (Identity (..))
+import Handlers.Database.Base (Handle (..), Limit (..), Offset (..))
 import Handlers.Database.User.Get (getAllUsers)
-
+import Schema (User (..))
 import Test.Hspec
-import Schema (User(..))
-import Control.Monad.Identity (Identity(..))
 import Test.QuickCheck (property)
-import Handlers.Database.Base (Handle (..), Offset (..), Limit (..))
-
 
 spec :: Spec
 spec = do
@@ -33,4 +31,3 @@ spec = do
             baseHandle' = baseHandle {userOffset = offset', userLimit = limit'}
         length <$> runIdentity (getAllUsers baseHandle')
           `shouldBe` Right (minimum [max 0 (numberUserInBase - userOffset baseHandle'), serverLimit, userLimit baseHandle'])
-

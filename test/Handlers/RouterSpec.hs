@@ -4,10 +4,6 @@
 
 module Handlers.RouterSpec (spec) where
 
-import Handlers.Router (doLogic, doAuthorization)
-
-import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, user1, user2, user3)
-import Database.Data.LocalTime (localtimeTemplate)
 import Control.Monad.Identity (Identity, runIdentity)
 import Control.Monad.State (State, evalState, get, gets)
 import Data.Binary.Builder as BU (Builder, fromByteString)
@@ -17,9 +13,13 @@ import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Data.Time (Day (..), UTCTime (..), fromGregorian)
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, user1, user2, user3)
+import Database.Data.LocalTime (localtimeTemplate)
 import qualified Handlers.Database.Base as DB
-import qualified Handlers.Web.Base as WB
 import qualified Handlers.Logger
+import Handlers.Router (doAuthorization, doLogic)
+import Handlers.Web.Base (CategoryInternal (..), NewsEditInternal (..), NewsInternal (..), NewsOut (..), UserInternal (..))
+import qualified Handlers.Web.Base as WB
 import Network.HTTP.Types (hContentType, notFound404, status200)
 import Network.Wai (defaultRequest, queryString, rawPathInfo, requestHeaders, responseBuilder)
 import Network.Wai.Internal (Response (..))
@@ -27,7 +27,6 @@ import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image
 import Test.Hspec (Spec, describe, it, shouldBe, shouldNotBe)
 import Types (Content (..), Label (..), Login (..), Name (..), NumberImage (..), Title (..), URI_Image (..))
 import Web.WebType (categoryToWeb, newsToWeb, userToWeb)
-import Handlers.Web.Base (CategoryInternal (..), UserInternal (..),NewsEditInternal (..), NewsInternal (..), NewsOut (..))
 
 spec :: Spec
 spec = do
@@ -288,18 +287,18 @@ spec = do
 
           webHandle1 =
             webHandle
-              {WB.base = baseHandle',
-               WB.client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              {WB.base = baseHandle',
-               WB.client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              {WB.base = baseHandle',
-               WB.client = clientAdminUser3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3
               }
           webHandle4 =
             webHandle
