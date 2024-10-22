@@ -27,7 +27,8 @@ putUser pginfo (UserInternal {..}) time = do
                 userPasswordId = pId,
                 userCreated = time,
                 userIsAdmin = isAdminUser,
-                userIsPublisher = isPublisherUser
+                userIsPublisher = isPublisherUser,
+                userLastName = Just (getName nameUser)
               }
         pure Put
     )

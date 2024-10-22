@@ -4,10 +4,6 @@
 
 module Handlers.RouterSpec (spec) where
 
-import Handlers.Router (doLogic, doAuthorization)
-
-import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, user1, user2, user3)
-import Database.Data.LocalTime (localtimeTemplate)
 import Control.Monad.Identity (Identity, runIdentity)
 import Control.Monad.State (State, evalState, get, gets)
 import Data.Binary.Builder as BU (Builder, fromByteString)
@@ -17,9 +13,13 @@ import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Data.Time (Day (..), UTCTime (..), fromGregorian)
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, user1test, user2test, user3test)
+import Database.Data.LocalTime (localtimeTemplate)
 import qualified Handlers.Database.Base as DB
-import qualified Handlers.Web.Base as WB
 import qualified Handlers.Logger
+import Handlers.Router (doAuthorization, doLogic)
+import Handlers.Web.Base (CategoryInternal (..), NewsEditInternal (..), NewsInternal (..), NewsOut (..), UserInternal (..))
+import qualified Handlers.Web.Base as WB
 import Network.HTTP.Types (hContentType, notFound404, status200)
 import Network.Wai (defaultRequest, queryString, rawPathInfo, requestHeaders, responseBuilder)
 import Network.Wai.Internal (Response (..))
@@ -27,14 +27,13 @@ import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image
 import Test.Hspec (Spec, describe, it, shouldBe, shouldNotBe)
 import Types (Content (..), Label (..), Login (..), Name (..), NumberImage (..), Title (..), URI_Image (..))
 import Web.WebType (categoryToWeb, newsToWeb, userToWeb)
-import Handlers.Web.Base (CategoryInternal (..), UserInternal (..),NewsEditInternal (..), NewsInternal (..), NewsOut (..))
 
 spec :: Spec
 spec = do
   describe "Autorization:" $ do
-    -- user1 admin noPublisher
-    -- user2 admin publisher
-    -- user3 noAdmin publisher
+    -- user1test admin noPublisher
+    -- user2test admin publisher
+    -- user3test noAdmin publisher
     -- unknown user noAdmin noPublisher
     --
     let req = defaultRequest
@@ -45,7 +44,7 @@ spec = do
               Handlers.Logger.writeLog = \_ -> pure ()
             }
 
-        usersInBase = [user1, user2, user3]
+        usersInBase = [user1test, user2test, user3test]
         baseHandle =
           DB.Handle
             { DB.logger = logHandle,
@@ -54,7 +53,7 @@ spec = do
                   ( Right
                       . listToMaybe
                       . mapMaybe
-                        ( \user@(User _ l _ _ _ _) ->
+                        ( \user@(User _ l _ _ _ _ _) ->
                             if l == login then Just user else Nothing
                         )
                   ),
@@ -76,30 +75,30 @@ spec = do
         `shouldBe` Right (WB.Client Nothing Nothing Nothing)
 
     it "A user with a valid password receives their privileges" $ do
-      let req1 = req {requestHeaders = [("Authorization", "Basic bG9naW4xOnFwYXNzMQ==")]} -- user1
-          req2 = req {requestHeaders = [("Authorization", "Basic bG9naW4yOnFwYXNzMg==")]} -- user2
-          req3 = req {requestHeaders = [("Authorization", "Basic bG9naW4zOnFwYXNzMw==")]} -- user3
+      let req1 = req {requestHeaders = [("Authorization", "Basic bG9naW4xOnFwYXNzMQ==")]} -- user1test
+          req2 = req {requestHeaders = [("Authorization", "Basic bG9naW4yOnFwYXNzMg==")]} -- user2test
+          req3 = req {requestHeaders = [("Authorization", "Basic bG9naW4zOnFwYXNzMw==")]} -- user3test
           webHandle' = webHandle
 
       WB.client <$> evalState (doAuthorization webHandle' req1) usersInBase
-        `shouldBe` Right (WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)) -- user1
+        `shouldBe` Right (WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)) -- user1test
       WB.client <$> evalState (doAuthorization webHandle' req2) usersInBase
-        `shouldBe` Right (WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)) -- user2
+        `shouldBe` Right (WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)) -- user2test
       WB.client <$> evalState (doAuthorization webHandle' req3) usersInBase
-        `shouldBe` Right (WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)) -- user3
+        `shouldBe` Right (WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)) -- user3test
     it "A user with an invalid password does not receive his privileges" $ do
-      let req1 = req {requestHeaders = [("Authorization", "Basic bG9naW4xOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user1
-          req2 = req {requestHeaders = [("Authorization", "Basic bG9naW4yOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user2
-          req3 = req {requestHeaders = [("Authorization", "Basic bG9naW4zOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user3
+      let req1 = req {requestHeaders = [("Authorization", "Basic bG9naW4xOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user1test
+          req2 = req {requestHeaders = [("Authorization", "Basic bG9naW4yOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user2test
+          req3 = req {requestHeaders = [("Authorization", "Basic bG9naW4zOk5PQ09SUkVDVFBBU1NXT1JE")]} -- user3test
           baseHandle' = baseHandle {DB.validPassword = \login password -> pure $ Right False}
           webHandle' = webHandle {WB.base = baseHandle'}
 
       WB.client <$> evalState (doAuthorization webHandle' req1) usersInBase
-        `shouldNotBe` Right (WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)) -- user1
+        `shouldNotBe` Right (WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)) -- user1test
       WB.client <$> evalState (doAuthorization webHandle' req2) usersInBase
-        `shouldNotBe` Right (WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)) -- user2
+        `shouldNotBe` Right (WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)) -- user2test
       WB.client <$> evalState (doAuthorization webHandle' req3) usersInBase
-        `shouldNotBe` Right (WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)) -- user3
+        `shouldNotBe` Right (WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)) -- user3test
   describe "EndPoint: /users" $ do
     let req = defaultRequest
         req' = req {rawPathInfo = "/users", queryString = [("panigate", Just "{\"offset\":0,\"limit\":7}")]}
@@ -110,7 +109,7 @@ spec = do
               Handlers.Logger.writeLog = \_ -> pure ()
             }
 
-        usersInBase = [user1, user2, user3]
+        usersInBase = [user1test, user2test, user3test]
         baseHandle =
           DB.Handle
             { DB.logger = logHandle,
@@ -127,9 +126,9 @@ spec = do
     it "All clients can get a list of users" $ do
       --
       let baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
@@ -203,9 +202,9 @@ spec = do
 
     it "All clients can get a list of category" $ do
       let baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
@@ -281,25 +280,25 @@ spec = do
 
     it "All clients can get a image" $ do
       let baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
             webHandle
-              {WB.base = baseHandle',
-               WB.client = clientAdminUser1
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser1
               }
           webHandle2 =
             webHandle
-              {WB.base = baseHandle',
-               WB.client = clientAdminUser2
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser2
               }
           webHandle3 =
             webHandle
-              {WB.base = baseHandle',
-               WB.client = clientAdminUser3
+              { WB.base = baseHandle',
+                WB.client = clientAdminUser3
               }
           webHandle4 =
             webHandle
@@ -325,7 +324,7 @@ spec = do
               Handlers.Logger.writeLog = \_ -> pure ()
             }
 
-        usersInBase = [user1, user2, user3]
+        usersInBase = [user1test, user2test, user3test]
         baseHandle =
           DB.Handle
             { DB.logger = logHandle,
@@ -335,7 +334,7 @@ spec = do
                   ( Right
                       . listToMaybe
                       . mapMaybe
-                        ( \user@(User _ l _ _ _ _) ->
+                        ( \user@(User _ l _ _ _ _ _) ->
                             if l == login then Just user else Nothing
                         )
                   ),
@@ -353,7 +352,7 @@ spec = do
     it "Admin can create new user" $ do
       let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -367,7 +366,7 @@ spec = do
     it "Non-admin can't create a new user" $ do
       let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -379,8 +378,8 @@ spec = do
         `shouldNotBe` test200
 
     it "Admin can't create a new user with login that already exists in the databse" $ do
-      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          oldUser = E.encodeUtf8 . userLogin $ user1
+      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+          oldUser = E.encodeUtf8 . userLogin $ user1test
           bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
           baseHandle' = baseHandle
           webHandle' =
@@ -429,7 +428,7 @@ spec = do
     it "Admin can create a new category" $ do
       let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -443,7 +442,7 @@ spec = do
     it "Non-admin can't create a new category" $ do
       let bodyReq = "{\"label\":\"Angel\",\"parent\":\"Abstract\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -455,7 +454,7 @@ spec = do
         `shouldNotBe` test200
 
     it "Admin can't create a new category with label that already exists in the database" $ do
-      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           oldLabel = E.encodeUtf8 . categoryLabel $ cat1
           bodyReq = "{\"label\":\"" <> oldLabel <> "\",\"parent\":\"Abstract\"}"
           baseHandle' = baseHandle
@@ -470,7 +469,7 @@ spec = do
         `shouldNotBe` test200
 
     it "Admin can't create a new category with parent that does not exis in the database" $ do
-      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+      let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           bodyReq = "{\"parent\":\"NOCATEGORYLABEL\",\"label\":\"NewLabel\"}"
           baseHandle' = baseHandle
           webHandle' =
@@ -487,7 +486,7 @@ spec = do
       let bodyReq1 = "{\"label\":\"Angel\",\"parent\":null}"
           bodyReq2 = "{\"label\":\"Angel\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle1 =
             webHandle
               { WB.base = baseHandle',
@@ -544,7 +543,7 @@ spec = do
           bodyReq2 = "{\"label\":\"Man\",\"newLabel\":\"NewMan\"}"
           bodyReq3 = "{\"label\":\"Man\",\"newparent\":\"Woman\"}"
           baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle1 =
             webHandle
               { WB.base = baseHandle',
@@ -574,7 +573,7 @@ spec = do
     it "Non-admin can't edit a category" $ do
       let bodyReq = "{\"label\":\"Man\",\"newLabel\":\"NewMan\",\"newparent\":\"Woman\"}"
           baseHandle' = baseHandle
-          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -596,7 +595,7 @@ spec = do
           [ MkNewsOut
               { nTitle = MkTitle "news1",
                 nTime = read $(localtimeTemplate),
-                nAuthor = MkName "user1",
+                nAuthor = MkName "user1test",
                 nCategories = map MkLabel ["Abstract", "Man"],
                 nContent = MkContent "content1",
                 nImages = [MkURI_Image "/images?id=1"],
@@ -605,7 +604,7 @@ spec = do
             MkNewsOut
               { nTitle = MkTitle "news2",
                 nTime = read $(localtimeTemplate),
-                nAuthor = MkName "user2",
+                nAuthor = MkName "user2test",
                 nCategories = map MkLabel ["Abstract", "Woman"],
                 nContent = MkContent "content2",
                 nImages = [],
@@ -614,7 +613,7 @@ spec = do
             MkNewsOut
               { nTitle = MkTitle "news3",
                 nTime = read $(localtimeTemplate),
-                nAuthor = MkName "user3",
+                nAuthor = MkName "user3test",
                 nCategories = map MkLabel ["Abstract", "Woman", "Witch"],
                 nContent = MkContent "content3",
                 nImages = [],
@@ -623,7 +622,7 @@ spec = do
             MkNewsOut
               { nTitle = MkTitle "news4",
                 nTime = read $(localtimeTemplate),
-                nAuthor = MkName "user1",
+                nAuthor = MkName "user1test",
                 nCategories = map MkLabel ["Abstract", "Woman", "Queen"],
                 nContent = MkContent "content4",
                 nImages = map MkURI_Image ["/images?id=2", "/images?id=3"],
@@ -651,9 +650,9 @@ spec = do
     it "All clients can get list of news" $ do
       --
       let baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =
@@ -716,7 +715,7 @@ spec = do
                     ]
               }
 
-          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           client2 = WB.Client Nothing Nothing Nothing
           webHandle1 =
             webHandle
@@ -738,7 +737,7 @@ spec = do
                            (MkName $ typeToText Descending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -781,7 +780,7 @@ spec = do
                     ]
               }
 
-          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -796,7 +795,7 @@ spec = do
                            (MkName $ typeToText Ascending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -809,7 +808,7 @@ spec = do
                            (MkName $ typeToText Descending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -821,13 +820,13 @@ spec = do
                            (MkName $ typeToText Ascending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
       evalState (doLogic webHandle' req4) newsInBase
         `shouldBe` ( testBuilder . newsToWeb $
-                       -- [(typeToText AuthorNews, testTime, typeToText Descending, [], typeToText (Nothing :: Maybe Find), [typeToText . FilterPublishOrAuthor . Just . userLogin $ user1], False)])
+                       -- [(typeToText AuthorNews, testTime, typeToText Descending, [], typeToText (Nothing :: Maybe Find), [typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test], False)])
 
                        [ MkNewsOut
                            (MkTitle $ typeToText AuthorNews)
@@ -835,13 +834,13 @@ spec = do
                            (MkName $ typeToText Descending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
       evalState (doLogic webHandle' req5) newsInBase
         `shouldBe` ( testBuilder . newsToWeb $
-                       -- [(typeToText CategoryName, testTime, typeToText Ascending, [], typeToText (Nothing :: Maybe Find), [typeToText . FilterPublishOrAuthor . Just . userLogin $ user1], False)])
+                       -- [(typeToText CategoryName, testTime, typeToText Ascending, [], typeToText (Nothing :: Maybe Find), [typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test], False)])
 
                        [ MkNewsOut
                            (MkTitle $ typeToText CategoryName)
@@ -849,7 +848,7 @@ spec = do
                            (MkName $ typeToText Ascending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -861,7 +860,7 @@ spec = do
                            (MkName $ typeToText Descending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -873,7 +872,7 @@ spec = do
                            (MkName $ typeToText Ascending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -885,7 +884,7 @@ spec = do
                            (MkName $ typeToText Descending)
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -908,7 +907,7 @@ spec = do
                     ]
               }
 
-          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -923,7 +922,7 @@ spec = do
                            (MkName $ typeToText Descending)
                            []
                            (MkContent $ typeToText (Just $ Find "googleIt"))
-                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1]
+                           [MkURI_Image . typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test]
                            False
                        ]
                    )
@@ -972,7 +971,7 @@ spec = do
                     ]
               }
 
-          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -988,7 +987,7 @@ spec = do
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
                            ( map MkURI_Image $
-                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1)
+                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test)
                                  : [typeToText . FilterDataAt $ testDay]
                            )
                            False
@@ -1004,7 +1003,7 @@ spec = do
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
                            ( map MkURI_Image $
-                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1)
+                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test)
                                  : [typeToText . FilterDataUntil $ testDay]
                            )
                            False
@@ -1020,7 +1019,7 @@ spec = do
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
                            ( map MkURI_Image $
-                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1)
+                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test)
                                  : [typeToText . FilterDataSince $ testDay]
                            )
                            False
@@ -1054,7 +1053,7 @@ spec = do
                     ]
               }
 
-          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -1070,7 +1069,7 @@ spec = do
                            []
                            (MkContent $ typeToText (Nothing :: Maybe Find))
                            ( map MkURI_Image $
-                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1)
+                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test)
                                  : (typeToText . FilterDataAt $ testDay)
                                  : (typeToText . FilterAuthorName $ "Vasya")
                                  : (typeToText . FilterCategoryLabel $ "Man")
@@ -1111,7 +1110,7 @@ spec = do
                     ]
               }
 
-          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          client1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -1134,7 +1133,7 @@ spec = do
                            []
                            (MkContent $ typeToText (Just $ Find "googleIt"))
                            ( map MkURI_Image $
-                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1)
+                               (typeToText . FilterPublishOrAuthor . Just . userLogin $ user1test)
                                  : (typeToText . FilterDataAt $ testDay)
                                  : (typeToText . FilterAuthorName $ "Vasya")
                                  : (typeToText . FilterCategoryLabel $ "Man")
@@ -1163,7 +1162,7 @@ spec = do
             { DB.logger = logHandle,
               DB.getTime = pure (read $(localtimeTemplate)),
               DB.findNewsByTitle = const (pure $ Right Nothing),
-              DB.findUserByLogin = const (pure $ Right $ Just user1),
+              DB.findUserByLogin = const (pure $ Right $ Just user1test),
               DB.findCategoryByLabel = const (pure . Right $ Just cat1),
               DB.putNews = \(NewsInternal title login label content images isPublish) time -> pure $ Right DB.Put
             }
@@ -1179,7 +1178,7 @@ spec = do
 
     it "Publisher can create news" $ do
       let baseHandle' = baseHandle
-          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -1190,7 +1189,7 @@ spec = do
 
     it "Non-publisher can't create news" $ do
       let baseHandle' = baseHandle
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           webHandle' =
             webHandle
               { WB.base = baseHandle',
@@ -1224,7 +1223,7 @@ spec = do
                     if title `elem` titles
                       then Just undefined
                       else Nothing,
-              DB.findUserByLogin = const (pure $ Right $ Just user1),
+              DB.findUserByLogin = const (pure $ Right $ Just user1test),
               DB.findCategoryByLabel = const (pure $ Right $ Just cat1),
               DB.editNews = \title time (NewsEditInternal mbtitle mblogin mblabel mbcontent image mbp) -> pure $ Right DB.Change
             }
@@ -1241,9 +1240,9 @@ spec = do
     it "Author can edit news" $ do
       let baseHandle' = baseHandle {DB.validCopyRight = \login title -> pure $ Right True}
 
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
 
           webHandle1 =
             webHandle
@@ -1271,9 +1270,9 @@ spec = do
     it "Non-author can't edit news" $ do
       let baseHandle' = baseHandle {DB.validCopyRight = \login title -> pure $ Right False}
 
-          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1)
-          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2)
-          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3)
+          clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+          clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
+          clientAdminUser3 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
           clientAdminUser4 = WB.Client Nothing Nothing Nothing
 
           webHandle1 =

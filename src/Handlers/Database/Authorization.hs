@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+
 module Handlers.Database.Authorization (getPrivilege, getCopyRight, getResultValid) where
 
 import Control.Exception (displayException)
