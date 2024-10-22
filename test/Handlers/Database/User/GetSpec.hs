@@ -4,6 +4,8 @@ import Control.Monad.Identity (Identity (..))
 import Handlers.Database.Base (Handle (..), Limit (..), Offset (..))
 import Handlers.Database.User.Get (getAllUsers)
 import Schema (User (..))
+-- import qualified Database.Migrations.Migrationv0 as SOLD
+-- import Schema (User (..))
 import Test.Hspec
 import Test.QuickCheck (property)
 
@@ -20,7 +22,8 @@ spec = do
                     take (min userLimit_ serverLimit) $
                       drop userOffset_ $
                         map
-                          (const (User "" "" undefined undefined False False))
+                          (const (User "" "" undefined undefined undefined undefined undefined))
+                          -- (const (User "" "" undefined undefined undefined undefined undefined False False ))
                           [1 .. numberUserInBase]
             } ::
             Handle Identity

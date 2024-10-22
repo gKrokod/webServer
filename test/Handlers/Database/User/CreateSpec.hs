@@ -3,7 +3,7 @@
 module Handlers.Database.User.CreateSpec where
 
 import Control.Monad.State (State, execState, modify)
-import Database.Data.FillTables (user1, user2, user3)
+import Database.Data.FillTables (user1test, user2test, user3test)
 import Database.Data.LocalTime (localtimeTemplate)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.User.Create (createUserBase)
@@ -20,14 +20,14 @@ spec = do
           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
             Handlers.Logger.writeLog = \_ -> pure ()
           }
-      usersInBase = [user1, user2, user3]
+      usersInBase = [user1test, user2test, user3test]
       baseHandle =
         Handle
           { logger = logHandle,
             findUserByLogin = undefined,
             getTime = pure (read $(localtimeTemplate)),
             putUser = \(UserInternal (MkName name) (MkLogin login) pass_ admin publish) time -> do
-              modify (User name login undefined time admin publish :)
+              modify (User name login undefined time admin publish undefined :)
               pure $ Right Put
           } ::
           Handle (State [User])
@@ -36,7 +36,7 @@ spec = do
     length (execState (createUserBase baseHandle' (UserInternal (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False)) usersInBase)
       `shouldBe` succ (length usersInBase)
   it "Failure: user exists in the database" $ do
-    let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right $ Just user1)}
+    let baseHandle' = baseHandle {findUserByLogin = const (pure $ Right $ Just user1test)}
     length (execState (createUserBase baseHandle' (UserInternal (MkName "Name") (MkLogin "Login") (MkPasswordUser "Password") False False)) usersInBase)
       `shouldNotBe` succ (length usersInBase)
 

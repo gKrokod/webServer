@@ -3,7 +3,7 @@
 module Handlers.Database.News.UpdateSpec where
 
 import Control.Monad.State (State, evalState, get)
-import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, news1, news2, news3, news4, user1, user2, user3)
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, news1, news2, news3, news4, user1test, user2test, user3test)
 import Database.Data.LocalTime (localtimeTemplate)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.News.Update (updateNewsBase)
@@ -23,7 +23,7 @@ spec = do
 
       newsInBase = [news1, news2, news3, news4]
       categoriesInBase = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]
-      usersInBase = [user1, user2, user3]
+      usersInBase = [user1test, user2test, user3test]
       base = (newsInBase, usersInBase, categoriesInBase)
 
       baseHandle =
@@ -35,7 +35,7 @@ spec = do
               pure $
                 Right $
                   if login `elem` users
-                    then Just (User "" login undefined undefined False False)
+                    then Just (User "" login undefined undefined False False undefined)
                     else Nothing,
             findNewsByTitle = \(MkTitle title) -> do
               (n, _u, _c) <- get
@@ -83,7 +83,7 @@ spec = do
           (MkTitle $ newsTitle news1)
           ( NewsEditInternal
               (Just . MkTitle $ "New Title for news1")
-              (Just . MkLogin $ userLogin user2)
+              (Just . MkLogin $ userLogin user2test)
               Nothing
               Nothing
               []

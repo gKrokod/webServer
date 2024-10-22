@@ -3,7 +3,7 @@
 module Handlers.Database.News.CreateSpec where
 
 import Control.Monad.State (State, execState, gets, modify)
-import Database.Data.FillTables (cat1, news1, news2, news3, news4, user1)
+import Database.Data.FillTables (cat1, news1, news2, news3, news4, user1test)
 import Database.Data.LocalTime (localtimeTemplate)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.News.Create (createNewsBase)
@@ -38,7 +38,7 @@ spec = do
     let baseHandle' =
           baseHandle
             { findNewsByTitle = const (pure $ Right Nothing),
-              findUserByLogin = const (pure $ Right $ Just user1),
+              findUserByLogin = const (pure $ Right $ Just user1test),
               findCategoryByLabel = const (pure $ Right $ Just cat1)
             }
     length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)
@@ -48,7 +48,7 @@ spec = do
     let baseHandle' =
           baseHandle
             { findNewsByTitle = const (pure $ Right Nothing),
-              findUserByLogin = const (pure $ Right $ Just user1),
+              findUserByLogin = const (pure $ Right $ Just user1test),
               findCategoryByLabel = const (pure $ Right Nothing)
             }
     length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatNew") (MkContent "Content") undefined False)) newsInBase)
@@ -78,7 +78,7 @@ spec = do
     let baseHandle' =
           baseHandle
             { findNewsByTitle = const (pure $ Right $ Just news1),
-              findUserByLogin = const (pure $ Right $ Just user1),
+              findUserByLogin = const (pure $ Right $ Just user1test),
               findCategoryByLabel = const (pure $ Right $ Just cat1)
             }
     length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "OldTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)
@@ -88,7 +88,7 @@ spec = do
     let baseHandle' =
           baseHandle
             { findNewsByTitle = const (pure $ Right $ Just news1),
-              findUserByLogin = const (pure $ Right $ Just user1),
+              findUserByLogin = const (pure $ Right $ Just user1test),
               findCategoryByLabel = const (pure $ Right Nothing)
             }
     length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "OldTitle") (MkLogin "UserOld") (MkLabel "CatNew") (MkContent "Content") undefined False)) newsInBase)
@@ -118,7 +118,7 @@ spec = do
     let baseHandle' =
           baseHandle
             { findNewsByTitle = const (pure $ Left undefined),
-              findUserByLogin = const (pure $ Right $ Just user1),
+              findUserByLogin = const (pure $ Right $ Just user1test),
               findCategoryByLabel = const (pure $ Right $ Just cat1)
             }
     length (execState (createNewsBase baseHandle' (NewsInternal (MkTitle "NewTitle") (MkLogin "UserOld") (MkLabel "CatOld") (MkContent "Content") undefined False)) newsInBase)

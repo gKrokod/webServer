@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -38,6 +38,8 @@ library
       Database.Migrations.Migrationv1
       Database.Migrations.Migrationv2
       Database.Migrations.Migrationv3
+      Database.Migrations.Migrationv4
+      Database.Migrations.Migrationv5
       Database.Migrations.Type
       Database.Queries.Category
       Database.Queries.Image
