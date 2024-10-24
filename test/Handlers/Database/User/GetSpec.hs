@@ -11,7 +11,7 @@ import Test.QuickCheck (property)
 
 spec :: Spec
 spec = do
-  describe "Data should be limited (Panigate)" $ do
+  describe "Data should be limited (Paginate)" $ do
     let serverLimit = 15
         numberUserInBase = 27
         baseHandle =
