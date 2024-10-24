@@ -1,8 +1,7 @@
 module Handlers.Database.Category.UpdateSpec where
 
 import Control.Monad.State (State, execState, get, gets, modify)
-import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9)
-import Database.Data.LocalTime (localtimeTemplate)
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, time4)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.Category.Update (updateCategoryBase)
 import qualified Handlers.Logger

@@ -1,10 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Handlers.Database.User.CreateSpec where
 
 import Control.Monad.State (State, execState, modify)
-import Database.Data.FillTables (user1test, user2test, user3test)
-import Database.Data.LocalTime (localtimeTemplate)
+import Database.Data.FillTables (time4, user1test, user2test, user3test)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.User.Create (createUserBase)
 import qualified Handlers.Logger
@@ -25,7 +22,7 @@ spec = do
         Handle
           { logger = logHandle,
             findUserByLogin = undefined,
-            getTime = pure (read $(localtimeTemplate)),
+            getTime = pure time4,
             putUser = \(UserInternal (MkName name) (MkLogin login) pass_ admin publish) time -> do
               modify (User name login undefined time admin publish undefined :)
               pure $ Right Put

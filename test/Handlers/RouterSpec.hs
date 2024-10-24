@@ -1,6 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Handlers.RouterSpec (spec) where
 
@@ -13,8 +11,7 @@ import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Data.Time (Day (..), UTCTime (..), fromGregorian)
-import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, user1test, user2test, user3test)
-import Database.Data.LocalTime (localtimeTemplate)
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, image1, image2, image3, news1, news2, news3, news4, time4, user1test, user2test, user3test)
 import qualified Handlers.Database.Base as DB
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
@@ -328,7 +325,7 @@ spec = do
         baseHandle =
           DB.Handle
             { DB.logger = logHandle,
-              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.getTime = pure time4,
               DB.findUserByLogin = \(MkLogin login) ->
                 gets
                   ( Right
@@ -406,7 +403,7 @@ spec = do
         baseHandle =
           DB.Handle
             { DB.logger = logHandle,
-              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.getTime = pure time4,
               DB.findCategoryByLabel = \(MkLabel label) -> do
                 categories <- gets (map categoryLabel)
                 pure $
@@ -519,7 +516,7 @@ spec = do
         baseHandle =
           DB.Handle
             { DB.logger = logHandle,
-              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.getTime = pure time4,
               DB.findCategoryByLabel = \(MkLabel label) -> do
                 categories <- gets (map categoryLabel)
                 pure $
@@ -594,7 +591,7 @@ spec = do
         newsInBase =
           [ MkNewsOut
               { nTitle = MkTitle "news1",
-                nTime = read $(localtimeTemplate),
+                nTime = time4,
                 nAuthor = MkName "user1test",
                 nCategories = map MkLabel ["Abstract", "Man"],
                 nContent = MkContent "content1",
@@ -603,7 +600,7 @@ spec = do
               },
             MkNewsOut
               { nTitle = MkTitle "news2",
-                nTime = read $(localtimeTemplate),
+                nTime = time4,
                 nAuthor = MkName "user2test",
                 nCategories = map MkLabel ["Abstract", "Woman"],
                 nContent = MkContent "content2",
@@ -612,7 +609,7 @@ spec = do
               },
             MkNewsOut
               { nTitle = MkTitle "news3",
-                nTime = read $(localtimeTemplate),
+                nTime = time4,
                 nAuthor = MkName "user3test",
                 nCategories = map MkLabel ["Abstract", "Woman", "Witch"],
                 nContent = MkContent "content3",
@@ -621,7 +618,7 @@ spec = do
               },
             MkNewsOut
               { nTitle = MkTitle "news4",
-                nTime = read $(localtimeTemplate),
+                nTime = time4,
                 nAuthor = MkName "user1test",
                 nCategories = map MkLabel ["Abstract", "Woman", "Queen"],
                 nContent = MkContent "content4",
@@ -1160,7 +1157,7 @@ spec = do
         baseHandle =
           DB.Handle
             { DB.logger = logHandle,
-              DB.getTime = pure (read $(localtimeTemplate)),
+              DB.getTime = pure time4,
               DB.findNewsByTitle = const (pure $ Right Nothing),
               DB.findUserByLogin = const (pure $ Right $ Just user1test),
               DB.findCategoryByLabel = const (pure . Right $ Just cat1),
@@ -1238,7 +1235,7 @@ spec = do
             WB.Handle (State [News])
 
     it "Author can edit news" $ do
-      let baseHandle' = baseHandle {DB.validCopyRight = \login title -> pure $ Right True}
+      let baseHandle' = baseHandle {DB.validCopyRight = \_login _title -> pure $ Right True}
 
           clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
@@ -1268,7 +1265,7 @@ spec = do
         `shouldBe` test200
 
     it "Non-author can't edit news" $ do
-      let baseHandle' = baseHandle {DB.validCopyRight = \login title -> pure $ Right False}
+      let baseHandle' = baseHandle {DB.validCopyRight = \_login _title -> pure $ Right False}
 
           clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
           clientAdminUser2 = WB.Client (Just Proxy) (Just Proxy) (Just . MkLogin $ userLogin user2test)
@@ -1306,7 +1303,7 @@ spec = do
         `shouldNotBe` test200
 
 testTime :: UTCTime
-testTime = read $(localtimeTemplate)
+testTime = time4
 
 testDay :: Day
 testDay = fromGregorian 2023 1 1
@@ -1331,7 +1328,7 @@ testImage (Image header base) = responseBuilder status200 [(hContentType, conten
 
 instance Show Response where
   show (ResponseBuilder s h b) = mconcat [show s, show h, show b]
-  show _ = undefined
+  show _ = "Response"
 
 instance Eq Response where
   (==) (ResponseBuilder s h b) (ResponseBuilder s' h' b') = (s == s') && (h == h') && (show b == show b')
