@@ -101,7 +101,7 @@ spec = do
         `shouldNotBe` Right (WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)) -- user3test
   describe "EndPoint: /users" $ do
     let req = defaultRequest
-        req' = req {rawPathInfo = "/users", queryString = [("panigate", Just "{\"offset\":0,\"limit\":7}")]}
+        req' = req {rawPathInfo = "/users", queryString = [("paginate", Just "{\"offset\":0,\"limit\":7}")]}
 
         logHandle =
           Handlers.Logger.Handle
@@ -161,8 +161,8 @@ spec = do
       evalState (doLogic webHandle4 req') usersInBase
         `shouldBe` (testBuilder . userToWeb $ usersInBase)
 
-    it "Client can panigate" $ do
-      let req' = req {rawPathInfo = "/users", queryString = [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
+    it "Client can paginate" $ do
+      let req' = req {rawPathInfo = "/users", queryString = [("paginate", Just "{\"offset\":1,\"limit\":1}")]}
           baseHandle' = baseHandle
           client' = WB.Client Nothing Nothing Nothing
 
@@ -178,7 +178,7 @@ spec = do
   describe "EndPoint: /categories" $ do
     --- todo
     let req = defaultRequest
-        req' = req {rawPathInfo = "/categories", queryString = [("panigate", Just "{\"offset\":0,\"limit\":10}")]}
+        req' = req {rawPathInfo = "/categories", queryString = [("paginate", Just "{\"offset\":0,\"limit\":10}")]}
         logHandle =
           Handlers.Logger.Handle
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
@@ -237,8 +237,8 @@ spec = do
       evalState (doLogic webHandle4 req') categoriesInBase
         `shouldBe` (testBuilder . categoryToWeb $ categoriesInBase)
 
-    it "Client can panigate" $ do
-      let req' = req {rawPathInfo = "/categories", queryString = [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
+    it "Client can paginate" $ do
+      let req' = req {rawPathInfo = "/categories", queryString = [("paginate", Just "{\"offset\":1,\"limit\":1}")]}
           baseHandle' = baseHandle
           client' = WB.Client Nothing Nothing Nothing
 
@@ -585,7 +585,7 @@ spec = do
 
   describe "EndPoint: /news" $ do
     let req = defaultRequest
-        req' = req {rawPathInfo = "/news", queryString = [("panigate", Just "{\"offset\":0,\"limit\":10}")]}
+        req' = req {rawPathInfo = "/news", queryString = [("paginate", Just "{\"offset\":0,\"limit\":10}")]}
         logHandle =
           Handlers.Logger.Handle
             { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
@@ -685,8 +685,8 @@ spec = do
       evalState (doLogic webHandle4 req') newsInBase
         `shouldBe` (testBuilder . newsToWeb $ newsInBase)
 
-    it "Client can panigate" $ do
-      let req' = req {rawPathInfo = "/news", queryString = [("panigate", Just "{\"offset\":1,\"limit\":1}")]}
+    it "Client can paginate" $ do
+      let req' = req {rawPathInfo = "/news", queryString = [("paginate", Just "{\"offset\":1,\"limit\":1}")]}
           baseHandle' = baseHandle
           client' = WB.Client Nothing Nothing Nothing
 

@@ -10,7 +10,7 @@ import Handlers.Web.Category.Create (createCategory)
 import Handlers.Web.Category.Get (existingCategories)
 import Handlers.Web.Category.Update (updateCategory)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
-import Web.WebType (queryToPanigate)
+import Web.WebType (queryToPaginate)
 
 endPointCategories :: (Monad m) => Handle m -> Request -> m Response
 endPointCategories h req = do
@@ -33,7 +33,7 @@ endPointCategories h req = do
           pure (response404 h)
     "/categories" -> do
       let queryLimit = queryString req
-          (userOffset, userLimit) = queryToPanigate queryLimit
+          (userOffset, userLimit) = queryToPaginate queryLimit
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Query String:"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))

@@ -135,27 +135,27 @@ newsToWeb = fromLazyByteString . encode @[NewsToWeb] . map convertToWeb
           isPublish = nIsPublish newsOut
         }
 
-data PanigateFromWeb = Panigate {offset :: Maybe Int, limit :: Maybe Int}
+data PaginateFromWeb = Paginate {offset :: Maybe Int, limit :: Maybe Int}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-webToPanigate :: B.ByteString -> Either String PanigateFromWeb
-webToPanigate = eitherDecodeStrict @PanigateFromWeb
+webToPaginate :: B.ByteString -> Either String PaginateFromWeb
+webToPaginate = eitherDecodeStrict @PaginateFromWeb
 
 type Offset = Int
 
 type Limit = Int
 
--- queryToPanigate :: Query -> (Int, Int)
+-- queryToPaginate :: Query -> (Int, Int)
 -- 0 and maxBound it's default
-queryToPanigate :: [(B.ByteString, Maybe B.ByteString)] -> (Offset, Limit)
-queryToPanigate = convertFromWeb . mapMaybe (\(x, y) -> if x == "panigate" then y else Nothing)
+queryToPaginate :: [(B.ByteString, Maybe B.ByteString)] -> (Offset, Limit)
+queryToPaginate = convertFromWeb . mapMaybe (\(x, y) -> if x == "paginate" then y else Nothing)
   where
     convertFromWeb :: [B.ByteString] -> (Int, Int)
-    convertFromWeb [xs] = case eitherDecodeStrict @PanigateFromWeb xs of
-      Right (Panigate (Just offset') (Just limit')) -> (offset', limit')
-      Right (Panigate (Just offset') Nothing) -> (offset', maxBound)
-      Right (Panigate Nothing (Just limit')) -> (0, limit')
+    convertFromWeb [xs] = case eitherDecodeStrict @PaginateFromWeb xs of
+      Right (Paginate (Just offset') (Just limit')) -> (offset', limit')
+      Right (Paginate (Just offset') Nothing) -> (offset', maxBound)
+      Right (Paginate Nothing (Just limit')) -> (0, limit')
       _ -> (0, maxBound)
     convertFromWeb _ = (0, maxBound)
 

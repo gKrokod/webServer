@@ -12,7 +12,7 @@ import Network.HTTP.Types (Query)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Schema (FilterItem (FilterPublishOrAuthor))
 import Types (Login (..))
-import Web.WebType (queryToFilters, queryToFind, queryToPanigate, queryToSort)
+import Web.WebType (queryToFilters, queryToFind, queryToPaginate, queryToSort)
 
 endPointNews :: (Monad m) => Handle m -> Request -> m Response
 endPointNews h req = do
@@ -36,7 +36,7 @@ endPointNews h req = do
     "/news" -> do
       -- get all news
       let queryLimit = queryString req
-          (userOffset, userLimit) = queryToPanigate queryLimit
+          (userOffset, userLimit) = queryToPaginate queryLimit
           sortWeb = queryToSort queryLimit
           findWeb = queryToFind queryLimit
           filtersWeb = queryToFilters queryLimit
@@ -50,7 +50,7 @@ endPointNews h req = do
       mapM_
         (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show)
         (filterPublishOrAuthor : filtersWeb)
-      existingNews (foldSets queryLimit h [setFilters, setFind, setSort, setPanigate]) req
+      existingNews (foldSets queryLimit h [setFilters, setFind, setSort, setPaginate]) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
       pure $ response404 h
@@ -58,10 +58,10 @@ endPointNews h req = do
     foldSets :: (Monad m) => Query -> Handle m -> [Handle m -> Query -> Handle m] -> Handle m
     foldSets query = foldr (\set h' -> set h' query)
 
-    setPanigate :: (Monad m) => Handle m -> Query -> Handle m
-    setPanigate h' q =
+    setPaginate :: (Monad m) => Handle m -> Query -> Handle m
+    setPaginate h' q =
       let baseHandle = base h'
-          (userOffset, userLimit) = queryToPanigate q
+          (userOffset, userLimit) = queryToPaginate q
           newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
        in h' {base = newBaseHandle}
 

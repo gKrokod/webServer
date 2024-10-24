@@ -8,7 +8,7 @@ import Handlers.Web.Base (Client (..), Handle (..))
 import Handlers.Web.User.Create (createUser)
 import Handlers.Web.User.Get (existingUsers)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
-import Web.WebType (queryToPanigate)
+import Web.WebType (queryToPaginate)
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m Response
 endPointUsers h req = do
@@ -25,7 +25,7 @@ endPointUsers h req = do
           pure (response404 h)
     "/users" -> do
       let queryLimit = queryString req
-          (userOffset, userLimit) = queryToPanigate queryLimit
+          (userOffset, userLimit) = queryToPaginate queryLimit
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Query String:"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))

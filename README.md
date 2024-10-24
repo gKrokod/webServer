@@ -83,14 +83,14 @@ Password hashes with dynamic salt are stored in the database (more details in mo
 Get list of news.
 
 	Field				Type			Description
-	panigate			PanigateFromWeb		Optional. Panigate parameters.
+	paginate			PaginateFromWeb		Optional. Paginate parameters.
 	sort				SortFromWeb		Optional. Sort parameters.
 	find				FindFromWeb		Optional. Search parameter.
 	filter				[FilterItem]		Optional. Filter parameters.
 
-The length of the resulting list of news can be limited in the request (see `PanigateFromWeb` type in the `src/Web/WebType.hs` module).
+The length of the resulting list of news can be limited in the request (see `PaginateFromWeb` type in the `src/Web/WebType.hs` module).
 	
-	Field of PanigateFromWeb	Type			Description
+	Field of PaginateFromWeb	Type			Description
 	offset      			Int			Optional. Offset
 	limit       			Int			Optional. Maximum number of news in the response
       
@@ -113,7 +113,7 @@ You can limit the list of requested news items to only those that contain the sp
     
 Example request (`sh/news/get` folder):
  
-	curl -v 'login1:qpass1@127.0.0.1:4221/news?panigate=%7B"offset"%3A1%2C"limit"%3A7%7D&filter=%5B%7B"contents"%3A"2023-01-01"%2C"tag"%3A"FilterDataSince"%7D%2C%7B"contents"%3A"user"%2C"tag"%3A"FilterTitleFind"%7D%5D&sort=%7B"columnType"%3A"QuantityImages"%2C"sortOrder"%3A"Ascending"%7D&find=%7B"subString"%3A"and"%7D'
+	curl -v 'login1:qpass1@127.0.0.1:4221/news?paginate=%7B"offset"%3A1%2C"limit"%3A7%7D&filter=%5B%7B"contents"%3A"2023-01-01"%2C"tag"%3A"FilterDataSince"%7D%2C%7B"contents"%3A"user"%2C"tag"%3A"FilterTitleFind"%7D%5D&sort=%7B"columnType"%3A"QuantityImages"%2C"sortOrder"%3A"Ascending"%7D&find=%7B"subString"%3A"and"%7D'
 	
 The body of the response will contain the list of news, e.g.
 
@@ -209,19 +209,19 @@ In case of an error, the web server will respond with a message with a response 
 Get list of users.
 
 	Field				Type			Description
-	panigate			PanigateFromWeb		Optional. Panigate parameters: offset and limit
+	paginate			PaginateFromWeb		Optional. Paginate parameters: offset and limit
 
-The length of the resulting list of users can be limited in the request (see `PanigateFromWeb` type in the `src/Web/WebType.hs` module).
+The length of the resulting list of users can be limited in the request (see `PaginateFromWeb` type in the `src/Web/WebType.hs` module).
 	    
-	Field of PanigateFromWeb	Type			Description
+	Field of PaginateFromWeb	Type			Description
 	offset      			Int			Optional. Offset
 	limit       			Int			Optional. Maximum number of users in the response
 
 Example request (`sh/users/get` folder):
  
-	curl -v '127.0.0.1:4221/users?panigate=%7B"offset"%3A1%2C"limit"%3A2%7D'
+	curl -v '127.0.0.1:4221/users?paginate=%7B"offset"%3A1%2C"limit"%3A2%7D'
 	
-The body of the response will contain the panigated list of users, e.g.
+The body of the response will contain the paginated list of users, e.g.
 
 	[{"created":"2024-08-06T08:22:14.273552Z","isAdmin":true,"isPublisher":true,"login":"login2","name":"user2"},{"created":"2024-08-06T08:22:14.273687Z","isAdmin":false,"isPublisher":true,"login":"login3","name":"user3"}]
   
@@ -265,19 +265,19 @@ In case of an error, the web server will respond with a message with a response 
 Get list of categories.
 
 	Field				Type			Description
-	panigate			PanigateFromWeb		Optional. Panigate parameters: offset and limit
+	paginate			PaginateFromWeb		Optional. Paginate parameters: offset and limit
 	
-The length of the resulting list of categories can be limited in the request (see `PanigateFromWeb` type in the `src/Web/WebType.hs` module).  
+The length of the resulting list of categories can be limited in the request (see `PaginateFromWeb` type in the `src/Web/WebType.hs` module).  
 
-	Field of PanigateFromWeb	Type			Description
+	Field of PaginateFromWeb	Type			Description
 	offset      			Int			Optional. Offset
 	limit       			Int			Optional. Maximum number of categories in the response
 
 Example request (`sh/users/get` folder):
  
-	curl -v '127.0.0.1:4221/users?panigate=%7B"offset"%3A1%2C"limit"%3A7%7D'
+	curl -v '127.0.0.1:4221/users?paginate=%7B"offset"%3A1%2C"limit"%3A7%7D'
 	
-The body of the response will contain the panigated list of catgories, e.g.
+The body of the response will contain the paginated list of catgories, e.g.
 
 	[{"label":"Man"},{"label":"Woman"},{"label":"Warrior"},{"label":"Archer"},{"label":"Neutral"},{"label":"Evil"},{"label":"Good"}]
   
