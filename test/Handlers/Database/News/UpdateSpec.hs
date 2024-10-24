@@ -1,10 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Handlers.Database.News.UpdateSpec where
 
 import Control.Monad.State (State, evalState, get)
-import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, news1, news2, news3, news4, user1test, user2test, user3test)
-import Database.Data.LocalTime (localtimeTemplate)
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, news1, news2, news3, news4, time4, user1test, user2test, user3test)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.News.Update (updateNewsBase)
 import qualified Handlers.Logger
@@ -53,7 +50,7 @@ spec = do
                   if label `elem` categories
                     then Just (Category label undefined)
                     else Nothing,
-            getTime = pure (read $(localtimeTemplate)),
+            getTime = pure time4,
             editNews = \_titleOld _time (NewsEditInternal _mbTitle _mbLogin _mbLabel _mbContent _images _mbPublish) -> pure $ Right Change
           } ::
           Handle (State ([News], [User], [Category]))

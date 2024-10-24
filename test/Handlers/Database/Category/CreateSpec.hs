@@ -1,10 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Handlers.Database.Category.CreateSpec where
 
 import Control.Monad.State (State, execState, gets, modify)
-import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9)
-import Database.Data.LocalTime (localtimeTemplate)
+import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, time4)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.Category.Create (createCategoryBase)
 import qualified Handlers.Logger
@@ -32,7 +29,7 @@ spec = do
                   if label `elem` categories
                     then Just (Category label undefined)
                     else Nothing,
-            getTime = pure (read $(localtimeTemplate)),
+            getTime = pure time4,
             putCategory = \(CategoryInternal (MkLabel label) parent) -> do
               modify (Category label undefined :)
               pure $ Right Put
