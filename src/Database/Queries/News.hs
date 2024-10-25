@@ -28,14 +28,14 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
           unValue
           ( select $ do
               (news :& author :& categoryName :& imageBank) <-
-                from $
-                  table @News
+                from
+                  $ table @News
                     `innerJoin` table @User
-                      `on` (\(n :& a) -> n ^. NewsUserId ==. a ^. UserId)
+                  `on` (\(n :& a) -> n ^. NewsUserId ==. a ^. UserId)
                     `innerJoin` table @Category
-                      `on` (\(n :& _ :& c) -> n ^. NewsCategoryId ==. c ^. CategoryId)
+                  `on` (\(n :& _ :& c) -> n ^. NewsCategoryId ==. c ^. CategoryId)
                     `leftJoin` table @ImageBank
-                      `on` (\(n :& _ :& _ :& ib) -> just (n ^. NewsId) ==. ib ?. ImageBankNewsId)
+                  `on` (\(n :& _ :& _ :& ib) -> just (n ^. NewsId) ==. ib ?. ImageBankNewsId)
               groupBy (news ^. NewsTitle, news ^. NewsCreated, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
               -- search substring
               maybe
@@ -110,20 +110,20 @@ fetchFullNews configLimit userLimit title = do
     fetchLabel :: (MonadIO m) => SqlPersistT m [Entity Category]
     fetchLabel = select $ do
       (news :& category) <-
-        from $
-          table @News
+        from
+          $ table @News
             `innerJoin` table @Category
-              `on` (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
+          `on` (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
       where_ (news ^. NewsTitle ==. (val . getTitle) title)
       pure category
 
     fetchUser :: (MonadIO m) => SqlPersistT m [Entity User]
     fetchUser = select $ do
       (news :& user) <-
-        from $
-          table @News
+        from
+          $ table @News
             `innerJoin` table @User
-              `on` (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
+          `on` (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
       where_ (news ^. NewsTitle ==. (val . getTitle) title)
       pure user
 
@@ -150,12 +150,12 @@ fetchFullNews configLimit userLimit title = do
     fetchActionImage :: (MonadIO m) => SqlPersistT m [Entity Image]
     fetchActionImage = select $ do
       (news :& _imagebank :& image) <-
-        from $
-          table @News
+        from
+          $ table @News
             `innerJoin` table @ImageBank
-              `on` (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+          `on` (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
             `innerJoin` table @Image
-              `on` (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+          `on` (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
       where_ (news ^. NewsTitle ==. (val . getTitle) title)
       limit (fromIntegral . min configLimit . getLimit $ userLimit)
       pure image

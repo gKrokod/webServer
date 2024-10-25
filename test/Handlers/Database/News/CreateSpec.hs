@@ -1,10 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Handlers.Database.News.CreateSpec where
 
 import Control.Monad.State (State, execState, gets, modify)
-import Database.Data.FillTables (cat1, news1, news2, news3, news4, user1test)
-import Database.Data.LocalTime (localtimeTemplate)
+import Database.Data.FillTables (cat1, news1, news2, news3, news4, time4, user1test)
 import Handlers.Database.Base (Handle (..), Success (..))
 import Handlers.Database.News.Create (createNewsBase)
 import qualified Handlers.Logger
@@ -27,7 +24,7 @@ spec = do
             findCategoryByLabel = undefined,
             findUserByLogin = undefined,
             findNewsByTitle = undefined,
-            getTime = pure (read $(localtimeTemplate)),
+            getTime = pure time4,
             putNews = \(NewsInternal (MkTitle title) login label (MkContent content) _images ispublish) time -> do
               modify (News title time undefined undefined content ispublish :)
               pure $ Right Put
