@@ -25,7 +25,7 @@ updateNews author_ h req = do
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit News WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h)
+      pure (response400 h . T.pack $ e)
     Right (EditNewsFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."
       checkCopyright <- getCopyRight baseHandle author_ (MkTitle title)
@@ -50,8 +50,8 @@ updateNews author_ h req = do
             Right _ -> do
               Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
               pure $ response200 h
-            _ -> pure $ response404 h
+            _ -> pure $ response500 h
         Right NotValid -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Fail"
-          pure $ response404 h
-        _ -> pure $ response404 h
+          pure $ response403 h
+        _ -> pure $ response500 h

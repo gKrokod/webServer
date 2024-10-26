@@ -22,10 +22,10 @@ existingImages h req = do
       case eImage of
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ response404 h
+          pure $ response500 h
         Right img -> pure $ mkResponseForImage h img
       where
         idImage = maybe (-1) (fromIntegral . fst) (BC.readInt n)
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request image"
-      pure (response404 h)
+      pure $ response400 h "Bad request \n"

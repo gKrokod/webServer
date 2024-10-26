@@ -23,7 +23,7 @@ createUser _ h req = do
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h)
+      pure (response400 h . T.pack $ e)
     Right (UserFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"
       tryCreateUser <-
@@ -40,7 +40,7 @@ createUser _ h req = do
       case tryCreateUser of
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create User success WEB"
-          pure (response200 h)
+          pure $ response200 h
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ response404 h
+          pure $ response500 h

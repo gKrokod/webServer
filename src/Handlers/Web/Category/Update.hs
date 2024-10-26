@@ -23,7 +23,7 @@ updateCategory _ h req = do
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit Category WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h)
+      pure (response400 h . T.pack $ e)
     Right (EditCategoryFromWeb {newlabel = (Just newlabel'), ..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category Just newlabel parent"
       tryEditCategory <-
@@ -39,7 +39,7 @@ updateCategory _ h req = do
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
           pure $ response200 h
-        Left _ -> pure $ response404 h
+        Left _ -> pure $ response500 h
     Right (EditCategoryFromWeb {newlabel = Nothing, ..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category without new label"
       tryEditCategory <-
@@ -55,4 +55,4 @@ updateCategory _ h req = do
         Right _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit Category success WEB"
           pure $ response200 h
-        Left _ -> pure $ response404 h
+        Left _ -> pure $ response500 h

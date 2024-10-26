@@ -25,14 +25,14 @@ endPointNews h req = do
         Client {clientPublisherToken = (Just publisherRole)} -> createNews publisherRole h req -- create news for only publisher
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h)
+          pure $ response403 h
     "/news/edit" ->
       case client h of
         Client {author = (Just author_)} -> do
           updateNews author_ h req -- edit news for only author
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h) --
+          pure $ response403 h --
     "/news" -> do
       -- get all news
       let queryLimit = queryString req

@@ -15,4 +15,4 @@ endPointImages h req = do
     "/images" -> existingImages h req -- get one image
     _ -> do
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"
-      pure (response404 h)
+      pure $ response404 h

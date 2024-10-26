@@ -24,13 +24,13 @@ endPointCategories h req = do
         Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole h req -- create a category for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h)
+          pure $ response404 h
     "/categories/edit" -> do
       case client h of
         Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole h req -- edit a category for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h)
+          pure $ response404 h
     "/categories" -> do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPaginate queryLimit

@@ -23,7 +23,7 @@ createNews _ h req = do
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode News WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h)
+      pure (response400 h . T.pack $ e)
     Right (NewsFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"
       tryCreateNews <-
@@ -44,4 +44,4 @@ createNews _ h req = do
           pure $ response200 h
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ response404 h
+          pure $ response500 h

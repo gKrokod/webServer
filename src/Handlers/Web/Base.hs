@@ -5,6 +5,7 @@ module Handlers.Web.Base (Handle (..), Client (..), UserInternal (..), CategoryI
 import Data.Binary.Builder (Builder)
 import qualified Data.ByteString as B
 import Data.Proxy (Proxy (..))
+import Data.Text (Text)
 import qualified Handlers.Database.Base
 import qualified Handlers.Logger
 import Handlers.Web.Category.Types (CategoryInternal (..))
@@ -31,6 +32,9 @@ data Handle m = Handle
     getBody :: Request -> m B.ByteString,
     response404 :: Response,
     response200 :: Response,
+    response403 :: Response,
+    response400 :: Text -> Response,
+    response500 :: Response,
     mkGoodResponse :: Builder -> Response,
     mkResponseForImage :: Image -> Response,
     response404WithImage :: Response

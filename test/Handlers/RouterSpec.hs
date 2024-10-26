@@ -17,7 +17,7 @@ import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
 import Handlers.Web.Base (CategoryInternal (..), NewsEditInternal (..), NewsInternal (..), NewsOut (..), UserInternal (..))
 import qualified Handlers.Web.Base as WB
-import Network.HTTP.Types (hContentType, notFound404, status200)
+import Network.HTTP.Types (badRequest400, forbidden403, hContentType, internalServerError500, notFound404, status200)
 import Network.Wai (defaultRequest, queryString, rawPathInfo, requestHeaders, responseBuilder)
 import Network.Wai.Internal (Response (..))
 import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
@@ -60,7 +60,10 @@ spec = do
           WB.Handle
             { WB.logger = logHandle,
               WB.base = baseHandle,
-              WB.response404 = test404
+              WB.response404 = test404,
+              WB.response403 = test403,
+              WB.response400 = test400,
+              WB.response500 = test500
             } ::
             WB.Handle (State [User])
 
@@ -342,6 +345,9 @@ spec = do
             { WB.logger = logHandle,
               WB.base = baseHandle,
               WB.response404 = test404,
+              WB.response403 = test403,
+              WB.response400 = test400,
+              WB.response500 = test500,
               WB.response200 = test200
             } ::
             WB.Handle (State [User])
@@ -418,6 +424,9 @@ spec = do
             { WB.logger = logHandle,
               WB.base = baseHandle,
               WB.response404 = test404,
+              WB.response403 = test403,
+              WB.response400 = test400,
+              WB.response500 = test500,
               WB.response200 = test200
             } ::
             WB.Handle (State [Category])
@@ -531,6 +540,9 @@ spec = do
             { WB.logger = logHandle,
               WB.base = baseHandle,
               WB.response404 = test404,
+              WB.response403 = test403,
+              WB.response400 = test400,
+              WB.response500 = test500,
               WB.response200 = test200
             } ::
             WB.Handle (State [Category])
@@ -1168,6 +1180,9 @@ spec = do
             { WB.logger = logHandle,
               WB.base = baseHandle,
               WB.response404 = test404,
+              WB.response403 = test403,
+              WB.response400 = test400,
+              WB.response500 = test500,
               WB.response200 = test200,
               WB.getBody = const . pure $ bodyReq
             } ::
@@ -1230,6 +1245,9 @@ spec = do
               WB.base = baseHandle,
               WB.response200 = test200,
               WB.response404 = test404,
+              WB.response403 = test403,
+              WB.response400 = test400,
+              WB.response500 = test500,
               WB.getBody = const . pure $ bodyReq
             } ::
             WB.Handle (State [News])
@@ -1311,11 +1329,20 @@ testDay = fromGregorian 2023 1 1
 typeToText :: (Show a) => a -> T.Text
 typeToText = T.pack . show
 
-test404 :: Response
-test404 = responseBuilder notFound404 [] "Not ok. status 404\n"
-
 test200 :: Response
 test200 = responseBuilder status200 [] "All ok. status 200\n"
+
+test400 :: T.Text -> Response
+test400 = responseBuilder badRequest400 [] . fromByteString . E.encodeUtf8
+
+test403 :: Response
+test403 = responseBuilder forbidden403 [] "Forbidden. status 403\n"
+
+test404 :: Response
+test404 = responseBuilder notFound404 [] "NotFound. status 404\n"
+
+test500 :: Response
+test500 = responseBuilder internalServerError500 [] "internalServerError. status 500\n"
 
 testBuilder :: Builder -> Response
 testBuilder = responseBuilder status200 []

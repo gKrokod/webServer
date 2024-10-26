@@ -23,7 +23,7 @@ createCategory _ h req = do
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Category WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
-      pure (response404 h)
+      pure (response400 h . T.pack $ e)
     Right (CategoryFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create category"
       tryCreateCategory <-
@@ -40,4 +40,4 @@ createCategory _ h req = do
           pure $ response200 h
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ response404 h
+          pure $ response500 h

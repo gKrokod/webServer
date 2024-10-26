@@ -22,7 +22,7 @@ endPointUsers h req = do
         Client {clientAdminToken = (Just adminRole)} -> createUser adminRole h req -- create User for only admin
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure (response404 h)
+          pure $ response404 h
     "/users" -> do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPaginate queryLimit
@@ -34,4 +34,4 @@ endPointUsers h req = do
       existingUsers (h {base = newBaseHandle}) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point Users not found"
-      pure (response404 h)
+      pure $ response404 h

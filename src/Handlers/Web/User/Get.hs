@@ -15,5 +15,5 @@ existingUsers h _req = do
   case getUsers of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure $ response404 h -- "Not ok.
+      pure $ response500 h -- "Not ok.
     Right users -> pure . mkGoodResponse h . userToWeb $ users
