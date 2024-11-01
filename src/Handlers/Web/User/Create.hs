@@ -13,7 +13,7 @@ import Network.Wai (Request, Response)
 import Types (Login (..), Name (..), PasswordUser (..))
 import Web.WebType (UserFromWeb (..), webToUser)
 
-createUser :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response -- for Admin
+createUser :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response 
 createUser _ h req = do
   let logHandle = logger h
       baseHandle = base h
@@ -22,7 +22,7 @@ createUser _ h req = do
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode User WEB"
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
       pure (response400 h . T.pack $ e)
     Right (UserFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Try to create user WEB"

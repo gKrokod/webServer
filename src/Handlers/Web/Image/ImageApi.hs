@@ -1,4 +1,3 @@
--- {-# LANGUAGE DataKinds #-}
 module Handlers.Web.Image.ImageApi (endPointImages) where
 
 import qualified Data.Text.Encoding as E
@@ -12,7 +11,7 @@ endPointImages h req = do
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "end Point Images"
   Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
-    "/images" -> existingImages h req -- get one image
+    "/images" -> existingImages h req 
     _ -> do
       Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"
       pure $ response404 h

@@ -31,7 +31,7 @@ doAuthorization h req = do
   case userRole of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure . Left . response400 h $ e
+      pure . Left $ response403 h
     Right clientRole -> do
       let h' = h {client = clientRole}
       pure $ Right h'

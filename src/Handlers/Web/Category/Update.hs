@@ -22,7 +22,7 @@ updateCategory _ h req = do
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit Category WEB"
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
       pure (response400 h . T.pack $ e)
     Right (EditCategoryFromWeb {newlabel = (Just newlabel'), ..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit category Just newlabel parent"

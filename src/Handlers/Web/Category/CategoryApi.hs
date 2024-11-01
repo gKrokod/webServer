@@ -1,4 +1,3 @@
--- {-# LANGUAGE DataKinds #-}
 module Handlers.Web.Category.CategoryApi (endPointCategories) where
 
 import qualified Data.Text as T
@@ -21,13 +20,13 @@ endPointCategories h req = do
   case rawPathInfo req of
     "/categories/create" -> do
       case client h of
-        Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole h req -- create a category for only admin
+        Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole h req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure $ response404 h
     "/categories/edit" -> do
       case client h of
-        Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole h req -- edit a category for only admin
+        Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole h req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure $ response404 h

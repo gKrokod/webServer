@@ -22,25 +22,23 @@ endPointNews h req = do
   case rawPathInfo req of
     "/news/create" -> do
       case client h of
-        Client {clientPublisherToken = (Just publisherRole)} -> createNews publisherRole h req -- create news for only publisher
+        Client {clientPublisherToken = (Just publisherRole)} -> createNews publisherRole h req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure $ response403 h
     "/news/edit" ->
       case client h of
         Client {author = (Just author_)} -> do
-          updateNews author_ h req -- edit news for only author
+          updateNews author_ h req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ response403 h --
+          pure $ response403 h
     "/news" -> do
-      -- get all news
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPaginate queryLimit
           sortWeb = queryToSort queryLimit
           findWeb = queryToFind queryLimit
           filtersWeb = queryToFilters queryLimit
-      -- Debug
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Query String:"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))
@@ -83,6 +81,6 @@ endPointNews h req = do
     setFilters h' q =
       let baseHandle = base h'
           filters = queryToFilters q
-          filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ client h) -- publish or author visible news
+          filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ client h)
           newBaseHandle = baseHandle {Handlers.Database.Base.filtersNews = filterVisible : filters}
        in h' {base = newBaseHandle}

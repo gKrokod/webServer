@@ -24,7 +24,7 @@ updateNews author_ h req = do
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit News WEB"
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
       pure (response400 h . T.pack $ e)
     Right (EditNewsFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."

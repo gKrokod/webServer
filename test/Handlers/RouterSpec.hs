@@ -1361,9 +1361,3 @@ instance Eq Response where
   (==) (ResponseBuilder s h b) (ResponseBuilder s' h' b') = (s == s') && (h == h') && (show b == show b')
   (==) _ _ = undefined
 
--- data Response
---     = ResponseFile H.Status H.ResponseHeaders FilePath (Maybe FilePart)
---     | ResponseBuilder H.Status H.ResponseHeaders Builder
---     | ResponseStream H.Status H.ResponseHeaders StreamingBody
---     | ResponseRaw (IO B.ByteString -> (B.ByteString -> IO ()) -> IO ()) Response
---   deriving Typeable

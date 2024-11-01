@@ -22,7 +22,7 @@ createNews _ h req = do
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode News WEB"
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning (T.pack e)
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
       pure (response400 h . T.pack $ e)
     Right (NewsFromWeb {..}) -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"

@@ -27,5 +27,5 @@ existingImages h req = do
       where
         idImage = maybe (-1) (fromIntegral . fst) (BC.readInt n)
     _ -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Bad request image"
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Error "Bad request image"
       pure $ response400 h "Bad request \n"

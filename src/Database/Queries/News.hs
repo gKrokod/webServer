@@ -37,7 +37,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                     `leftJoin` table @ImageBank
                   `on` (\(n :& _ :& _ :& ib) -> just (n ^. NewsId) ==. ib ?. ImageBankNewsId)
               groupBy (news ^. NewsTitle, news ^. NewsCreated, author ^. UserName, categoryName ^. CategoryLabel, imageBank ?. ImageBankNewsId)
-              -- search substring
+              
               maybe
                 (where_ (val True))
                 ( \(Find text) ->
@@ -49,18 +49,18 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
                           )
                 )
                 mbFind
-              -- filters
+              
               mapM_ (filterAction news author categoryName) filters
-              -- sortBy column and order
+
               orderBy $ case columnType of
                 DataNews -> [order sortOrder (news ^. NewsCreated)]
                 AuthorNews -> [order sortOrder (author ^. UserName)]
                 CategoryName -> [order sortOrder (categoryName ^. CategoryLabel)]
                 QuantityImages -> [order sortOrder (count (imageBank ?. ImageBankNewsId) :: SqlExpr (Value Int))]
-              -- offset and limit news
+              
               offset (fromIntegral . getOffset $ userOffset)
               limit (fromIntegral . min configLimit . getLimit $ userLimit)
-              -- return title
+              
               pure (news ^. NewsTitle)
           )
       mapM (fetchFullNews configLimit userLimit . MkTitle) titles
@@ -79,7 +79,7 @@ pullAllNews connString configLimit userOffset userLimit columnType sortOrder mbF
       FilterContentFind findText -> where_ (n ^. NewsContent `like` (%) ++. val findText ++. (%))
       FilterPublishOrAuthor login ->
         where_
-          ( (n ^. NewsIsPublish ==. val True) -- publish all, not publish only author
+          ( (n ^. NewsIsPublish ==. val True) 
               ||. (just (a ^. UserLogin) ==. val login)
           )
 

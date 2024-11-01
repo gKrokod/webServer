@@ -18,7 +18,6 @@ spec = do
             Handlers.Logger.writeLog = \_ -> pure ()
           }
       categoriesInBase = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]
-      -- "Man" "Woman" "Warrior" "Archer" "Neutral" "Evil" "Good" "Witch"
       baseHandle =
         Handle
           { logger = logHandle,
