@@ -146,8 +146,6 @@ type Offset = Int
 
 type Limit = Int
 
--- queryToPaginate :: Query -> (Int, Int)
--- 0 and maxBound it's default
 queryToPaginate :: [(B.ByteString, Maybe B.ByteString)] -> (Offset, Limit)
 queryToPaginate = convertFromWeb . mapMaybe (\(x, y) -> if x == "paginate" then y else Nothing)
   where
@@ -163,7 +161,6 @@ data SortFromWeb = SortNews {columnType :: ColumnType, sortOrder :: SortOrder}
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
--- DataNews and Descending it's default
 queryToSort :: [(B.ByteString, Maybe B.ByteString)] -> (ColumnType, SortOrder)
 queryToSort = convertFromWeb . mapMaybe (\(x, y) -> if x == "sort" then y else Nothing)
   where

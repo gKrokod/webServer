@@ -15,5 +15,5 @@ existingCategories h _req = do
   case categories of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure $ response404 h
+      pure $ response500 h
     Right c -> pure . mkGoodResponse h . categoryToWeb $ c

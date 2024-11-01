@@ -31,7 +31,7 @@ doAuthorization h req = do
   case userRole of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure (Left $ response404 h)
+      pure . Left $ response403 h
     Right clientRole -> do
       let h' = h {client = clientRole}
       pure $ Right h'
@@ -48,7 +48,7 @@ doLogic h req = do
       | B.isPrefixOf "/images" path -> endPointImages h req
       | otherwise -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-          pure (response404 h)
+          pure $ response404 h
 
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
