@@ -14,7 +14,6 @@ import Types (Title (..))
 updateNewsBase :: (Monad m) => Handle m -> Title -> NewsEditInternal -> m (Either T.Text Success)
 updateNewsBase h title newsEdit@(NewsEditInternal {..}) = do
   let logHandle = logger h
-  logMessage logHandle Debug ("Checks attributes for update news with title " <> getTitle title)
   existTitle <-
     either
       (Left . T.pack . displayException)
@@ -42,7 +41,6 @@ updateNewsBase h title newsEdit@(NewsEditInternal {..}) = do
       logMessage logHandle Warning e
       pure $ Left "fail to update news"
     Right _ -> do
-      logMessage logHandle Debug "Ok. Updates news..."
       t <- getTime h
       tryEdit <- editNews h title t newsEdit
       when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't editNews")

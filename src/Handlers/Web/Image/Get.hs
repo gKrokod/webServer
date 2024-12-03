@@ -1,7 +1,6 @@
 module Handlers.Web.Image.Get (existingImages) where
 
 import Data.ByteString.Char8 as BC (readInt)
-import qualified Data.Text as T
 import Handlers.Database.Api (getImage)
 import qualified Handlers.Logger
 import Handlers.Web.Base (Handle (..))
@@ -13,11 +12,8 @@ existingImages h req = do
   let logHandle = logger h
       baseHandle = base h
       queryImage = queryString req
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Give image with query string"
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryImage)
   case queryImage of
     [("id", Just n)] | idImage > 0 -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Good request image"
       eImage <- getImage baseHandle (MkNumberImage idImage)
       case eImage of
         Left e -> do

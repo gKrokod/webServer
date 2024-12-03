@@ -25,7 +25,7 @@ editCategory pginfo label (CategoryInternal newLabel parent) = do
           (Just iD, Just (MkLabel labelParent)) -> do
             parentId <- (fmap . fmap) entityKey <$> getBy . UniqueCategoryLabel $ labelParent
             replace iD $ Category {categoryLabel = getLabel newLabel, categoryParent = parentId}
-          _ -> throw $ userError "function editCategory fail (can't find category)" 
+          _ -> throw $ userError "function editCategory fail (can't find category)"
         pure Change
     )
 

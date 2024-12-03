@@ -17,15 +17,12 @@ createNews :: (Monad m) => Proxy 'PublisherRole -> Handle m -> Request -> m Resp
 createNews _ h req = do
   let logHandle = logger h
       baseHandle = base h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create News WEB"
   body <- webToNews <$> getBody h req
   case body of
     Left e -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode News WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
       pure (response400 h . T.pack $ e)
     Right (NewsFromWeb {..}) -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try create news"
       tryCreateNews <-
         createNewsBase
           baseHandle
@@ -39,8 +36,7 @@ createNews _ h req = do
               }
           )
       case tryCreateNews of
-        Right _ -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Create News success WEB"
+        Right _ ->
           pure $ response200 h
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e

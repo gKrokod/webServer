@@ -20,15 +20,15 @@ validCopyRight connString login title = do
       logins <- fetchUserFromNews
       case logins of
         [Value loginNews] -> pure (getLogin login == loginNews)
-        _ -> pure False 
+        _ -> pure False
       where
         fetchUserFromNews :: (MonadIO m) => SqlPersistT m [Value T.Text]
         fetchUserFromNews = select $ do
           (news :& user) <-
-            from
-              $ table @News
+            from $
+              table @News
                 `innerJoin` table @User
-              `on` (\(n :& u) -> n ^. NewsUserId ==. (u ^. UserId))
+                  `on` (\(n :& u) -> n ^. NewsUserId ==. (u ^. UserId))
           where_ (news ^. NewsTitle ==. (val . getTitle) title)
           pure (user ^. UserLogin)
 
@@ -41,13 +41,13 @@ validPassword connString login password = do
       qpass <- fetchSaltAndPassword
       case qpass of
         [Value qpass'] -> pure $ Database.Crypto.validPassword (getPasswordUser password) qpass'
-        _ -> pure False 
+        _ -> pure False
     fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [Value T.Text]
     fetchSaltAndPassword = select $ do
       (user :& pass) <-
-        from
-          $ table @User
+        from $
+          table @User
             `innerJoin` table @Password
-          `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
+              `on` (\(u :& p) -> u ^. UserPasswordId ==. p ^. PasswordId)
       where_ (user ^. UserLogin ==. (val . getLogin) login)
       pure (pass ^. PasswordQuasiPassword)

@@ -4,7 +4,6 @@ module Handlers.Router (Client (..), doAuthorization, doLogic) where
 
 import Control.Monad (when)
 import Control.Monad.Except (ExceptT (..), runExceptT)
-import Control.Monad.Trans (lift)
 import Data.Bool (bool)
 import qualified Data.ByteString as B
 import Data.Maybe (isNothing)
@@ -22,11 +21,6 @@ import Web.WebType (headersToLoginAndPassword)
 doAuthorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
 doAuthorization h req = do
   let logHandle = logger h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "do Authorization"
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get request"
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show req)
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get headers"
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show $ requestHeaders req)
   userRole <- getClient h req
   case userRole of
     Left e -> do
@@ -39,7 +33,6 @@ doAuthorization h req = do
 doLogic :: (Monad m) => Handle m -> Request -> m Response
 doLogic h req = do
   let logHandle = logger h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "run doLogic"
   case rawPathInfo req of
     path
       | B.isPrefixOf "/news" path -> endPointNews h req
@@ -52,8 +45,7 @@ doLogic h req = do
 
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
-  let logHandle = logger h
-      baseHandle = base h
+  let baseHandle = base h
       secureData = headersToLoginAndPassword . requestHeaders $ req
   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
   runExceptT $ do
@@ -69,17 +61,14 @@ getClient h req = do
         (isAdmin_, isPublisher_) <- ExceptT $ getPrivilege baseHandle (MkLogin login_)
         valid <- ExceptT $ getResultValid baseHandle (MkLogin login_) (MkPasswordUser password_)
         case valid of
-          NotValid -> do
-            lift $ Handlers.Logger.logMessage (logger h) Handlers.Logger.Debug "Password is incorrect"
+          NotValid ->
             pure $
               Client
                 { clientAdminToken = Nothing,
                   clientPublisherToken = Nothing,
                   author = Nothing
                 }
-          Valid -> do
-            lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Password is correct"
-            lift $ Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get privilege"
+          Valid ->
             pure $
               Client
                 { clientAdminToken = bool Nothing (Just Proxy) isAdmin_,
