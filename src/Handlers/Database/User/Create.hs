@@ -14,7 +14,6 @@ import Types (Login (..), PasswordUser (..))
 createUserBase :: (Monad m) => Handle m -> UserInternal -> m (Either T.Text Success)
 createUserBase h user@(UserInternal {..}) = do
   let logHandle = logger h
-  logMessage logHandle Debug ("check user By login for  create: " <> getLogin loginUser)
   tryFind <- findUserByLogin h loginUser
   case tryFind of
     Left e -> do
@@ -24,7 +23,6 @@ createUserBase h user@(UserInternal {..}) = do
       logMessage logHandle Warning ("Login arleady taken: " <> getLogin loginUser)
       pure $ Left "Login arleady taken"
     Right Nothing -> do
-      logMessage logHandle Debug "Create user..."
       time <- getTime h
       let pwd' = makeHashPassword h passwordUser time
       tryCreate <- putUser h (user {passwordUser = MkPasswordUser pwd'}) time

@@ -15,7 +15,6 @@ import Types (Login (..), PasswordUser (..), Title (..))
 getCopyRight :: (Monad m) => Handle m -> Login -> Title -> m (Either T.Text IsValidPassword)
 getCopyRight h login title = do
   let logHandle = logger h
-  logMessage logHandle Debug ("Check copyright for the login: " <> getLogin login <> " of the news with title: " <> getTitle title)
   tryValid <- validCopyRight h login title
   when (isLeft tryValid) (logMessage logHandle Handlers.Logger.Error "function validCopyRight fail")
   pure $ either (Left . T.pack . displayException) (Right . bool NotValid Valid) tryValid
@@ -23,7 +22,6 @@ getCopyRight h login title = do
 getResultValid :: (Monad m) => Handle m -> Login -> PasswordUser -> m (Either T.Text IsValidPassword)
 getResultValid h login password = do
   let logHandle = logger h
-  logMessage logHandle Debug ("Check password for: " <> getLogin login <> " " <> getPasswordUser password)
   tryValid <- validPassword h login password
   when (isLeft tryValid) (logMessage logHandle Handlers.Logger.Error "function validPassword fail")
   pure $ either (Left . T.pack . displayException) (Right . bool NotValid Valid) tryValid
@@ -35,14 +33,11 @@ type IsPublisher = Bool
 getPrivilege :: (Monad m) => Handle m -> Login -> m (Either T.Text (IsAdmin, IsPublisher))
 getPrivilege h login = do
   let logHandle = logger h
-  logMessage logHandle Debug ("Get privilege for login: " <> getLogin login)
   tryFindUser <- findUserByLogin h login
   when (isLeft tryFindUser) (logMessage logHandle Error "function findUserByLogin fail")
   case tryFindUser of
     Left e -> pure . Left . T.pack . displayException $ e
     Right (Just (User {..})) -> do
-      logMessage logHandle Debug (T.pack $ "Privilege: Admin " <> show userIsAdmin <> " Publisher " <> show userIsPublisher)
       pure $ Right (userIsAdmin, userIsPublisher)
-    _ -> do
-      logMessage logHandle Debug "Privilege: Admin False False "
+    _ ->
       pure $ Right (False, False)

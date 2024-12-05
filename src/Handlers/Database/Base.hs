@@ -20,10 +20,10 @@ type HashPasswordUser = T.Text
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
-    userOffset :: Int, 
-    userLimit :: Int, 
-    sortColumnNews :: ColumnType, 
-    sortOrderNews :: SortOrder, 
+    userOffset :: Int,
+    userLimit :: Int,
+    sortColumnNews :: ColumnType,
+    sortOrderNews :: SortOrder,
     findSubString :: Maybe Find,
     filtersNews :: [FilterItem],
     getTime :: m UTCTime,

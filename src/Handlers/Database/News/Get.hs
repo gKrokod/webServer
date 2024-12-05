@@ -11,7 +11,6 @@ import Handlers.Web.Base (NewsOut (..))
 getAllNews :: (Monad m) => Handle m -> m (Either T.Text [NewsOut])
 getAllNews h = do
   let logHandle = logger h
-  logMessage logHandle Debug "Try to get all news from database"
   news <- pullAllNews h (MkOffset . userOffset $ h) (MkLimit . userLimit $ h) (sortColumnNews h) (sortOrderNews h) (findSubString h) (filtersNews h)
   when (isLeft news) (logMessage logHandle Handlers.Logger.Error "function pullAllNews fail")
   pure $ either (Left . T.pack . displayException) Right news

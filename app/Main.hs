@@ -2,11 +2,10 @@ module Main (main) where
 
 import Config (ConfigDataBase (..), connectionString, loadConfig)
 import Control.Exception (bracket_)
-import qualified Data.Text as T
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
 import qualified Handlers.Database.Base
-import Handlers.Logger (Log (Debug))
+import Handlers.Logger (logMessage, Log(Info))
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
 import qualified Handlers.Web.Base
@@ -18,8 +17,6 @@ import qualified Web.WebLogic as WL
 
 main :: IO ()
 main = do
-  Logger.writeLog "Welcome!"
-
   config <- loadConfig
 
   DA.migrationEngine (connectionString config)
@@ -33,28 +30,21 @@ type ServerSetup m = Handlers.Web.Base.Handle m
 app :: ServerSetup IO -> Application
 app h req f =
   bracket_
-    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "Open app")
-    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "Close app")
+    (logMessage (Handlers.Web.Base.logger h) Info "Open app")
+    (logMessage (Handlers.Web.Base.logger h) Info "Close app")
     (doLogic h req >>= f)
 
+
 authorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Application
-authorization h nextApp req respond =
-  bracket_
-    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "OpenAuth app")
-    (Handlers.Logger.logMessage (Handlers.Web.Base.logger h) Handlers.Logger.Debug "CloseAuth app")
-    ( do
-        check <- doAuthorization h req
-        case check of
-          Left fail' -> respond fail'
-          Right h' -> nextApp h' req respond
-    )
+authorization h nextApp req respond = do
+  check <- doAuthorization h req
+  case check of
+    Left fail' -> respond fail'
+    Right h' -> nextApp h' req respond
 
 makeSetup :: ConfigDataBase -> IO (ServerSetup IO)
 makeSetup cfg = do
-  Logger.writeLog "Setting up the server"
   let pginfo = connectionString cfg
-  t <- getCurrentTime
-  Logger.writeLog ("Launch time: " <> T.pack (show t))
   let logHandle =
         Handlers.Logger.Handle
           { Handlers.Logger.levelLogger = cLogLvl cfg,

@@ -1,7 +1,5 @@
 module Handlers.Web.News.NewsApi (endPointNews) where
 
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as E
 import qualified Handlers.Database.Base
 import qualified Handlers.Logger
 import Handlers.Web.Base (Client (..), Handle (..))
@@ -17,8 +15,6 @@ import Web.WebType (queryToFilters, queryToFind, queryToPaginate, queryToSort)
 endPointNews :: (Monad m) => Handle m -> Request -> m Response
 endPointNews h req = do
   let logHandle = logger h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "end Point News"
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (E.decodeUtf8 $ rawPathInfo req)
   case rawPathInfo req of
     "/news/create" -> do
       case client h of
@@ -35,19 +31,6 @@ endPointNews h req = do
           pure $ response403 h
     "/news" -> do
       let queryLimit = queryString req
-          (userOffset, userLimit) = queryToPaginate queryLimit
-          sortWeb = queryToSort queryLimit
-          findWeb = queryToFind queryLimit
-          filtersWeb = queryToFilters queryLimit
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Query String:"
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show queryLimit)
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show (userOffset, userLimit))
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show sortWeb)
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug (T.pack $ show findWeb)
-      let filterPublishOrAuthor = FilterPublishOrAuthor (fmap getLogin $ author $ client h)
-      mapM_
-        (Handlers.Logger.logMessage logHandle Handlers.Logger.Debug . T.pack . show)
-        (filterPublishOrAuthor : filtersWeb)
       existingNews (foldSets queryLimit h [setFilters, setFind, setSort, setPaginate]) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"

@@ -6,14 +6,13 @@ import Handlers.Web.Base (Handle (..))
 import Network.Wai (Request, Response)
 import Web.WebType (userToWeb)
 
-existingUsers :: (Monad m) => Handle m -> Request -> m Response 
+existingUsers :: (Monad m) => Handle m -> Request -> m Response
 existingUsers h _req = do
   let logHandle = logger h
       baseHandle = base h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All users"
   getUsers <- getAllUsers baseHandle
   case getUsers of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure $ response500 h 
+      pure $ response500 h
     Right users -> pure . mkGoodResponse h . userToWeb $ users

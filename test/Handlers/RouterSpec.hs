@@ -1360,4 +1360,3 @@ instance Show Response where
 instance Eq Response where
   (==) (ResponseBuilder s h b) (ResponseBuilder s' h' b') = (s == s') && (h == h') && (show b == show b')
   (==) _ _ = undefined
-

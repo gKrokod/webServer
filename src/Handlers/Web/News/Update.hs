@@ -19,20 +19,15 @@ updateNews :: (Monad m) => Author -> Handle m -> Request -> m Response
 updateNews author_ h req = do
   let logHandle = logger h
       baseHandle = base h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News WEB"
   body <- webToEditNews <$> getBody h req
   case body of
     Left e -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "fail decode Edit News WEB"
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
       pure (response400 h . T.pack $ e)
     Right (EditNewsFromWeb {..}) -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check..."
       checkCopyright <- getCopyRight baseHandle author_ (MkTitle title)
       case checkCopyright of
         Right Valid -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Ok"
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "try edit news "
           tryEditNews <-
             updateNewsBase
               baseHandle
@@ -47,11 +42,9 @@ updateNews author_ h req = do
                   }
               )
           case tryEditNews of
-            Right _ -> do
-              Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Edit News success WEB"
+            Right _ ->
               pure $ response200 h
             _ -> pure $ response500 h
-        Right NotValid -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Copyright check: Fail"
+        Right NotValid ->
           pure $ response403 h
         _ -> pure $ response500 h

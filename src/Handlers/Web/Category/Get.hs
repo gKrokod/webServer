@@ -10,7 +10,6 @@ existingCategories :: (Monad m) => Handle m -> Request -> m Response
 existingCategories h _req = do
   let logHandle = logger h
       baseHandle = base h
-  Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "Get All categories Web"
   categories <- getAllCategories baseHandle
   case categories of
     Left e -> do
