@@ -7,7 +7,7 @@ import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 
-data Log = Debug | Warning | Error | Fatal
+data Log = Info | Debug | Warning | Error | Fatal
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
