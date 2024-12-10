@@ -23,7 +23,7 @@ import Network.Wai.Internal (Response (..))
 import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
 import Test.Hspec (Spec, describe, it, shouldBe, shouldNotBe)
 import Types (Content (..), Label (..), Login (..), Name (..), NumberImage (..), Title (..), URI_Image (..))
-import Web.WebType (categoryToWeb, newsToWeb, userToWeb)
+import Web.DTO (categoryToWeb, newsToWeb, userToWeb)
 
 spec :: Spec
 spec = do

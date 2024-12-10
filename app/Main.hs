@@ -5,7 +5,7 @@ import Control.Exception (bracket_)
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
 import qualified Handlers.Database.Base
-import Handlers.Logger (logMessage, Log(Info))
+import Handlers.Logger (Log (Info), logMessage)
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
 import qualified Handlers.Web.Base
@@ -13,7 +13,7 @@ import qualified Logger
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Schema (ColumnType (..), SortOrder (..))
-import qualified Web.WebLogic as WL
+import qualified Web.WebUtils as WL
 
 main :: IO ()
 main = do
@@ -33,7 +33,6 @@ app h req f =
     (logMessage (Handlers.Web.Base.logger h) Info "Open app")
     (logMessage (Handlers.Web.Base.logger h) Info "Close app")
     (doLogic h req >>= f)
-
 
 authorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Application
 authorization h nextApp req respond = do

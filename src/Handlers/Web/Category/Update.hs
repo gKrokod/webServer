@@ -11,7 +11,7 @@ import Handlers.Web.Base (ClientRole (..), Handle (..))
 import Handlers.Web.Category.Types (CategoryInternal (..))
 import Network.Wai (Request, Response)
 import Types (Label (..))
-import Web.WebType (EditCategoryFromWeb (..), webToEditCategory)
+import Web.DTO (EditCategoryFromWeb (..), webToEditCategory)
 
 updateCategory :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response
 updateCategory _ h req = do

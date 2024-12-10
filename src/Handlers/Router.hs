@@ -16,7 +16,7 @@ import Handlers.Web.Base (Client (..), Handle (..))
 import Network.Wai (Request, Response, rawPathInfo, requestHeaders)
 import Schema (IsValidPassword (..))
 import Types (Login (..), PasswordUser (..))
-import Web.WebType (headersToLoginAndPassword)
+import Web.QueryTransfer (headersToLoginAndPassword)
 
 doAuthorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
 doAuthorization h req = do

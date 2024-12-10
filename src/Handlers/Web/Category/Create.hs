@@ -11,7 +11,7 @@ import Handlers.Web.Base (ClientRole (..), Handle (..))
 import Handlers.Web.Category.Types (CategoryInternal (..))
 import Network.Wai (Request, Response)
 import Types (Label (..))
-import Web.WebType (CategoryFromWeb (..), webToCategory)
+import Web.DTO (CategoryFromWeb (..), webToCategory)
 
 createCategory :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response
 createCategory _ h req = do

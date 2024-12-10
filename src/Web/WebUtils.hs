@@ -1,4 +1,4 @@
-module Web.WebLogic (getBody, response403, response400, response404, response200, response500, mkGoodResponse, mkResponseForImage, response404WithImage) where
+module Web.WebUtils (getBody, response403, response400, response404, response200, response500, mkGoodResponse, mkResponseForImage, response404WithImage) where
 
 import Data.Binary.Builder (Builder, fromByteString)
 import Data.ByteString (ByteString)

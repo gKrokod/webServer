@@ -6,7 +6,7 @@ import Handlers.Web.Base (Client (..), Handle (..))
 import Handlers.Web.User.Create (createUser)
 import Handlers.Web.User.Get (existingUsers)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
-import Web.WebType (queryToPaginate)
+import Web.QueryTransfer (queryToPaginate)
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m Response
 endPointUsers h req = do

@@ -4,7 +4,7 @@ import Handlers.Database.Api (getAllCategories)
 import qualified Handlers.Logger
 import Handlers.Web.Base (Handle (..))
 import Network.Wai (Request, Response)
-import Web.WebType (categoryToWeb)
+import Web.DTO (categoryToWeb)
 
 existingCategories :: (Monad m) => Handle m -> Request -> m Response
 existingCategories h _req = do
