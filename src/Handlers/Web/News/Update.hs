@@ -11,7 +11,7 @@ import Handlers.Web.News.Types (NewsEditInternal (..))
 import Network.Wai (Request, Response)
 import Schema (IsValidPassword (..))
 import Types (Content (..), Label (..), Login (..), Title (..))
-import Web.DTO (EditNewsFromWeb (..), webToEditNews)
+import Web.DTO.News (EditNewsFromWeb (..), webToEditNews)
 
 type Author = Login
 

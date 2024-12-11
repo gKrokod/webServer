@@ -11,7 +11,7 @@ import Handlers.Web.Base (ClientRole (..), Handle (..))
 import Handlers.Web.News.Types (NewsInternal (..))
 import Network.Wai (Request, Response)
 import Types (Content (..), Label (..), Login (..), Title (..))
-import Web.DTO (NewsFromWeb (..), webToNews)
+import Web.DTO.News (NewsFromWeb (..), webToNews)
 
 createNews :: (Monad m) => Proxy 'PublisherRole -> Handle m -> Request -> m Response
 createNews _ h req = do

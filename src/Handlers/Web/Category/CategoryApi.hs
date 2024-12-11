@@ -7,7 +7,7 @@ import Handlers.Web.Category.Create (createCategory)
 import Handlers.Web.Category.Get (existingCategories)
 import Handlers.Web.Category.Update (updateCategory)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
-import Web.QueryTransfer (queryToPaginate)
+import Web.Query (queryToPaginate)
 
 endPointCategories :: (Monad m) => Handle m -> Request -> m Response
 endPointCategories h req = do

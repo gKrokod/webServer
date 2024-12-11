@@ -1,8 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 
-module Web.QueryTransfer (queryToPaginate, queryToFilters, queryToFind, queryToSort, headersToLoginAndPassword) where
+module Web.Query (queryToPaginate, queryToFilters, queryToFind, queryToSort, headersToLoginAndPassword) where
 
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict)
 import qualified Data.ByteString as B

@@ -81,9 +81,11 @@ library
       Logger
       Schema
       Types
-      Web.DTO
-      Web.QueryTransfer
-      Web.WebUtils
+      Web.DTO.Category
+      Web.DTO.News
+      Web.DTO.User
+      Web.Query
+      Web.Utils
   other-modules:
       Paths_webServer
   autogen-modules:

@@ -10,7 +10,7 @@ import Network.HTTP.Types (Query)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Schema (FilterItem (FilterPublishOrAuthor))
 import Types (Login (..))
-import Web.QueryTransfer (queryToFilters, queryToFind, queryToPaginate, queryToSort)
+import Web.Query (queryToFilters, queryToFind, queryToPaginate, queryToSort)
 
 endPointNews :: (Monad m) => Handle m -> Request -> m Response
 endPointNews h req = do
