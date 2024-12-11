@@ -5,7 +5,7 @@ import Control.Exception (bracket_)
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
 import qualified Handlers.Database.Base
-import Handlers.Logger (logMessage, Log(Info))
+import Handlers.Logger (Log (Info), logMessage)
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
 import qualified Handlers.Web.Base
@@ -13,7 +13,7 @@ import qualified Logger
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Schema (ColumnType (..), SortOrder (..))
-import qualified Web.WebLogic as WL
+import qualified Web.Utils as WU
 
 main :: IO ()
 main = do
@@ -33,7 +33,6 @@ app h req f =
     (logMessage (Handlers.Web.Base.logger h) Info "Open app")
     (logMessage (Handlers.Web.Base.logger h) Info "Close app")
     (doLogic h req >>= f)
-
 
 authorization :: ServerSetup IO -> (ServerSetup IO -> Application) -> Application
 authorization h nextApp req respond = do
@@ -86,14 +85,14 @@ makeSetup cfg = do
                   Handlers.Web.Base.clientPublisherToken = Nothing,
                   Handlers.Web.Base.author = Nothing
                 },
-            Handlers.Web.Base.response404 = WL.response404,
-            Handlers.Web.Base.response200 = WL.response200,
-            Handlers.Web.Base.response403 = WL.response403,
-            Handlers.Web.Base.response400 = WL.response400,
-            Handlers.Web.Base.response500 = WL.response500,
-            Handlers.Web.Base.mkGoodResponse = WL.mkGoodResponse,
-            Handlers.Web.Base.mkResponseForImage = WL.mkResponseForImage,
-            Handlers.Web.Base.response404WithImage = WL.response404WithImage,
-            Handlers.Web.Base.getBody = WL.getBody
+            Handlers.Web.Base.response404 = WU.response404,
+            Handlers.Web.Base.response200 = WU.response200,
+            Handlers.Web.Base.response403 = WU.response403,
+            Handlers.Web.Base.response400 = WU.response400,
+            Handlers.Web.Base.response500 = WU.response500,
+            Handlers.Web.Base.mkGoodResponse = WU.mkGoodResponse,
+            Handlers.Web.Base.mkResponseForImage = WU.mkResponseForImage,
+            Handlers.Web.Base.response404WithImage = WU.response404WithImage,
+            Handlers.Web.Base.getBody = WU.getBody
           }
   pure handle

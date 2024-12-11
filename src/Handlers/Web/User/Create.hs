@@ -11,7 +11,7 @@ import Handlers.Web.Base (ClientRole (..), Handle (..))
 import Handlers.Web.User.Types (UserInternal (..))
 import Network.Wai (Request, Response)
 import Types (Login (..), Name (..), PasswordUser (..))
-import Web.WebType (UserFromWeb (..), webToUser)
+import Web.DTO.User (UserFromWeb (..), webToUser)
 
 createUser :: (Monad m) => Proxy 'AdminRole -> Handle m -> Request -> m Response
 createUser _ h req = do

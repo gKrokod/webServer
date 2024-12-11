@@ -4,7 +4,7 @@ import Handlers.Database.Api (getAllUsers)
 import qualified Handlers.Logger
 import Handlers.Web.Base (Handle (..))
 import Network.Wai (Request, Response)
-import Web.WebType (userToWeb)
+import Web.DTO.User (userToWeb)
 
 existingUsers :: (Monad m) => Handle m -> Request -> m Response
 existingUsers h _req = do

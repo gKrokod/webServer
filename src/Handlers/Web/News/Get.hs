@@ -4,7 +4,7 @@ import Handlers.Database.Api (getAllNews)
 import qualified Handlers.Logger
 import Handlers.Web.Base (Handle (..))
 import Network.Wai (Request, Response)
-import Web.WebType (newsToWeb)
+import Web.DTO.News (newsToWeb)
 
 existingNews :: (Monad m) => Handle m -> Request -> m Response
 existingNews h _req = do
