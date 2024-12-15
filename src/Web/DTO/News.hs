@@ -14,7 +14,6 @@ import Handlers.Web.Base (NewsOut (..))
 import Schema (Image (..))
 import Types (Content (..), Label (..), Name (..), Title (..), URI_Image (..))
 
-
 data NewsFromWeb = NewsFromWeb
   { title :: T.Text,
     login :: T.Text,
