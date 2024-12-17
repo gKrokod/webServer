@@ -35,8 +35,13 @@ packages:
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
 #
-# extra-deps:
+extra-deps:
+# - ormolu-0.7.7.0
+- github: tweag/ormolu
+  commit: '8e8af5f828815307d31ed0f8039f8af46f2b0fbf'
+
 # - acme-missiles-0.3
+#
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #

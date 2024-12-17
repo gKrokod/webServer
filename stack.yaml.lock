@@ -3,7 +3,18 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    name: ormolu
+    pantry-tree:
+      sha256: 1f0f0838f075288156824681cf55e0d1ae17b32266bb20f763c2af9b938eedeb
+      size: 106185
+    sha256: 19b90b95e02e19d37bf07c1633452f66fe332ff0f3af305e0ecf8ceaf6232062
+    size: 402181
+    url: https://github.com/tweag/ormolu/archive/8e8af5f828815307d31ed0f8039f8af46f2b0fbf.tar.gz
+    version: 0.7.7.0
+  original:
+    url: https://github.com/tweag/ormolu/archive/8e8af5f828815307d31ed0f8039f8af46f2b0fbf.tar.gz
 snapshots:
 - completed:
     sha256: b146f371d1a90abbd2aeae1da10f776951046be50eae55a6fe93548a74fcc0dd
