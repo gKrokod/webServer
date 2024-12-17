@@ -11,7 +11,7 @@ import Database.Persist.Postgresql (ConnectionString, Entity (..), toSqlKey)
 import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
-import Handlers.Web.Base (NewsEditInternal (..), NewsInternal (..), NewsOut (..))
+import Handlers.Web.Base (NewsEditInternal (..), NewsInternal (..), NewsOut (..), NewsOutWithId (..))
 import Schema (Category (..), ColumnType (..), EntityField (..), FilterItem (..), Find (..), Image (..), ImageBank (..), News (..), SortOrder (..), Unique (..), User (..))
 import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..), NumberNews (..))
 
@@ -237,14 +237,14 @@ findNewsByTitle connString title = try @SomeException (runDataBaseWithOutLog con
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
     fetchAction = (fmap . fmap) entityVal (getBy . UniqueNews . getTitle $ title)
 
-pullOneNews :: ConnectionString -> LimitData -> NumberNews -> IO (Either SomeException NewsOut)
+pullOneNews :: ConnectionString -> LimitData -> NumberNews -> IO (Either SomeException NewsOutWithId)
 pullOneNews connString configLimit uid = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
-    fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m NewsOut
+    fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m NewsOutWithId
     fetchAction = fetchFullNewsAdditionalTask configLimit uid
       
-fetchFullNewsAdditionalTask :: (MonadFail m, MonadIO m) => LimitData -> NumberNews -> SqlPersistT m NewsOut
+fetchFullNewsAdditionalTask :: (MonadFail m, MonadIO m) => LimitData -> NumberNews -> SqlPersistT m NewsOutWithId
 fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
   (label : _) <- (fmap . fmap) entityVal fetchLabel
   lables <- fetchLables (MkLabel $ categoryLabel label)
@@ -252,14 +252,15 @@ fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
   images <- fetchActionImage
   (Just partNews) <- get (toSqlKey uid)
   let a =
-        MkNewsOut
-          { nTitle = MkTitle $ newsTitle partNews,
-            nTime = newsCreated partNews,
-            nAuthor = MkName $ userName user,
-            nCategories = workerCategory lables,
-            nContent = MkContent $ newsContent partNews,
-            nImages = workerImage images,
-            nIsPublish = newsIsPublish partNews
+        MkNewsOutWithId
+          { wTitle = MkTitle $ newsTitle partNews,
+            wTime = newsCreated partNews,
+            wId = uid,
+            wAuthor = MkName $ userName user,
+            wCategories = workerCategory lables,
+            wContent = MkContent $ newsContent partNews,
+            wImages = workerImage images,
+            wIsPublish = newsIsPublish partNews
           }
   pure a
   where
