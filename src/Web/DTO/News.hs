@@ -13,7 +13,7 @@ import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import Handlers.Web.Base (NewsOut (..), NewsOutWithId (..))
 import Schema (Image (..))
-import Types (Content (..), Label (..), Name (..), Title (..), URI_Image (..))
+import Types (Content (..), Label (..), Name (..), Title (..), URI_Image (..), LabelAndId (..))
 
 data NewsFromWeb = NewsFromWeb
   { title :: T.Text,
@@ -94,7 +94,7 @@ newsWithIdToWeb = fromLazyByteString . encode @[NewsWithIdToWeb] . map convertTo
           id = wId newsOut,
           created = wTime newsOut,
           author = getName $ wAuthor newsOut,
-          labels = map getLabel $ wCategories newsOut,
+          labels = map getLabelAndId $ wCategories newsOut,
           content = getContent $ wContent newsOut,
           images = map getURI_Image $ wImages newsOut,
           isPublish = wIsPublish newsOut

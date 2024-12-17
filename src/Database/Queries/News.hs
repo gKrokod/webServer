@@ -13,7 +13,7 @@ import Database.Verb (runDataBaseWithOutLog)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
 import Handlers.Web.Base (NewsEditInternal (..), NewsInternal (..), NewsOut (..), NewsOutWithId (..))
 import Schema (Category (..), ColumnType (..), EntityField (..), FilterItem (..), Find (..), Image (..), ImageBank (..), News (..), SortOrder (..), Unique (..), User (..))
-import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..), NumberNews (..))
+import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..), NumberNews (..), LabelAndId (..))
 
 type LimitData = Int
 
@@ -257,7 +257,7 @@ fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
             wTime = newsCreated partNews,
             wId = uid,
             wAuthor = MkName $ userName user,
-            wCategories = workerCategory lables,
+            wCategories = (workerCategory lables),
             wContent = MkContent $ newsContent partNews,
             wImages = workerImage images,
             wIsPublish = newsIsPublish partNews
@@ -320,5 +320,5 @@ fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
     workerImage :: [Entity Image] -> [URI_Image]
     workerImage = map (\(Entity key _value) -> MkURI_Image $ "/images?id=" <> T.pack (show $ fromSqlKey key))
 
-    workerCategory :: [Entity Category] -> [Label]
-    workerCategory = map (\(Entity _key value) -> MkLabel $ categoryLabel value)
+    workerCategory :: [Entity Category] -> [LabelAndId]
+    workerCategory = map (\(Entity key value) -> MkLabelAndId $ categoryLabel value <> ", id:" <> T.pack (show $ fromSqlKey key))

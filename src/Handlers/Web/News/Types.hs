@@ -3,7 +3,7 @@ module Handlers.Web.News.Types (NewsInternal (..), NewsEditInternal (..), NewsOu
 import Data.Time (UTCTime)
 import Data.Int (Int64)
 import Schema (Image (..))
-import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..))
+import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..), LabelAndId (..))
 
 data NewsInternal = NewsInternal
   { titleNews :: Title,
@@ -37,7 +37,7 @@ data NewsOutWithId = MkNewsOutWithId
   { wTitle :: Title,
     wTime :: UTCTime,
     wAuthor :: Name,
-    wCategories :: [Label],
+    wCategories :: [LabelAndId],
     wContent :: Content,
     wImages :: [URI_Image],
     wIsPublish :: Bool,
