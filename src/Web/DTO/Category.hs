@@ -2,7 +2,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module Web.DTO.Category (EditCategoryFromWeb (..), webToEditCategory, categoryToWeb, CategoryFromWeb (..), webToCategory) where
+module Web.DTO.Category (EditCategoryFromWeb (..), webToEditCategory, categoryToWeb, CategoryFromWeb (..), webToCategory, EditCategoryIdFromWeb(..), webToEditIdCategory) where
 
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict, encode)
 import Data.Binary.Builder (Builder, fromLazyByteString)
@@ -10,6 +10,7 @@ import qualified Data.ByteString as B
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Schema (Category (..))
+import Data.Int (Int64)
 
 newtype CategoryToWeb = CategoryToWeb {label :: T.Text}
   deriving stock (Show, Generic)
@@ -20,6 +21,10 @@ data CategoryFromWeb = CategoryFromWeb {label :: T.Text, parent :: Maybe T.Text}
   deriving anyclass (FromJSON)
 
 data EditCategoryFromWeb = EditCategoryFromWeb {label :: T.Text, newlabel :: Maybe T.Text, newparent :: Maybe T.Text}
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data EditCategoryIdFromWeb = EditCategoryIdFromWeb {id :: Int64, newlabel :: Maybe T.Text, newparent :: Maybe T.Text}
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
 
@@ -34,3 +39,6 @@ webToCategory = eitherDecodeStrict @CategoryFromWeb
 
 webToEditCategory :: B.ByteString -> Either String EditCategoryFromWeb
 webToEditCategory = eitherDecodeStrict @EditCategoryFromWeb
+
+webToEditIdCategory :: B.ByteString -> Either String EditCategoryIdFromWeb
+webToEditIdCategory = eitherDecodeStrict @EditCategoryIdFromWeb

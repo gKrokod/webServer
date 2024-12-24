@@ -55,6 +55,7 @@ library
       Handlers.Database.Image.Get
       Handlers.Database.News.Create
       Handlers.Database.News.Get
+      Handlers.Database.News.GetAdditionalTask
       Handlers.Database.News.Update
       Handlers.Database.User.Create
       Handlers.Database.User.Get
@@ -67,13 +68,16 @@ library
       Handlers.Web.Category.Get
       Handlers.Web.Category.Types
       Handlers.Web.Category.Update
+      Handlers.Web.Category.UpdateAdditionalTask
       Handlers.Web.Image.Get
       Handlers.Web.Image.ImageApi
       Handlers.Web.News.Create
       Handlers.Web.News.Get
+      Handlers.Web.News.GetAdditionalTask
       Handlers.Web.News.NewsApi
       Handlers.Web.News.Types
       Handlers.Web.News.Update
+      Handlers.Web.News.UpdateAdditionalTask
       Handlers.Web.User.Create
       Handlers.Web.User.Get
       Handlers.Web.User.Types

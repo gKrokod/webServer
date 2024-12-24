@@ -6,6 +6,7 @@ import Handlers.Web.Base (Client (..), Handle (..))
 import Handlers.Web.Category.Create (createCategory)
 import Handlers.Web.Category.Get (existingCategories)
 import Handlers.Web.Category.Update (updateCategory)
+import Handlers.Web.Category.UpdateAdditionalTask (updateCategoryAdditionalTask)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Web.Query (queryToPaginate)
 
@@ -23,6 +24,12 @@ endPointCategories h req = do
     "/categories/edit" -> do
       case client h of
         Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole h req
+        _ -> do
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
+          pure $ response404 h
+    "/categories/AdditionalTask/edit" -> do
+      case client h of
+        Client {clientAdminToken = (Just adminRole)} -> updateCategoryAdditionalTask adminRole h req --todo
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure $ response404 h

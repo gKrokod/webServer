@@ -38,7 +38,7 @@ endPointNews h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "edit By Id news"
       case client h of
         Client {author = (Just author_)} -> do
-          updateNewsAdditionalTask author_ h req
+          updateNewsAdditionalTask author_ h req --todo
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure $ response403 h
