@@ -1,9 +1,9 @@
 module Handlers.Web.News.Types (NewsInternal (..), NewsEditInternal (..), NewsOut (..), NewsOutWithId (..)) where
 
-import Data.Time (UTCTime)
 import Data.Int (Int64)
+import Data.Time (UTCTime)
 import Schema (Image (..))
-import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..), LabelAndId (..))
+import Types (Content (..), Label (..), LabelAndId (..), Login (..), Name (..), Title (..), URI_Image (..))
 
 data NewsInternal = NewsInternal
   { titleNews :: Title,

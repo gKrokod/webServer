@@ -2,15 +2,15 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module Web.DTO.Category (EditCategoryFromWeb (..), webToEditCategory, categoryToWeb, CategoryFromWeb (..), webToCategory, EditCategoryIdFromWeb(..), webToEditIdCategory) where
+module Web.DTO.Category (EditCategoryFromWeb (..), webToEditCategory, categoryToWeb, CategoryFromWeb (..), webToCategory, EditCategoryIdFromWeb (..), webToEditIdCategory) where
 
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict, encode)
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import qualified Data.ByteString as B
+import Data.Int (Int64)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Schema (Category (..))
-import Data.Int (Int64)
 
 newtype CategoryToWeb = CategoryToWeb {label :: T.Text}
   deriving stock (Show, Generic)
@@ -24,7 +24,7 @@ data EditCategoryFromWeb = EditCategoryFromWeb {label :: T.Text, newlabel :: May
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
 
-data EditCategoryIdFromWeb = EditCategoryIdFromWeb {id :: Int64, newlabel :: Maybe T.Text, newparent :: Maybe T.Text}
+data EditCategoryIdFromWeb = EditCategoryIdFromWeb {uid :: Int64, newlabel :: Maybe T.Text, newparent :: Maybe T.Text}
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
 

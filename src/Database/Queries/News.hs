@@ -6,14 +6,14 @@ import Control.Exception (SomeException, throw, try)
 import Control.Monad.IO.Class (MonadIO)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), addDays)
-import Database.Esqueleto.Experimental (Key, OrderBy, PersistField (..), SqlExpr, Value (..), asc, count, delete, desc, from, fromSqlKey, getBy, groupBy, innerJoin, insert, insertMany, insertMany_, just, leftJoin, like, limit, offset, on, orderBy, replace, select, table, unionAll_, val, where_, withRecursive, (%), (&&.), (++.), (:&) (..), (<.), (==.), (>=.), (?.), (^.), (||.), get)
+import Database.Esqueleto.Experimental (Key, OrderBy, PersistField (..), SqlExpr, Value (..), asc, count, delete, desc, from, fromSqlKey, get, getBy, groupBy, innerJoin, insert, insertMany, insertMany_, just, leftJoin, like, limit, offset, on, orderBy, replace, select, table, unionAll_, val, where_, withRecursive, (%), (&&.), (++.), (:&) (..), (<.), (==.), (>=.), (?.), (^.), (||.))
 import Database.Persist.Postgresql (ConnectionString, Entity (..), toSqlKey)
 import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
 import Handlers.Web.Base (NewsEditInternal (..), NewsInternal (..), NewsOut (..), NewsOutWithId (..))
 import Schema (Category (..), ColumnType (..), EntityField (..), FilterItem (..), Find (..), Image (..), ImageBank (..), News (..), SortOrder (..), Unique (..), User (..))
-import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..), NumberNews (..), LabelAndId (..))
+import Types (Content (..), Label (..), LabelAndId (..), Login (..), Name (..), NumberNews (..), Title (..), URI_Image (..))
 
 type LimitData = Int
 
@@ -243,7 +243,7 @@ pullOneNews connString configLimit uid = do
   where
     fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m NewsOutWithId
     fetchAction = fetchFullNewsAdditionalTask configLimit uid
-      
+
 fetchFullNewsAdditionalTask :: (MonadFail m, MonadIO m) => LimitData -> NumberNews -> SqlPersistT m NewsOutWithId
 fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
   (label : _) <- (fmap . fmap) entityVal fetchLabel
@@ -257,7 +257,7 @@ fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
             wTime = newsCreated partNews,
             wId = uid,
             wAuthor = MkName $ userName user,
-            wCategories = (workerCategory lables),
+            wCategories = workerCategory lables,
             wContent = MkContent $ newsContent partNews,
             wImages = workerImage images,
             wIsPublish = newsIsPublish partNews
@@ -271,7 +271,7 @@ fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
           table @News
             `innerJoin` table @Category
               `on` (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
-      where_ (news ^. NewsId ==. (val $ toSqlKey uid))
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
       pure category
 
     fetchUser :: (MonadIO m) => SqlPersistT m [Entity User]
@@ -281,7 +281,7 @@ fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
           table @News
             `innerJoin` table @User
               `on` (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
-      where_ (news ^. NewsId ==. (val $ toSqlKey uid))
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
       pure user
 
     fetchLables :: (MonadIO m) => Label -> SqlPersistT m [Entity Category]
@@ -313,7 +313,7 @@ fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
               `on` (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
             `innerJoin` table @Image
               `on` (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
-      where_ (news ^. NewsId ==. (val $ toSqlKey uid))
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
       limit (fromIntegral configLimit)
       pure image
 

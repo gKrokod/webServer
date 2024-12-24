@@ -23,7 +23,7 @@ updateCategoryBase h label newCat@(CategoryInternal newlabel parent) = do
     (Left e, _) -> pure . Left . T.pack . displayException $ e
     (Right [Just _, Nothing], Nothing) -> do
       tryEdit <- editCategory h label newCat
-      when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't editCategory")
+      when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't edit Category")
       pure $ either (Left . T.pack . displayException) Right tryEdit
     (Right [Just _, Nothing], Just labelParent) -> do
       existLabel <- findCategoryByLabel h labelParent
@@ -36,7 +36,7 @@ updateCategoryBase h label newCat@(CategoryInternal newlabel parent) = do
           pure $ Left "Parent dont' exist"
         Right (Just _) -> do
           tryEdit <- editCategory h label newCat
-          when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't editCategory")
+          when (isLeft tryEdit) (logMessage logHandle Handlers.Logger.Error "Can't edit Category")
           pure $ either (Left . T.pack . displayException) Right tryEdit
     _ -> do
       logMessage logHandle Warning ("Abort. Category don't exist or .... Category: " <> getLabel label)

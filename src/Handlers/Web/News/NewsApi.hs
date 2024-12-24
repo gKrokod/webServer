@@ -6,7 +6,6 @@ import Handlers.Web.Base (Client (..), Handle (..))
 import Handlers.Web.News.Create (createNews)
 import Handlers.Web.News.Get (existingNews)
 import Handlers.Web.News.GetAdditionalTask (existingNewsAdditionalTask)
-import Handlers.Web.News.UpdateAdditionalTask (updateNewsAdditionalTask)
 import Handlers.Web.News.Update (updateNews)
 import Network.HTTP.Types (Query)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
@@ -32,16 +31,8 @@ endPointNews h req = do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure $ response403 h
     "/news/AdditionalTask/get" -> do
-       Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get By Id news"
-       existingNewsAdditionalTask h req
-    "/news/AdditionalTask/edit" -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "edit By Id news"
-      case client h of
-        Client {author = (Just author_)} -> do
-          updateNewsAdditionalTask author_ h req --todo
-        _ -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ response403 h
+      Handlers.Logger.logMessage logHandle Handlers.Logger.Debug "get By Id news"
+      existingNewsAdditionalTask h req
     "/news" -> do
       let queryLimit = queryString req
       existingNews (foldSets queryLimit h [setFilters, setFind, setSort, setPaginate]) req

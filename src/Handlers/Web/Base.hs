@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 
-module Handlers.Web.Base (Handle (..), Client (..), UserInternal (..), CategoryInternal (..), ClientRole (..), NewsInternal (..), NewsOut (..), NewsEditInternal (..), NewsOutWithId (..)) where
+module Handlers.Web.Base (Handle (..), Client (..), UserInternal (..), CategoryInternalId (..), CategoryInternal (..), ClientRole (..), NewsInternal (..), NewsOut (..), NewsEditInternal (..), NewsOutWithId (..)) where
 
 import Data.Binary.Builder (Builder)
 import qualified Data.ByteString as B
@@ -8,7 +8,7 @@ import Data.Proxy (Proxy (..))
 import Data.Text (Text)
 import qualified Handlers.Database.Base
 import qualified Handlers.Logger
-import Handlers.Web.Category.Types (CategoryInternal (..))
+import Handlers.Web.Category.Types (CategoryInternal (..), CategoryInternalId (..))
 import Handlers.Web.News.Types (NewsEditInternal (..), NewsInternal (..), NewsOut (..), NewsOutWithId (..))
 import Handlers.Web.User.Types (UserInternal (..))
 import Network.Wai (Request, Response)

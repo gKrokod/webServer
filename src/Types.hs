@@ -1,4 +1,4 @@
-module Types (Name (..), Login (..), PasswordUser (..), Label (..), NewLabel, Title (..), Content (..), URI_Image (..), NumberImage (..), NumberNews (..), Id (..), LabelAndId (..)) where
+module Types (Name (..), Login (..), PasswordUser (..), Label (..), NewLabel, Title (..), Content (..), URI_Image (..), NumberImage (..), NumberNews (..), Id (..), LabelAndId (..), NumberCategory (..)) where
 
 import Data.Int (Int64)
 import Data.Text (Text)
@@ -20,6 +20,8 @@ type NewLabel = Label
 newtype NumberImage = MkNumberImage {getNumberImage :: Int64} deriving (Show)
 
 newtype NumberNews = MkNumberNews {getNumberNews :: Int64} deriving (Show)
+
+newtype NumberCategory = MkNumberCategory {getNumberCategory :: Int64} deriving (Show)
 
 newtype Title = MkTitle {getTitle :: Text} deriving (Show, Eq)
 

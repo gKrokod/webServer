@@ -7,13 +7,13 @@ module Web.DTO.News (EditNewsFromWeb (..), webToEditNews, newsToWeb, NewsFromWeb
 import Data.Aeson (FromJSON, ToJSON, eitherDecodeStrict, encode)
 import Data.Binary.Builder (Builder, fromLazyByteString)
 import qualified Data.ByteString as B
-import qualified Data.Text as T
 import Data.Int (Int64)
+import qualified Data.Text as T
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import Handlers.Web.Base (NewsOut (..), NewsOutWithId (..))
 import Schema (Image (..))
-import Types (Content (..), Label (..), Name (..), Title (..), URI_Image (..), LabelAndId (..))
+import Types (Content (..), Label (..), LabelAndId (..), Name (..), Title (..), URI_Image (..))
 
 data NewsFromWeb = NewsFromWeb
   { title :: T.Text,
@@ -99,4 +99,3 @@ newsWithIdToWeb = fromLazyByteString . encode @[NewsWithIdToWeb] . map convertTo
           images = map getURI_Image $ wImages newsOut,
           isPublish = wIsPublish newsOut
         }
-

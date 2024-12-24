@@ -1,13 +1,12 @@
 module Handlers.Web.News.GetAdditionalTask (existingNewsAdditionalTask) where
 
+import Data.ByteString.Char8 as BC (readInt)
 import Handlers.Database.Api (getOneNews)
 import qualified Handlers.Logger
 import Handlers.Web.Base (Handle (..))
 import Network.Wai (Request, Response, queryString)
-import Web.DTO.News (newsWithIdToWeb)
-import Data.ByteString.Char8 as BC (readInt)
 import Types (NumberNews (..))
-
+import Web.DTO.News (newsWithIdToWeb)
 
 existingNewsAdditionalTask :: (Monad m) => Handle m -> Request -> m Response
 existingNewsAdditionalTask h req = do

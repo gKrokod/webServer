@@ -29,7 +29,7 @@ endPointCategories h req = do
           pure $ response404 h
     "/categories/AdditionalTask/edit" -> do
       case client h of
-        Client {clientAdminToken = (Just adminRole)} -> updateCategoryAdditionalTask adminRole h req --todo
+        Client {clientAdminToken = (Just adminRole)} -> updateCategoryAdditionalTask adminRole h req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
           pure $ response404 h
