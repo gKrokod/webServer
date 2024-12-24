@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -52,9 +52,11 @@ library
       Handlers.Database.Category.Create
       Handlers.Database.Category.Get
       Handlers.Database.Category.Update
+      Handlers.Database.Category.UpdateAdditionalTask
       Handlers.Database.Image.Get
       Handlers.Database.News.Create
       Handlers.Database.News.Get
+      Handlers.Database.News.GetAdditionalTask
       Handlers.Database.News.Update
       Handlers.Database.User.Create
       Handlers.Database.User.Get
@@ -67,10 +69,12 @@ library
       Handlers.Web.Category.Get
       Handlers.Web.Category.Types
       Handlers.Web.Category.Update
+      Handlers.Web.Category.UpdateAdditionalTask
       Handlers.Web.Image.Get
       Handlers.Web.Image.ImageApi
       Handlers.Web.News.Create
       Handlers.Web.News.Get
+      Handlers.Web.News.GetAdditionalTask
       Handlers.Web.News.NewsApi
       Handlers.Web.News.Types
       Handlers.Web.News.Update

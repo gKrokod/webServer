@@ -1,8 +1,9 @@
-module Handlers.Web.News.Types (NewsInternal (..), NewsEditInternal (..), NewsOut (..)) where
+module Handlers.Web.News.Types (NewsInternal (..), NewsEditInternal (..), NewsOut (..), NewsOutWithId (..)) where
 
+import Data.Int (Int64)
 import Data.Time (UTCTime)
 import Schema (Image (..))
-import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..))
+import Types (Content (..), Label (..), LabelAndId (..), Login (..), Name (..), Title (..), URI_Image (..))
 
 data NewsInternal = NewsInternal
   { titleNews :: Title,
@@ -30,4 +31,15 @@ data NewsOut = MkNewsOut
     nContent :: Content,
     nImages :: [URI_Image],
     nIsPublish :: Bool
+  }
+
+data NewsOutWithId = MkNewsOutWithId
+  { wTitle :: Title,
+    wTime :: UTCTime,
+    wAuthor :: Name,
+    wCategories :: [LabelAndId],
+    wContent :: Content,
+    wImages :: [URI_Image],
+    wIsPublish :: Bool,
+    wId :: Int64
   }

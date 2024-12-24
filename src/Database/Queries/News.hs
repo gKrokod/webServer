@@ -1,19 +1,19 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Database.Queries.News (editNews, pullAllNews, putNews, findNewsByTitle) where
+module Database.Queries.News (editNews, pullAllNews, putNews, findNewsByTitle, pullOneNews) where
 
 import Control.Exception (SomeException, throw, try)
 import Control.Monad.IO.Class (MonadIO)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), addDays)
-import Database.Esqueleto.Experimental (Key, OrderBy, PersistField (..), SqlExpr, Value (..), asc, count, delete, desc, from, fromSqlKey, getBy, groupBy, innerJoin, insert, insertMany, insertMany_, just, leftJoin, like, limit, offset, on, orderBy, replace, select, table, unionAll_, val, where_, withRecursive, (%), (&&.), (++.), (:&) (..), (<.), (==.), (>=.), (?.), (^.), (||.))
-import Database.Persist.Postgresql (ConnectionString, Entity (..))
+import Database.Esqueleto.Experimental (Key, OrderBy, PersistField (..), SqlExpr, Value (..), asc, count, delete, desc, from, fromSqlKey, get, getBy, groupBy, innerJoin, insert, insertMany, insertMany_, just, leftJoin, like, limit, offset, on, orderBy, replace, select, table, unionAll_, val, where_, withRecursive, (%), (&&.), (++.), (:&) (..), (<.), (==.), (>=.), (?.), (^.), (||.))
+import Database.Persist.Postgresql (ConnectionString, Entity (..), toSqlKey)
 import Database.Persist.Sql (SqlPersistT)
 import Database.Verb (runDataBaseWithOutLog)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
-import Handlers.Web.Base (NewsEditInternal (..), NewsInternal (..), NewsOut (..))
+import Handlers.Web.Base (NewsEditInternal (..), NewsInternal (..), NewsOut (..), NewsOutWithId (..))
 import Schema (Category (..), ColumnType (..), EntityField (..), FilterItem (..), Find (..), Image (..), ImageBank (..), News (..), SortOrder (..), Unique (..), User (..))
-import Types (Content (..), Label (..), Login (..), Name (..), Title (..), URI_Image (..))
+import Types (Content (..), Label (..), LabelAndId (..), Login (..), Name (..), NumberNews (..), Title (..), URI_Image (..))
 
 type LimitData = Int
 
@@ -236,3 +236,89 @@ findNewsByTitle connString title = try @SomeException (runDataBaseWithOutLog con
   where
     fetchAction :: (MonadIO m) => SqlPersistT m (Maybe News)
     fetchAction = (fmap . fmap) entityVal (getBy . UniqueNews . getTitle $ title)
+
+pullOneNews :: ConnectionString -> LimitData -> NumberNews -> IO (Either SomeException NewsOutWithId)
+pullOneNews connString configLimit uid = do
+  try @SomeException (runDataBaseWithOutLog connString fetchAction)
+  where
+    fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m NewsOutWithId
+    fetchAction = fetchFullNewsAdditionalTask configLimit uid
+
+fetchFullNewsAdditionalTask :: (MonadFail m, MonadIO m) => LimitData -> NumberNews -> SqlPersistT m NewsOutWithId
+fetchFullNewsAdditionalTask configLimit (MkNumberNews uid) = do
+  (label : _) <- (fmap . fmap) entityVal fetchLabel
+  lables <- fetchLables (MkLabel $ categoryLabel label)
+  (user : _) <- (fmap . fmap) entityVal fetchUser
+  images <- fetchActionImage
+  (Just partNews) <- get (toSqlKey uid)
+  let a =
+        MkNewsOutWithId
+          { wTitle = MkTitle $ newsTitle partNews,
+            wTime = newsCreated partNews,
+            wId = uid,
+            wAuthor = MkName $ userName user,
+            wCategories = workerCategory lables,
+            wContent = MkContent $ newsContent partNews,
+            wImages = workerImage images,
+            wIsPublish = newsIsPublish partNews
+          }
+  pure a
+  where
+    fetchLabel :: (MonadIO m) => SqlPersistT m [Entity Category]
+    fetchLabel = select $ do
+      (news :& category) <-
+        from $
+          table @News
+            `innerJoin` table @Category
+              `on` (\(n :& c) -> n ^. NewsCategoryId ==. (c ^. CategoryId))
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
+      pure category
+
+    fetchUser :: (MonadIO m) => SqlPersistT m [Entity User]
+    fetchUser = select $ do
+      (news :& user) <-
+        from $
+          table @News
+            `innerJoin` table @User
+              `on` (\(n :& c) -> n ^. NewsUserId ==. (c ^. UserId))
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
+      pure user
+
+    fetchLables :: (MonadIO m) => Label -> SqlPersistT m [Entity Category]
+    fetchLables label =
+      select $ do
+        cte <-
+          withRecursive
+            ( do
+                child <- from $ table @Category
+                where_ (child ^. CategoryLabel ==. (val . getLabel) label)
+                pure child
+            )
+            unionAll_
+            ( \self -> do
+                child <- from self
+                parent <- from $ table @Category
+                where_ (just (parent ^. CategoryId) ==. child ^. CategoryParent)
+                pure parent
+            )
+        limit (fromIntegral configLimit)
+        from cte
+
+    fetchActionImage :: (MonadIO m) => SqlPersistT m [Entity Image]
+    fetchActionImage = select $ do
+      (news :& _imagebank :& image) <-
+        from $
+          table @News
+            `innerJoin` table @ImageBank
+              `on` (\(n :& i) -> n ^. NewsId ==. (i ^. ImageBankNewsId))
+            `innerJoin` table @Image
+              `on` (\(_ :& i :& im) -> (i ^. ImageBankImageId) ==. (im ^. ImageId))
+      where_ (news ^. NewsId ==. val (toSqlKey uid))
+      limit (fromIntegral configLimit)
+      pure image
+
+    workerImage :: [Entity Image] -> [URI_Image]
+    workerImage = map (\(Entity key _value) -> MkURI_Image $ "/images?id=" <> T.pack (show $ fromSqlKey key))
+
+    workerCategory :: [Entity Category] -> [LabelAndId]
+    workerCategory = map (\(Entity key value) -> MkLabelAndId $ categoryLabel value <> ", id:" <> T.pack (show $ fromSqlKey key))
