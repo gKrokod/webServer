@@ -4,6 +4,7 @@ import Data.ByteString.Char8 as BC (readInt)
 import Handlers.Database.Api (getImage)
 import qualified Handlers.Logger
 import Handlers.Web.Base (Handle (..))
+-- import Handlers.Web.Image.ImageApi (HandleImage (..))
 import Network.Wai (Request, Response, queryString)
 import Types (NumberImage (..))
 
@@ -17,7 +18,7 @@ existingImages h req = do
       eImage <- getImage baseHandle (MkNumberImage idImage)
       case eImage of
         Left e -> do
-          Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
+          Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
           pure $ response500 h
         Right img -> pure $ mkResponseForImage h img
       where

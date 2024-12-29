@@ -14,6 +14,7 @@ import Web.Query (queryToFilters, queryToFind, queryToPaginate, queryToSort)
 
 endPointNews :: (Monad m) => Handle m -> Request -> m Response
 endPointNews h req = do
+  -- tyt vozmi handler obshij i sozdaj lokalnuj
   let logHandle = logger h
   case rawPathInfo req of
     "/news/create" -> do
