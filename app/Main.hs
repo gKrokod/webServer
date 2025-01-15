@@ -77,7 +77,9 @@ makeSetup cfg = do
           }
       handle =
         Handlers.Web.Base.Handle
-          { Handlers.Web.Base.logger = logHandle,
+          {  
+            Handlers.Web.Base.connectionString = pginfo, 
+            Handlers.Web.Base.logger = logHandle,
             Handlers.Web.Base.base = baseHandle,
             Handlers.Web.Base.client =
               Handlers.Web.Base.Client
@@ -91,7 +93,7 @@ makeSetup cfg = do
             Handlers.Web.Base.response400 = WU.response400,
             Handlers.Web.Base.response500 = WU.response500,
             Handlers.Web.Base.mkGoodResponse = WU.mkGoodResponse,
-            Handlers.Web.Base.mkResponseForImage = WU.mkResponseForImage,
+            -- Handlers.Web.Base.mkResponseForImage = WU.mkResponseForImage,
             Handlers.Web.Base.response404WithImage = WU.response404WithImage,
             Handlers.Web.Base.getBody = WU.getBody
           }

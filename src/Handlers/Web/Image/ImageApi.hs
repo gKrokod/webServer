@@ -1,33 +1,36 @@
 module Handlers.Web.Image.ImageApi (endPointImages) where
 
-import qualified Handlers.Logger
+import Handlers.Logger (logMessage, Log (Warning))
 import qualified Handlers.Database.Base
-import Handlers.Web.Base (Handle (..))
+import Handlers.Web.Base (Handle (..), HandleImage (..))
 import Handlers.Web.Image.Get (existingImages)
 import Network.Wai (Request, Response, rawPathInfo)
-import Data.Text (Text)
-import Schema (Image (..))
-
-import qualified Database.Api as DA
-            -- Handlers.Database.Base.pullImage = DA.pullImage pginfo,
+import qualified Web.Utils as WU
 
 endPointImages :: (Monad m) => Handle m -> Request -> m Response
 endPointImages h req = do
   case rawPathInfo req of
-    "/images" -> existingImages h req
+    "/images" -> existingImages h' req
     _ -> do
-      Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"
+      logMessage (logger h)  Warning "End point not found"
       pure $ response404 h
+  where h' = HandleImage { 
+                response400B = WU.response400, 
+                response500B = WU.response500,
+                mkResponseForImage = WU.mkResponseForImage,
+                pullImage = Handlers.Database.Base.pullImage $ base h,
+                loggerImage = logger h}
+                
 
-data HandleImage m = HandleImage
-  { 
-    response400 :: Text -> Response,
-    response500 :: Response,
-    mkResponseForImage :: Image -> Response,
-    logHandle :: Handlers.Logger.Handle m,
-    baseHandle :: Handlers.Database.Base.Handle m
-    -- pullImage :: NumberImage -> m (Either SomeException (Maybe Image))
-  }        
+-- data HandleImage m = HandleImage
+--   { 
+--     response400 :: Text -> Response,
+--     response500 :: Response,
+--     mkResponseForImage :: Image -> Response,
+--     logHandle :: Handlers.Logger.Handle m,
+--     baseHandle :: Handlers.Database.Base.Handle m
+--     -- pullImage :: NumberImage -> m (Either SomeException (Maybe Image))
+--   }        
 
 -- getImage :: (Monad m) => Handle m -> NumberImage -> m (Either T.Text Image)
 -- getImage h uid = do

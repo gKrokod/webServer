@@ -1,14 +1,14 @@
 module Handlers.Database.Image.Get (getImage) where
 
 import qualified Data.Text as T
-import Handlers.Database.Base (Handle (..))
+import Handlers.Web.Base (HandleImage(..))
 import Handlers.Logger (Log (..), logMessage)
 import Schema (Image (..))
 import Types (NumberImage (..))
 
-getImage :: (Monad m) => Handle m -> NumberImage -> m (Either T.Text Image)
+getImage :: (Monad m) => HandleImage m -> NumberImage -> m (Either T.Text Image)
 getImage h uid = do
-  let logHandle = logger h
+  let logHandle = loggerImage h
   images <- pullImage h uid
   case images of
     Left e -> do
