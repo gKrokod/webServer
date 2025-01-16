@@ -21,6 +21,7 @@ endPointImages h req = do
                 pullImage = Handlers.Database.Base.pullImage $ base h,
                 loggerImage = logger h}
                 
+            -- Handlers.Database.Base.pullImage = DA.pullImage pginfo,
 
 -- data HandleImage m = HandleImage
 --   { 
