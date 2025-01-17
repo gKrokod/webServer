@@ -1,7 +1,7 @@
 -- {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE DataKinds #-}
 
-module Handlers.Web.Base (Handle (..), Client (..), UserInternal (..), CategoryInternal (..), ClientRole (..), NewsInternal (..), NewsOut (..), NewsEditInternal (..), HandleImage(..), HandleUser(..)) where
+module Handlers.Web.Base (Handle (..), Client (..), UserInternal (..), CategoryInternal (..), ClientRole (..), NewsInternal (..), NewsOut (..), NewsEditInternal (..), HandleImage(..)) where
 
 import Data.Binary.Builder (Builder)
 import qualified Data.ByteString as B
@@ -18,13 +18,8 @@ import Types (Login (..))
 import Types (NumberImage (..))
 import Control.Exception (SomeException)
 import Database.Persist.Postgresql (ConnectionString)
-import Handlers.Database.Base (Offset (..), Limit (..)) 
-import Schema (User (..)) 
-import Types (PasswordUser (..))
-import Data.Time (UTCTime)
-import Handlers.Database.Base (Success (..))
+import qualified Handlers.Web.User (Handle (..))
 
-type HashPasswordUser = Text
 
 data ClientRole = AdminRole | PublisherRole
   deriving (Eq, Show)
@@ -40,6 +35,7 @@ data Handle m = Handle
   { connectionString :: ConnectionString, 
     logger :: Handlers.Logger.Handle m,
     base :: Handlers.Database.Base.Handle m,
+    user :: Handlers.Web.User.Handle m,
     client :: Client,
     getBody :: Request -> m B.ByteString,
     response404 :: Response,
@@ -61,22 +57,22 @@ data HandleImage m = HandleImage
     loggerImage :: Handlers.Logger.Handle m
   }        
 
-data HandleUser m = HandleUser
-  { 
-    response400U :: Text -> Response,
-    response500U :: Response,
-    response200U :: Response,
-    userOffsetU :: Int,
-    userLimitU :: Int,
-    mkGoodResponseU :: Builder -> Response,
-    pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
-    getTime :: m UTCTime,
-    findUserByLogin :: Login -> m (Either SomeException (Maybe User)),
-    makeHashPassword :: PasswordUser -> UTCTime -> HashPasswordUser,
-    putUser :: UserInternal -> UTCTime -> m (Either SomeException Success),
-    getBodyU :: Request -> m B.ByteString,
-    loggerUser :: Handlers.Logger.Handle m
-  }        
+-- data HandleUser m = HandleUser
+--   { 
+--     response400U :: Text -> Response,
+--     response500U :: Response,
+--     response200U :: Response,
+--     userOffsetU :: Int,
+--     userLimitU :: Int,
+--     mkGoodResponseU :: Builder -> Response,
+--     pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
+--     getTime :: m UTCTime,
+--     findUserByLogin :: Login -> m (Either SomeException (Maybe User)),
+--     makeHashPassword :: PasswordUser -> UTCTime -> HashPasswordUser,
+--     putUser :: UserInternal -> UTCTime -> m (Either SomeException Success),
+--     getBodyU :: Request -> m B.ByteString,
+--     loggerUser :: Handlers.Logger.Handle m
+--   }        
 
     -- userOffset :: Int,
     -- userLimit :: Int,

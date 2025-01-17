@@ -20,5 +20,6 @@ data Handle m = Handle
     response200 :: Response,
     response400 :: Text -> Response,
     response500 :: Response,
+    response404 :: Response,
     mkGoodResponse :: Builder -> Response
   }

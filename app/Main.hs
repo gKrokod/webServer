@@ -5,6 +5,8 @@ import Control.Exception (bracket_)
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
 import qualified Handlers.Database.Base
+import qualified Handlers.Database.User
+import qualified Handlers.Web.User
 import Handlers.Logger (Log (Info), logMessage)
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
@@ -49,11 +51,32 @@ makeSetup cfg = do
           { Handlers.Logger.levelLogger = cLogLvl cfg,
             Handlers.Logger.writeLog = Logger.writeLog
           }
+      baseUserHandle =
+        Handlers.Database.User.Handle
+          { Handlers.Database.User.logger = logHandle,
+            Handlers.Database.User.userOffset = 0,
+            Handlers.Database.User.userLimit = maxBound,
+            Handlers.Database.User.getTime = getCurrentTime,
+            Handlers.Database.User.makeHashPassword = DA.makeHashPassword,
+            Handlers.Database.User.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
+            Handlers.Database.User.findUserByLogin = DA.findUserByLogin pginfo,
+            Handlers.Database.User.putUser = DA.putUser pginfo
+          }
+      userHandle = Handlers.Web.User.Handle {
+          Handlers.Web.User.logger = logHandle,
+          Handlers.Web.User.base = baseUserHandle,
+          Handlers.Web.User.response400 = WU.response400,
+          Handlers.Web.User.response500 = WU.response500,
+          Handlers.Web.User.response200 = WU.response200,
+          Handlers.Web.User.response404 = WU.response404,
+          Handlers.Web.User.mkGoodResponse = WU.mkGoodResponse,
+          Handlers.Web.User.getBody = WU.getBody
+        }
       baseHandle =
         Handlers.Database.Base.Handle
           { Handlers.Database.Base.logger = logHandle,
-            Handlers.Database.Base.putUser = DA.putUser pginfo,
-            Handlers.Database.Base.findUserByLogin = DA.findUserByLogin pginfo,
+            -- Handlers.Database.Base.putUser = DA.putUser pginfo,
+            Handlers.Database.Base.findUserByLogin = DA.findUserByLogin pginfo, --нужен для авторизации. там проверка
             Handlers.Database.Base.getTime = getCurrentTime,
             Handlers.Database.Base.makeHashPassword = DA.makeHashPassword,
             Handlers.Database.Base.validPassword = DA.validPassword pginfo,
@@ -64,7 +87,7 @@ makeSetup cfg = do
             Handlers.Database.Base.sortOrderNews = Descending,
             Handlers.Database.Base.findSubString = Nothing,
             Handlers.Database.Base.filtersNews = [],
-            Handlers.Database.Base.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
+            -- Handlers.Database.Base.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
             Handlers.Database.Base.findCategoryByLabel = DA.findCategoryByLabel pginfo,
             Handlers.Database.Base.putCategory = DA.putCategory pginfo,
             Handlers.Database.Base.editCategory = DA.editCategory pginfo,
@@ -95,6 +118,7 @@ makeSetup cfg = do
             Handlers.Web.Base.mkGoodResponse = WU.mkGoodResponse,
             -- Handlers.Web.Base.mkResponseForImage = WU.mkResponseForImage,
             Handlers.Web.Base.response404WithImage = WU.response404WithImage,
-            Handlers.Web.Base.getBody = WU.getBody
+            Handlers.Web.Base.getBody = WU.getBody,
+            Handlers.Web.Base.user = userHandle
           }
   pure handle
