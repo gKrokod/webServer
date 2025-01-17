@@ -7,14 +7,14 @@ import Control.Monad (when)
 import Data.Either (isLeft)
 import qualified Data.Text as T
 import Handlers.Database.Base (Success (..))
-import Handlers.Web.Base (HandleUser(..))
+import Handlers.Database.User (Handle(..))
 import Handlers.Logger (Log (..), logMessage)
 import Handlers.Web.Base (UserInternal (..))
 import Types (Login (..), PasswordUser (..))
 
-createUserBase :: (Monad m) => HandleUser m -> UserInternal -> m (Either T.Text Success)
+createUserBase :: (Monad m) => Handle m -> UserInternal -> m (Either T.Text Success)
 createUserBase h user@(UserInternal {..}) = do
-  let logHandle = loggerUser h
+  let logHandle = logger h
   tryFind <- findUserByLogin h loginUser
   case tryFind of
     Left e -> do

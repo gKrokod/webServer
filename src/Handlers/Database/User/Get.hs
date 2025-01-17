@@ -5,13 +5,14 @@ import Control.Monad (when)
 import Data.Either (isLeft)
 import qualified Data.Text as T
 import Handlers.Database.Base ( Limit (..), Offset (..))
-import Handlers.Web.Base (HandleUser (..))
+-- import Handlers.Web.Base (HandleUser (..))
+import Handlers.Database.User (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
 import Schema (User (..))
 
-getAllUsers :: (Monad m) => HandleUser m -> m (Either T.Text [User])
+getAllUsers :: (Monad m) => Handle m -> m (Either T.Text [User])
 getAllUsers h = do
-  let logHandle = loggerUser h
-  users <- pullAllUsers h (MkOffset . userOffsetU $ h) (MkLimit . userLimitU $ h)
+  let logHandle = logger h
+  users <- pullAllUsers h (MkOffset . userOffset $ h) (MkLimit . userLimit $ h)
   when (isLeft users) (logMessage logHandle Handlers.Logger.Error "function pullAllUsers fail")
   pure $ either (Left . T.pack . displayException) Right users

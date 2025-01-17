@@ -1,9 +1,10 @@
 module Handlers.Web.User.UserApi (endPointUsers) where
 
 import qualified Handlers.Database.Base
+import qualified Handlers.Database.User
+import qualified Handlers.Web.User
 import qualified Handlers.Logger
 import Handlers.Web.Base (Client (..), Handle (..))
-import Handlers.Web.Base (HandleUser(..))
 import Handlers.Web.User.Create (createUser)
 import Handlers.Web.User.Get (existingUsers)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
@@ -13,7 +14,7 @@ import qualified Web.Utils as WU
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m Response
 endPointUsers h req = do
-  let logHandle = logger h
+  let logHandle = Handlers.Web.Base.logger h
   case rawPathInfo req of
     "/users/create" -> do
       case client h of
@@ -25,29 +26,51 @@ endPointUsers h req = do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPaginate queryLimit
 
-      -- let newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
-      let newUserHandle = h' {userOffsetU = userOffset, userLimitU = userLimit}
-      existingUsers newUserHandle req
+      let newBaseUserHandle = baseHandle {Handlers.Database.User.userOffset = userOffset, Handlers.Database.User.userLimit = userLimit}
+      existingUsers (h' {Handlers.Web.User.base = newBaseUserHandle} ) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point Users not found"
       pure $ response404 h
-  where h' = HandleUser {
-        response400U = WU.response400,
-        response500U = WU.response500,
-        response200U = WU.response200,
-        userOffsetU = Handlers.Database.Base.userOffset $ base h,
-        userLimitU = Handlers.Database.Base.userLimit $ base h,
-        -- getBodyU = WU.getBody,
-        getBodyU = getBody h,
-        getTime = Handlers.Database.Base.getTime $ base h,
-        mkGoodResponseU = WU.mkGoodResponse,
-        pullAllUsers = Handlers.Database.Base.pullAllUsers $ base h,
-        findUserByLogin = Handlers.Database.Base.findUserByLogin $ base h,
-        putUser = Handlers.Database.Base.putUser $ base h,
-        makeHashPassword = DA.makeHashPassword,
-        loggerUser = logger h
+  where baseHandle = Handlers.Database.User.Handle {
+          Handlers.Database.User.logger = Handlers.Web.Base.logger h,
+          Handlers.Database.User.userOffset = Handlers.Database.Base.userOffset $ base h,
+          Handlers.Database.User.userLimit = Handlers.Database.Base.userLimit $ base h,
+          Handlers.Database.User.getTime = Handlers.Database.Base.getTime $ base h,
+          Handlers.Database.User.makeHashPassword = DA.makeHashPassword,
+          Handlers.Database.User.pullAllUsers = Handlers.Database.Base.pullAllUsers $ base h,
+          Handlers.Database.User.findUserByLogin = Handlers.Database.Base.findUserByLogin $ base h,
+          Handlers.Database.User.putUser = Handlers.Database.Base.putUser $ Handlers.Web.Base.base h
+        }
+        h' = Handlers.Web.User.Handle {
+          Handlers.Web.User.logger = Handlers.Web.Base.logger h,
+          Handlers.Web.User.base = baseHandle,
+          Handlers.Web.User.response400 = WU.response400,
+          Handlers.Web.User.response500 = WU.response500,
+          Handlers.Web.User.response200 = WU.response200,
+          Handlers.Web.User.getBody = Handlers.Web.Base.getBody h,
+          Handlers.Web.User.mkGoodResponse = WU.mkGoodResponse
         }
 
+-- data Handle m = Handle
+--   { connectionString :: ConnectionString, 
+--     logger :: Handlers.Logger.Handle m,
+--     base :: Handlers.Database.User.Handle m,
+--     getBody :: Request -> m B.ByteString,
+--     response200 :: Response,
+--     response400 :: Text -> Response,
+--     response500 :: Response,
+--     mkGoodResponse :: Builder -> Response
+--   }
+-- data Handle m = Handle
+--   { connectionString :: ConnectionString, 
+--     logger :: Handlers.Logger.Handle m,
+--     base :: Handlers.Database.User.Handle m,
+--     getBody :: Request -> m B.ByteString,
+--     response200 :: Response,
+--     response400 :: Text -> Response,
+--     response500 :: Response,
+--     mkGoodResponse :: Builder -> Response
+--   }
 -- data HandleUser m = HandleUser
 --   { 
 --     response400U :: Text -> Response,
