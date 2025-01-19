@@ -7,6 +7,8 @@ import qualified Database.Api as DA
 import qualified Handlers.Database.Base
 import qualified Handlers.Database.User
 import qualified Handlers.Web.User
+import qualified Handlers.Database.Image
+import qualified Handlers.Web.Image
 import Handlers.Logger (Log (Info), logMessage)
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
@@ -51,6 +53,20 @@ makeSetup cfg = do
           { Handlers.Logger.levelLogger = cLogLvl cfg,
             Handlers.Logger.writeLog = Logger.writeLog
           }
+      baseImageHandle =
+        Handlers.Database.Image.Handle
+          { Handlers.Database.Image.logger = logHandle,
+            Handlers.Database.Image.pullImage = DA.pullImage pginfo
+          }
+      imageHandle = Handlers.Web.Image.Handle {
+          Handlers.Web.Image.logger = logHandle,
+          Handlers.Web.Image.base = baseImageHandle,
+          Handlers.Web.Image.response404 = WU.response404,
+          Handlers.Web.Image.response400 = WU.response400,
+          Handlers.Web.Image.response500 = WU.response500,
+          Handlers.Web.Image.mkGoodResponse = WU.mkGoodResponse,
+          Handlers.Web.Image.mkResponseForImage = WU.mkResponseForImage
+        }
       baseUserHandle =
         Handlers.Database.User.Handle
           { Handlers.Database.User.logger = logHandle,
@@ -92,7 +108,7 @@ makeSetup cfg = do
             Handlers.Database.Base.putCategory = DA.putCategory pginfo,
             Handlers.Database.Base.editCategory = DA.editCategory pginfo,
             Handlers.Database.Base.pullAllCategories = DA.pullAllCategories pginfo (cLimitData cfg),
-            Handlers.Database.Base.pullImage = DA.pullImage pginfo, -- *
+            -- Handlers.Database.Base.pullImage = DA.pullImage pginfo, -- *
             Handlers.Database.Base.putNews = DA.putNews pginfo,
             Handlers.Database.Base.findNewsByTitle = DA.findNewsByTitle pginfo,
             Handlers.Database.Base.pullAllNews = DA.pullAllNews pginfo (cLimitData cfg),
@@ -117,8 +133,9 @@ makeSetup cfg = do
             Handlers.Web.Base.response500 = WU.response500,
             Handlers.Web.Base.mkGoodResponse = WU.mkGoodResponse,
             -- Handlers.Web.Base.mkResponseForImage = WU.mkResponseForImage,
-            Handlers.Web.Base.response404WithImage = WU.response404WithImage,
+            -- Handlers.Web.Base.response404WithImage = WU.response404WithImage,
             Handlers.Web.Base.getBody = WU.getBody,
-            Handlers.Web.Base.user = userHandle
+            Handlers.Web.Base.user = userHandle,
+            Handlers.Web.Base.image = imageHandle
           }
   pure handle
