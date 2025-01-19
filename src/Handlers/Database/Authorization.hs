@@ -7,7 +7,9 @@ import Control.Monad (when)
 import Data.Bool (bool)
 import Data.Either (isLeft)
 import qualified Data.Text as T
-import Handlers.Database.Base (Handle (..))
+-- import Handlers.Database.Base (Handle (..))
+import Handlers.Database.News (Handle (..))
+import qualified Handlers.Database.News 
 import Handlers.Logger (Log (..), logMessage)
 import Schema (IsValidPassword (..), User (..))
 import Types (Login (..), PasswordUser (..), Title (..))

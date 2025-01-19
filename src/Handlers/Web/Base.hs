@@ -19,6 +19,7 @@ import Database.Persist.Postgresql (ConnectionString)
 import qualified Handlers.Web.User (Handle (..))
 import qualified Handlers.Web.Category (Handle (..))
 import qualified Handlers.Web.Image (Handle (..))
+import qualified Handlers.Web.News (Handle (..))
 
 
 data ClientRole = AdminRole | PublisherRole
@@ -38,6 +39,7 @@ data Handle m = Handle
     user :: Handlers.Web.User.Handle m,
     category :: Handlers.Web.Category.Handle m,
     image :: Handlers.Web.Image.Handle m,
+    news :: Handlers.Web.News.Handle m,
     client :: Client,
     getBody :: Request -> m B.ByteString,
     response404 :: Response,

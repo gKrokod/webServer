@@ -4,7 +4,8 @@ import Control.Exception (displayException)
 import Control.Monad (when)
 import Data.Either (isLeft)
 import qualified Data.Text as T
-import Handlers.Database.Base (Handle (..), Limit (..), Offset (..))
+import Handlers.Database.Base (Limit (..), Offset (..))
+import Handlers.Database.News (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
 import Handlers.Web.Base (NewsOut (..))
 

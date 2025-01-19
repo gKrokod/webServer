@@ -2,7 +2,7 @@ module Handlers.Web.News.Get (existingNews) where
 
 import Handlers.Database.Api (getAllNews)
 import qualified Handlers.Logger
-import Handlers.Web.Base (Handle (..))
+import Handlers.Web.News (Handle (..))
 import Network.Wai (Request, Response)
 import Web.DTO.News (newsToWeb)
 

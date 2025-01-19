@@ -6,7 +6,7 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import Handlers.Database.Api (getCopyRight, updateNewsBase)
 import qualified Handlers.Logger
-import Handlers.Web.Base (Handle (..))
+import Handlers.Web.News (Handle (..))
 import Handlers.Web.News.Types (NewsEditInternal (..))
 import Network.Wai (Request, Response)
 import Schema (IsValidPassword (..))

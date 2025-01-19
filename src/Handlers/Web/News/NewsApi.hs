@@ -1,6 +1,7 @@
 module Handlers.Web.News.NewsApi (endPointNews) where
 
-import qualified Handlers.Database.Base
+import qualified Handlers.Database.News
+import qualified Handlers.Web.News
 import qualified Handlers.Logger
 import Handlers.Web.Base (Client (..), Handle (..))
 import Handlers.Web.News.Create (createNews)
@@ -14,57 +15,61 @@ import Web.Query (queryToFilters, queryToFind, queryToPaginate, queryToSort)
 
 endPointNews :: (Monad m) => Handle m -> Request -> m Response
 endPointNews h req = do
-  -- tyt vozmi handler obshij i sozdaj lokalnuj
-  let logHandle = logger h
+  let logHandle = Handlers.Web.Base.logger h
+      newsHandle = Handlers.Web.Base.news h
+      -- baseNewsHandle = Handlers.Web.News.base newsHandle
+      userRole = Handlers.Web.Base.client h
   case rawPathInfo req of
     "/news/create" -> do
-      case client h of
-        Client {clientPublisherToken = (Just publisherRole)} -> createNews publisherRole h req
+      case userRole of
+        Client {clientPublisherToken = (Just publisherRole)} -> createNews publisherRole newsHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ response403 h
+          pure $ Handlers.Web.News.response403 newsHandle
     "/news/edit" ->
-      case client h of
+      case userRole of
         Client {author = (Just author_)} -> do
-          updateNews author_ h req
+          updateNews author_ newsHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ response403 h
+          pure $ Handlers.Web.News.response403 newsHandle
     "/news" -> do
       let queryLimit = queryString req
-      existingNews (foldSets queryLimit h [setFilters, setFind, setSort, setPaginate]) req
+      existingNews undefined req
+      -- existingNews (foldSets queryLimit newsHandle [setFilters, setFind, setSort, setPaginate]) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-      pure $ response404 h
+      pure $ Handlers.Web.News.response404 newsHandle
   where
-    foldSets :: (Monad m) => Query -> Handle m -> [Handle m -> Query -> Handle m] -> Handle m
+    -- foldSets :: (Monad m) => Query -> Handlers.Web.News.Handle m -> [Handlers.Web.News.Handle m -> Query -> Handlers.Web.News.Handle m] -> Handlers.Web.News.Handle m
     foldSets query = foldr (\set h' -> set h' query)
 
-    setPaginate :: (Monad m) => Handle m -> Query -> Handle m
+    setPaginate :: (Monad m) => Handlers.Web.News.Handle m -> Query -> Handlers.Web.News.Handle m
     setPaginate h' q =
-      let baseHandle = base h'
+      let baseHandle = Handlers.Web.News.base h'
           (userOffset, userLimit) = queryToPaginate q
-          newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
-       in h' {base = newBaseHandle}
+          newBaseHandle = baseHandle {Handlers.Database.News.userOffset = userOffset, Handlers.Database.News.userLimit = userLimit}
+       in h' {Handlers.Web.News.base = newBaseHandle}
 
-    setSort :: (Monad m) => Handle m -> Query -> Handle m
+    -- setSort :: (Monad m) => Handlers.Web.News.Handle m -> Query -> Handlers.Web.News.Handle m
     setSort h' q =
-      let baseHandle = base h'
+      let baseHandle = Handlers.Web.News.base h'
           (userSortColumn, userSortOrder) = queryToSort q
-          newBaseHandle = baseHandle {Handlers.Database.Base.sortColumnNews = userSortColumn, Handlers.Database.Base.sortOrderNews = userSortOrder}
-       in h' {base = newBaseHandle}
+          newBaseHandle = baseHandle {Handlers.Database.News.sortColumnNews = userSortColumn, Handlers.Database.News.sortOrderNews = userSortOrder}
+       in h' {Handlers.Web.News.base = newBaseHandle}
 
-    setFind :: (Monad m) => Handle m -> Query -> Handle m
+    -- setFind :: (Monad m) => Handlers.Web.News.Handle m -> Query -> Handlers.Web.News.Handle m
     setFind h' q =
-      let baseHandle = base h'
+      let baseHandle = Handlers.Web.News.base h'
           mbFind = queryToFind q
-          newBaseHandle = baseHandle {Handlers.Database.Base.findSubString = mbFind}
-       in h' {base = newBaseHandle}
+          newBaseHandle = baseHandle {Handlers.Database.News.findSubString = mbFind}
+       in h' {Handlers.Web.News.base = newBaseHandle}
 
-    setFilters :: (Monad m) => Handle m -> Query -> Handle m
+    -- setFilters :: (Monad m) => Handlers.Web.News.Handle m -> Query -> Handlers.Web.News.Handle m
     setFilters h' q =
-      let baseHandle = base h'
+      let baseHandle = Handlers.Web.News.base h'
           filters = queryToFilters q
-          filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ client h)
-          newBaseHandle = baseHandle {Handlers.Database.Base.filtersNews = filterVisible : filters}
-       in h' {base = newBaseHandle}
+          -- filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ userRole)
+          filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ undefined)
+          newBaseHandle = baseHandle {Handlers.Database.News.filtersNews = filterVisible : filters}
+       in h' {Handlers.Web.News.base = newBaseHandle}
