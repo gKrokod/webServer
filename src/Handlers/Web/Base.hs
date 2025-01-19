@@ -14,8 +14,10 @@ import Handlers.Web.News.Types (NewsEditInternal (..), NewsInternal (..), NewsOu
 import Handlers.Web.User.Types (UserInternal (..))
 import Network.Wai (Request, Response)
 import Types (Login (..))
+import Schema (Image)
 import Database.Persist.Postgresql (ConnectionString)
 import qualified Handlers.Web.User (Handle (..))
+import qualified Handlers.Web.Category (Handle (..))
 import qualified Handlers.Web.Image (Handle (..))
 
 
@@ -34,6 +36,7 @@ data Handle m = Handle
     logger :: Handlers.Logger.Handle m,
     base :: Handlers.Database.Base.Handle m,
     user :: Handlers.Web.User.Handle m,
+    category :: Handlers.Web.Category.Handle m,
     image :: Handlers.Web.Image.Handle m,
     client :: Client,
     getBody :: Request -> m B.ByteString,
@@ -43,7 +46,7 @@ data Handle m = Handle
     response400 :: Text -> Response,
     response500 :: Response,
     mkGoodResponse :: Builder -> Response,
-    -- mkResponseForImage :: Image -> Response,
+    mkResponseForImage :: Image -> Response,
     response404WithImage :: Response
   }
 

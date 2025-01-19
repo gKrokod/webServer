@@ -49,6 +49,7 @@ library
       Handlers.Database.Api
       Handlers.Database.Authorization
       Handlers.Database.Base
+      Handlers.Database.Category
       Handlers.Database.Category.Create
       Handlers.Database.Category.Get
       Handlers.Database.Category.Update
@@ -64,6 +65,7 @@ library
       Handlers.Router
       Handlers.Web.Api
       Handlers.Web.Base
+      Handlers.Web.Category
       Handlers.Web.Category.CategoryApi
       Handlers.Web.Category.Create
       Handlers.Web.Category.Get

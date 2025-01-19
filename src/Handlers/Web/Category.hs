@@ -1,19 +1,20 @@
 -- {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE DataKinds #-}
 
-module Handlers.Web.User (Handle (..)) where
+module Handlers.Web.Category (Handle (..)) where
 
 import Data.Binary.Builder (Builder)
 import qualified Data.ByteString as B
 import Data.Text (Text)
 import qualified Handlers.Logger
 import Network.Wai (Request, Response)
-import qualified Handlers.Database.User
+import qualified Handlers.Database.Category
+
 
 data Handle m = Handle
   { 
     logger :: Handlers.Logger.Handle m,
-    base :: Handlers.Database.User.Handle m,
+    base :: Handlers.Database.Category.Handle m,
     getBody :: Request -> m B.ByteString,
     response200 :: Response,
     response400 :: Text -> Response,

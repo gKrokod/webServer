@@ -2,7 +2,7 @@ module Handlers.Web.Category.Get (existingCategories) where
 
 import Handlers.Database.Api (getAllCategories)
 import qualified Handlers.Logger
-import Handlers.Web.Base (Handle (..))
+import Handlers.Web.Category (Handle (..))
 import Network.Wai (Request, Response)
 import Web.DTO.Category (categoryToWeb)
 

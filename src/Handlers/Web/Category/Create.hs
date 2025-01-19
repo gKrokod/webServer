@@ -7,7 +7,8 @@ import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import Handlers.Database.Api (createCategoryBase)
 import qualified Handlers.Logger
-import Handlers.Web.Base (ClientRole (..), Handle (..))
+import Handlers.Web.Base (ClientRole (..))
+import Handlers.Web.Category (Handle (..))
 import Handlers.Web.Category.Types (CategoryInternal (..))
 import Network.Wai (Request, Response)
 import Types (Label (..))

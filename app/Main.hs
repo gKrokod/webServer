@@ -9,6 +9,8 @@ import qualified Handlers.Database.User
 import qualified Handlers.Web.User
 import qualified Handlers.Database.Image
 import qualified Handlers.Web.Image
+import qualified Handlers.Database.Category
+import qualified Handlers.Web.Category
 import Handlers.Logger (Log (Info), logMessage)
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
@@ -67,6 +69,26 @@ makeSetup cfg = do
           Handlers.Web.Image.mkGoodResponse = WU.mkGoodResponse,
           Handlers.Web.Image.mkResponseForImage = WU.mkResponseForImage
         }
+      baseCategoryHandle =
+        Handlers.Database.Category.Handle
+          { Handlers.Database.Category.logger = logHandle,
+            Handlers.Database.Category.userOffset = 0,
+            Handlers.Database.Category.userLimit = maxBound,
+            Handlers.Database.Category.findCategoryByLabel = DA.findCategoryByLabel pginfo,
+            Handlers.Database.Category.putCategory = DA.putCategory pginfo,
+            Handlers.Database.Category.editCategory = DA.editCategory pginfo,
+            Handlers.Database.Category.pullAllCategories = DA.pullAllCategories pginfo (cLimitData cfg)
+          }
+      categoryHandle = Handlers.Web.Category.Handle {
+          Handlers.Web.Category.logger = logHandle,
+          Handlers.Web.Category.base = baseCategoryHandle,
+          Handlers.Web.Category.response400 = WU.response400,
+          Handlers.Web.Category.response500 = WU.response500,
+          Handlers.Web.Category.response200 = WU.response200,
+          Handlers.Web.Category.response404 = WU.response404,
+          Handlers.Web.Category.mkGoodResponse = WU.mkGoodResponse,
+          Handlers.Web.Category.getBody = WU.getBody
+        }
       baseUserHandle =
         Handlers.Database.User.Handle
           { Handlers.Database.User.logger = logHandle,
@@ -91,7 +113,7 @@ makeSetup cfg = do
       baseHandle =
         Handlers.Database.Base.Handle
           { Handlers.Database.Base.logger = logHandle,
-            -- Handlers.Database.Base.putUser = DA.putUser pginfo,
+            Handlers.Database.Base.putUser = DA.putUser pginfo,
             Handlers.Database.Base.findUserByLogin = DA.findUserByLogin pginfo, --нужен для авторизации. там проверка
             Handlers.Database.Base.getTime = getCurrentTime,
             Handlers.Database.Base.makeHashPassword = DA.makeHashPassword,
@@ -103,12 +125,12 @@ makeSetup cfg = do
             Handlers.Database.Base.sortOrderNews = Descending,
             Handlers.Database.Base.findSubString = Nothing,
             Handlers.Database.Base.filtersNews = [],
-            -- Handlers.Database.Base.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
+            Handlers.Database.Base.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
             Handlers.Database.Base.findCategoryByLabel = DA.findCategoryByLabel pginfo,
             Handlers.Database.Base.putCategory = DA.putCategory pginfo,
             Handlers.Database.Base.editCategory = DA.editCategory pginfo,
             Handlers.Database.Base.pullAllCategories = DA.pullAllCategories pginfo (cLimitData cfg),
-            -- Handlers.Database.Base.pullImage = DA.pullImage pginfo, -- *
+            Handlers.Database.Base.pullImage = DA.pullImage pginfo, -- *
             Handlers.Database.Base.putNews = DA.putNews pginfo,
             Handlers.Database.Base.findNewsByTitle = DA.findNewsByTitle pginfo,
             Handlers.Database.Base.pullAllNews = DA.pullAllNews pginfo (cLimitData cfg),
@@ -132,10 +154,11 @@ makeSetup cfg = do
             Handlers.Web.Base.response400 = WU.response400,
             Handlers.Web.Base.response500 = WU.response500,
             Handlers.Web.Base.mkGoodResponse = WU.mkGoodResponse,
-            -- Handlers.Web.Base.mkResponseForImage = WU.mkResponseForImage,
-            -- Handlers.Web.Base.response404WithImage = WU.response404WithImage,
+            Handlers.Web.Base.mkResponseForImage = WU.mkResponseForImage,
+            Handlers.Web.Base.response404WithImage = WU.response404WithImage,
             Handlers.Web.Base.getBody = WU.getBody,
             Handlers.Web.Base.user = userHandle,
+            Handlers.Web.Base.category = categoryHandle,
             Handlers.Web.Base.image = imageHandle
           }
   pure handle

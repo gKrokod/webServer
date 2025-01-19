@@ -1,6 +1,3 @@
--- {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE DataKinds #-}
-
 module Handlers.Web.Image (Handle (..)) where
 
 import Data.Binary.Builder (Builder)
