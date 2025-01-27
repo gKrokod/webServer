@@ -5,12 +5,15 @@ import Control.Exception (bracket_)
 import Data.Time (getCurrentTime)
 import qualified Database.Api as DA
 import qualified Handlers.Database.Base
+import qualified Handlers.Database.Auth
 import qualified Handlers.Database.User
 import qualified Handlers.Web.User
 import qualified Handlers.Database.Image
 import qualified Handlers.Web.Image
 import qualified Handlers.Database.Category
 import qualified Handlers.Web.Category
+import qualified Handlers.Web.News
+import qualified Handlers.Database.News
 import Handlers.Logger (Log (Info), logMessage)
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization, doLogic)
@@ -54,6 +57,20 @@ makeSetup cfg = do
         Handlers.Logger.Handle
           { Handlers.Logger.levelLogger = cLogLvl cfg,
             Handlers.Logger.writeLog = Logger.writeLog
+          }
+      client = 
+              Handlers.Database.Auth.Client
+                { Handlers.Database.Auth.clientAdminToken = Nothing,
+                  Handlers.Database.Auth.clientPublisherToken = Nothing,
+                  Handlers.Database.Auth.author = Nothing
+                }
+      authHandle =
+        Handlers.Database.Auth.Handle
+          { Handlers.Database.Auth.logger = logHandle,
+            Handlers.Database.Auth.findUserByLogin = DA.findUserByLogin pginfo, --нужен для авторизации. там проверка
+            Handlers.Database.Auth.validPassword = DA.validPassword pginfo,
+            Handlers.Database.Auth.client = client,
+            Handlers.Database.Auth.validCopyRight = DA.validCopyRight pginfo
           }
       baseImageHandle =
         Handlers.Database.Image.Handle
@@ -110,6 +127,60 @@ makeSetup cfg = do
           Handlers.Web.User.mkGoodResponse = WU.mkGoodResponse,
           Handlers.Web.User.getBody = WU.getBody
         }
+      baseNewsHandle =
+        Handlers.Database.News.Handle
+          { Handlers.Database.News.logger = logHandle,
+            Handlers.Database.News.userOffset = 0,
+            Handlers.Database.News.userLimit = maxBound,
+            Handlers.Database.News.getTime = getCurrentTime,
+            Handlers.Database.News.findUserByLogin = DA.findUserByLogin pginfo,
+            Handlers.Database.News.sortColumnNews = DataNews,
+            Handlers.Database.News.sortOrderNews = Descending,
+            Handlers.Database.News.findSubString = Nothing,
+            Handlers.Database.News.filtersNews = [],
+            Handlers.Database.News.findCategoryByLabel = DA.findCategoryByLabel pginfo,
+            Handlers.Database.News.putNews = DA.putNews pginfo,
+            Handlers.Database.News.findNewsByTitle = DA.findNewsByTitle pginfo,
+            Handlers.Database.News.pullAllNews = DA.pullAllNews pginfo (cLimitData cfg),
+            Handlers.Database.News.editNews = DA.editNews pginfo
+          }
+--
+-- data Handle m = Handle
+--   { 
+--     logger :: Handlers.Logger.Handle m,
+--     userOffset :: Int,
+--     findNewsByTitle :: Title -> m (Either SomeException (Maybe News)),
+--     getTime :: m UTCTime,
+--     putNews :: NewsInternal -> UTCTime -> m (Either SomeException Success),
+--     editNews :: Title -> UTCTime -> NewsEditInternal -> m (Either SomeException Success),
+--     findUserByLogin :: Login -> m (Either SomeException (Maybe User)),
+--     findCategoryByLabel :: Label -> m (Either SomeException (Maybe Category)),
+--     pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either SomeException [NewsOut]),
+--     sortColumnNews :: ColumnType,
+--     sortOrderNews :: SortOrder,
+--     findSubString :: Maybe Find,
+--     filtersNews :: [FilterItem],
+--     validCopyRight :: Login -> Title -> m (Either SomeException Bool),
+--     validPassword :: Login -> PasswordUser -> m (Either SomeException Bool),
+--     userLimit :: Int
+--     -- makeHashPassword :: PasswordUser -> UTCTime -> HashPasswordUser,
+--     -- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
+--     -- findUserByLogin :: Login -> m (Either SomeException (Maybe User)),
+--     -- putUser :: UserInternal -> UTCTime -> m (Either SomeException Success)
+--   }        
+      newsHandle = Handlers.Web.News.Handle {
+          Handlers.Web.News.logger = logHandle,
+          Handlers.Web.News.base = baseNewsHandle,
+          Handlers.Web.News.auth = authHandle,
+          Handlers.Web.News.client = client,
+          Handlers.Web.News.response400 = WU.response400,
+          Handlers.Web.News.response500 = WU.response500,
+          Handlers.Web.News.response200 = WU.response200,
+          Handlers.Web.News.response404 = WU.response404,
+          Handlers.Web.News.response403 = WU.response403,
+          Handlers.Web.News.mkGoodResponse = WU.mkGoodResponse,
+          Handlers.Web.News.getBody = WU.getBody
+        }
       baseHandle =
         Handlers.Database.Base.Handle
           { Handlers.Database.Base.logger = logHandle,
@@ -142,12 +213,8 @@ makeSetup cfg = do
             Handlers.Web.Base.connectionString = pginfo, 
             Handlers.Web.Base.logger = logHandle,
             Handlers.Web.Base.base = baseHandle,
-            Handlers.Web.Base.client =
-              Handlers.Web.Base.Client
-                { Handlers.Web.Base.clientAdminToken = Nothing,
-                  Handlers.Web.Base.clientPublisherToken = Nothing,
-                  Handlers.Web.Base.author = Nothing
-                },
+            Handlers.Web.Base.auth = authHandle,
+            Handlers.Web.Base.client = client,
             Handlers.Web.Base.response404 = WU.response404,
             Handlers.Web.Base.response200 = WU.response200,
             Handlers.Web.Base.response403 = WU.response403,
@@ -159,6 +226,7 @@ makeSetup cfg = do
             Handlers.Web.Base.getBody = WU.getBody,
             Handlers.Web.Base.user = userHandle,
             Handlers.Web.Base.category = categoryHandle,
+            Handlers.Web.Base.news = newsHandle,
             Handlers.Web.Base.image = imageHandle
           }
   pure handle

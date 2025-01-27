@@ -7,11 +7,14 @@ import Data.Text (Text)
 import qualified Handlers.Logger
 import Network.Wai (Request, Response)
 import qualified Handlers.Database.News
+import qualified Handlers.Database.Auth
 
 data Handle m = Handle
   { 
     logger :: Handlers.Logger.Handle m,
     base :: Handlers.Database.News.Handle m,
+    auth :: Handlers.Database.Auth.Handle m,
+    client :: Handlers.Database.Auth.Client,
     getBody :: Request -> m B.ByteString,
     response400 :: Text -> Response,
     response200 :: Response,
@@ -20,22 +23,3 @@ data Handle m = Handle
     response404 :: Response,
     mkGoodResponse :: Builder -> Response
   }
--- data Handle m = Handle
---   { connectionString :: ConnectionString, 
---     logger :: Handlers.Logger.Handle m,
---     base :: Handlers.Database.Base.Handle m,
---     user :: Handlers.Web.User.Handle m,
---     category :: Handlers.Web.Category.Handle m,
---     image :: Handlers.Web.Image.Handle m,
---     news :: Handlers.Web.News.Handle m,
---     client :: Client,
---     getBody :: Request -> m B.ByteString,
---     response404 :: Response,
---     response200 :: Response,
---     response403 :: Response,
---     response400 :: Text -> Response,
---     response500 :: Response,
---     mkGoodResponse :: Builder -> Response,
---     mkResponseForImage :: Image -> Response,
---     response404WithImage :: Response
---   }

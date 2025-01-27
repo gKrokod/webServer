@@ -18,6 +18,7 @@ type Author = Login
 updateNews :: (Monad m) => Author -> Handle m -> Request -> m Response
 updateNews author_ h req = do
   let logHandle = logger h
+      authHandle = auth h
       baseHandle = base h
   body <- webToEditNews <$> getBody h req
   case body of
@@ -25,7 +26,7 @@ updateNews author_ h req = do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
       pure (response400 h . T.pack $ e)
     Right (EditNewsFromWeb {..}) -> do
-      checkCopyright <- getCopyRight baseHandle author_ (MkTitle title)
+      checkCopyright <- getCopyRight authHandle author_ (MkTitle title)
       case checkCopyright of
         Right Valid -> do
           tryEditNews <-

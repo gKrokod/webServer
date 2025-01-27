@@ -5,14 +5,10 @@ import Control.Exception (SomeException)
 import Data.Time (UTCTime)
 import qualified Handlers.Logger
 import Schema (User (..))
-import Types (Login (..), PasswordUser (..))
-import Data.Time (UTCTime)
-import qualified Handlers.Logger
-import Handlers.Web.Category.Types (CategoryInternal (..))
-import Handlers.Web.User.Types (UserInternal (..))
+import Types (Login (..))
 import Handlers.Web.News.Types (NewsEditInternal (..), NewsInternal (..), NewsOut (..))
-import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), Image (..), News (..), SortOrder (..), User (..))
-import Types (Label (..), Login (..), NumberImage (..), PasswordUser (..), Title (..))
+import Schema (Category (..), ColumnType (..), FilterItem (..), Find (..), News (..), SortOrder (..))
+import Types (Label (..),  Title (..))
 
 
 data Handle m = Handle
@@ -30,8 +26,8 @@ data Handle m = Handle
     sortOrderNews :: SortOrder,
     findSubString :: Maybe Find,
     filtersNews :: [FilterItem],
-    validCopyRight :: Login -> Title -> m (Either SomeException Bool),
-    validPassword :: Login -> PasswordUser -> m (Either SomeException Bool),
+    -- validCopyRight :: Login -> Title -> m (Either SomeException Bool),
+    -- validPassword :: Login -> PasswordUser -> m (Either SomeException Bool),
     userLimit :: Int
     -- makeHashPassword :: PasswordUser -> UTCTime -> HashPasswordUser,
     -- pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),
