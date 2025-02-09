@@ -13,6 +13,7 @@ import Handlers.Database.Api (getPrivilege, getResultValid)
 import qualified Handlers.Logger
 import Handlers.Web.Api (endPointCategories, endPointImages, endPointNews, endPointUsers)
 import Handlers.Web.Base (Handle (..))
+import qualified Handlers.Web.News
 import Handlers.Database.Auth (Client (..))
 import Network.Wai (Request, Response, rawPathInfo, requestHeaders)
 import Schema (IsValidPassword (..))
@@ -22,11 +23,12 @@ import Web.Query (headersToLoginAndPassword)
 doAuthorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
 doAuthorization h req = do
   let logHandle = logger h
+      newsHandle = news h
   userRole <- getClient h req
   case userRole of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure . Left $ response403 h
+      pure . Left $ Handlers.Web.News.response403 newsHandle
     Right clientRole -> do
       let h' = h {client = clientRole}
       pure $ Right h'
@@ -34,6 +36,7 @@ doAuthorization h req = do
 doLogic :: (Monad m) => Handle m -> Request -> m Response
 doLogic h req = do
   let logHandle = logger h
+      newsHandle = news h
   case rawPathInfo req of
     path
       | B.isPrefixOf "/news" path -> endPointNews h req
@@ -42,7 +45,7 @@ doLogic h req = do
       | B.isPrefixOf "/images" path -> endPointImages h req
       | otherwise -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-          pure $ response404 h
+          pure $ Handlers.Web.News.response404 newsHandle
 
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
