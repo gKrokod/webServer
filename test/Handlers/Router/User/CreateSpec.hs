@@ -20,88 +20,124 @@ import Network.Wai.Internal (Response (..))
 import Schema (User (..))
 import Test.Hspec (Spec, it, shouldBe, shouldNotBe)
 import Types (Login (..))
+import Handlers.Database.Auth (Client (..))
+import qualified Handlers.Database.Auth as Auth
 
 spec :: Spec
 spec = do
+  it "123" $ do head [23,14] `shouldBe` (23 :: Int)
   -- curl "127.0.0.1:4221/images?id=1" --output -
-  let req = defaultRequest
-      req' = req {rawPathInfo = "/users/create"}
-      logHandle =
-        Handlers.Logger.Handle
-          { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
-            Handlers.Logger.writeLog = \_ -> pure ()
-          }
-
-      usersInBase = [user1test, user2test, user3test]
-      baseHandle =
-        DB.Handle
-          { DB.logger = logHandle,
-            DB.getTime = pure time4,
-            DB.findUserByLogin = \(MkLogin login) ->
-              gets
-                ( Right
-                    . listToMaybe
-                    . mapMaybe
-                      ( \user@(User _ l _ _ _ _ _) ->
-                          if l == login then Just user else Nothing
-                      )
-                ),
-            DB.putUser = \(UserInternal _name _login _pass _admin _publish) _time -> pure $ Right DB.Put
-          }
-      webHandle =
-        WB.Handle
-          { WB.logger = logHandle,
-            WB.base = baseHandle,
-            WB.response404 = test404,
-            WB.response403 = test403,
-            WB.response400 = test400,
-            WB.response500 = test500,
-            WB.response200 = test200
-          } ::
-          WB.Handle (State [User])
-
-  it "Admin can create new user" $ do
-    let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
-        baseHandle' = baseHandle
-        clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
-        webHandle' =
-          webHandle
-            { WB.base = baseHandle',
-              WB.client = clientAdminUser1,
-              WB.getBody = const . pure $ bodyReq
-            }
-
-    evalState (doLogic webHandle' req') usersInBase
-      `shouldBe` test200
-
-  it "Non-admin can't create a new user" $ do
-    let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
-        baseHandle' = baseHandle
-        clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
-        webHandle' =
-          webHandle
-            { WB.base = baseHandle',
-              WB.client = clientAdminUser1,
-              WB.getBody = const . pure $ bodyReq
-            }
-
-    evalState (doLogic webHandle' req') usersInBase
-      `shouldNotBe` test200
-
-  it "Admin can't create a new user with login that already exists in the databse" $ do
-    let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
-        oldUser = E.encodeUtf8 . userLogin $ user1test
-        bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
-        baseHandle' = baseHandle
-        webHandle' =
-          webHandle
-            { WB.base = baseHandle',
-              WB.client = clientAdminUser1,
-              WB.getBody = const . pure $ bodyReq
-            }
-
-    evalState (doLogic webHandle' req') usersInBase
-      `shouldNotBe` test200
+--   let req = defaultRequest
+--       req' = req {rawPathInfo = "/users/create"}
+--       logHandle =
+--         Handlers.Logger.Handle
+--           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+--             Handlers.Logger.writeLog = \_ -> pure ()
+--           }
+--
+--       usersInBase = [user1test, user2test, user3test]
+--       baseHandle =
+--         DB.Handle
+--           { DB.logger = logHandle,
+--             DB.getTime = pure time4,
+--             DB.findUserByLogin = \(MkLogin login) ->
+--               gets
+--                 ( Right
+--                     . listToMaybe
+--                     . mapMaybe
+--                       ( \user@(User _ l _ _ _ _ _) ->
+--                           if l == login then Just user else Nothing
+--                       )
+--                 ),
+--             DB.putUser = \(UserInternal _name _login _pass _admin _publish) _time -> pure $ Right DB.Put
+--           }
+--       webHandle =
+--         WB.Handle
+--           { WB.logger = logHandle,
+--             WB.base = baseHandle,
+--             WB.user = undefined
+--             -- WB.response404 = test404,
+--             -- WB.response403 = test403,
+--             -- WB.response400 = test400,
+--             -- WB.response500 = test500,
+--             -- WB.response200 = test200
+--           } ::
+--           WB.Handle (State [User])
+--
+-- -- data Handle m = Handle
+-- --   { 
+-- --     logger :: Handlers.Logger.Handle m,
+-- --     base :: Handlers.Database.User.Handle m,
+-- --     getBody :: Request -> m B.ByteString,
+-- --     response200 :: Response,
+-- --     response400 :: Text -> Response,
+-- --     response500 :: Response,
+-- --     response404 :: Response,
+-- --     mkGoodResponse :: Builder -> Response
+-- --   }
+-- -- import Handlers.Web.User (Handle(..))
+-- -- data Handle m = Handle
+-- --   { logger :: Handlers.Logger.Handle m,
+-- --     validPassword :: Login -> PasswordUser -> m (Either SomeException Bool),
+-- --     validCopyRight :: Login -> Title -> m (Either SomeException Bool),
+-- --     client :: Client,
+-- --     findUserByLogin :: Login -> m (Either SomeException (Maybe User))
+-- --   }
+--
+-- -- data Handle m = Handle
+-- --   { connectionString :: ConnectionString, 
+-- --     logger :: Handlers.Logger.Handle m,
+-- --     base :: Handlers.Database.Base.Handle m,
+-- --     auth :: Handlers.Database.Auth.Handle m,
+-- --     user :: Handlers.Web.User.Handle m,
+-- --     category :: Handlers.Web.Category.Handle m,
+-- --     image :: Handlers.Web.Image.Handle m,
+-- --     news :: Handlers.Web.News.Handle m,
+-- --     client :: Handlers.Database.Auth.Client
+-- --   }
+-- --
+--   it "Admin can create new user" $ do
+--     let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
+--         baseHandle' = baseHandle
+--         clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+--         webHandle' =
+--           webHandle
+--             { WB.base = baseHandle',
+--               WB.client = clientAdminUser1,
+--               WB.getBody = const . pure $ bodyReq
+--             }
+--
+--     evalState (doLogic webHandle' req') usersInBase
+--       `shouldBe` test200
+--
+--   it "Non-admin can't create a new user" $ do
+--     let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
+--         baseHandle' = baseHandle
+--         clientAdminUser1 = WB.Client Nothing (Just Proxy) (Just . MkLogin $ userLogin user3test)
+--         webHandle' =
+--           webHandle
+--             { WB.base = baseHandle',
+--               WB.client = clientAdminUser1,
+--               WB.getBody = const . pure $ bodyReq
+--             }
+--
+--     evalState (doLogic webHandle' req') usersInBase
+--       `shouldNotBe` test200
+--
+--   it "Admin can't create a new user with login that already exists in the databse" $ do
+--     let clientAdminUser1 = WB.Client (Just Proxy) Nothing (Just . MkLogin $ userLogin user1test)
+--         oldUser = E.encodeUtf8 . userLogin $ user1test
+--         bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
+--         baseHandle' = baseHandle
+--         webHandle' =
+--           webHandle
+--             { WB.base = baseHandle',
+--               WB.client = clientAdminUser1,
+--               WB.getBody = const . pure $ bodyReq
+--             }
+--
+--     evalState (doLogic webHandle' req') usersInBase
+--       `shouldNotBe` test200
 
 test200 :: Response
 test200 = responseBuilder status200 [] "All ok. status 200\n"

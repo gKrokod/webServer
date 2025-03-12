@@ -2,7 +2,6 @@ module Handlers.Database.Category (Handle (..)) where
 
 import Handlers.Database.Base (Offset (..), Limit(..), Success(..))
 import Control.Exception (SomeException)
--- import Data.Time (UTCTime)
 import qualified Handlers.Logger
 import Handlers.Web.Category.Types (CategoryInternal (..))
 import Schema (Category(..))
