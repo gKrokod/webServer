@@ -4,7 +4,6 @@ import qualified Handlers.Web.Image
 
 import Handlers.Logger (logMessage, Log (Warning))
 import Handlers.Web.Base (Handle (..))
--- import Handlers.Web.Base (Handle (..), HandleImage (..))
 import Handlers.Web.Image.Get (existingImages)
 import Network.Wai (Request, Response, rawPathInfo)
 
