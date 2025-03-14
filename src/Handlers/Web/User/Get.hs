@@ -2,7 +2,6 @@ module Handlers.Web.User.Get (existingUsers) where
 
 import Handlers.Database.Api (getAllUsers)
 import qualified Handlers.Logger
--- import Handlers.Web.Base (HandleUser (..))
 import Handlers.Web.User (Handle (..))
 import Network.Wai (Request, Response)
 import Web.DTO.User (userToWeb)

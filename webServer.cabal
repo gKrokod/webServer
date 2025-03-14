@@ -166,7 +166,6 @@ test-suite webServer-test
       Handlers.Router.Category.CreateSpec
       Handlers.Router.Category.EditSpec
       Handlers.Router.Category.GetSpec
-      Handlers.Router.Category.PaginateSpec
       Handlers.Router.Image.GetSpec
       Handlers.Router.News.CreateSpec
       Handlers.Router.News.EditSpec
@@ -178,7 +177,6 @@ test-suite webServer-test
       Handlers.Router.News.SortSpec
       Handlers.Router.User.CreateSpec
       Handlers.Router.User.GetSpec
-      Handlers.Router.User.PaginateSpec
       Paths_webServer
   autogen-modules:
       Paths_webServer
