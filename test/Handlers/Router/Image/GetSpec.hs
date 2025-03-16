@@ -23,7 +23,6 @@ import qualified Web.Utils as WU
 
 spec :: Spec
 spec = do
---   -- curl "127.0.0.1:4221/images?id=1" --output -
   let req = defaultRequest
       req' = req {rawPathInfo = "/images", queryString = [("id", Just "1")]}
       imagesInBase = [image1, image2, image3]

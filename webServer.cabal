@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -169,12 +169,7 @@ test-suite webServer-test
       Handlers.Router.Image.GetSpec
       Handlers.Router.News.CreateSpec
       Handlers.Router.News.EditSpec
-      Handlers.Router.News.FilterSpec
       Handlers.Router.News.GetSpec
-      Handlers.Router.News.PaginateSpec
-      Handlers.Router.News.SearchSpec
-      Handlers.Router.News.SettingsSpec
-      Handlers.Router.News.SortSpec
       Handlers.Router.User.CreateSpec
       Handlers.Router.User.GetSpec
       Paths_webServer
