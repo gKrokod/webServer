@@ -3,8 +3,8 @@ module Handlers.Database.AuthorizationSpec (spec) where
 import Control.Monad.State (State, evalState, gets)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Database.Data.FillTables (user1test, user2test, user3test)
-import Handlers.Database.Authorization (getPrivilege)
 import qualified Handlers.Database.Auth
+import Handlers.Database.Authorization (getPrivilege)
 import qualified Handlers.Logger
 import Schema (User (..))
 import Test.Hspec
@@ -24,7 +24,7 @@ spec = do
             Handlers.Database.Auth.validPassword = \_ _ -> pure $ Right False,
             Handlers.Database.Auth.client = Handlers.Database.Auth.Client Nothing Nothing Nothing,
             Handlers.Database.Auth.validCopyRight = \_ _ -> pure $ Right False,
-            Handlers.Database.Auth.findUserByLogin = 
+            Handlers.Database.Auth.findUserByLogin =
               \(MkLogin login) ->
                 gets
                   ( Right
@@ -35,7 +35,7 @@ spec = do
                         )
                   )
           } ::
-            Handlers.Database.Auth.Handle (State [User])
+          Handlers.Database.Auth.Handle (State [User])
 
   it "Get no privilege for a user that is not in the database" $ do
     evalState (getPrivilege authHandle (MkLogin "NoUser")) usersInBase

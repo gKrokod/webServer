@@ -7,7 +7,7 @@ import Control.Monad (when)
 import Data.Either (isLeft)
 import qualified Data.Text as T
 import Handlers.Database.Base (Success (..))
-import Handlers.Database.User (Handle(..))
+import Handlers.Database.User (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
 import Handlers.Web.Base (UserInternal (..))
 import Types (Login (..), PasswordUser (..))

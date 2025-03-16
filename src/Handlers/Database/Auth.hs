@@ -1,11 +1,12 @@
 {-# LANGUAGE DataKinds #-}
 
-module Handlers.Database.Auth (Handle (..), Client (..), ClientRole(..)) where
+module Handlers.Database.Auth (Handle (..), Client (..), ClientRole (..)) where
+
 import Control.Exception (SomeException)
-import qualified Handlers.Logger
-import Schema ( User (..))
-import Types ( Login (..),  PasswordUser (..), Title (..))
 import Data.Proxy (Proxy (..))
+import qualified Handlers.Logger
+import Schema (User (..))
+import Types (Login (..), PasswordUser (..), Title (..))
 
 data ClientRole = AdminRole | PublisherRole
   deriving (Eq, Show)

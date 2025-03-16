@@ -1,10 +1,10 @@
 module Handlers.Database.Category (Handle (..)) where
 
-import Handlers.Database.Base (Offset (..), Limit(..), Success(..))
 import Control.Exception (SomeException)
+import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
 import qualified Handlers.Logger
 import Handlers.Web.Category.Types (CategoryInternal (..))
-import Schema (Category(..))
+import Schema (Category (..))
 import Types (Label)
 
 data Handle m = Handle

@@ -1,9 +1,8 @@
 module Handlers.Web.Image.ImageApi (endPointImages) where
 
-import qualified Handlers.Web.Image
-
-import Handlers.Logger (logMessage, Log (Warning))
+import Handlers.Logger (Log (Warning), logMessage)
 import Handlers.Web.Base (Handle (..))
+import qualified Handlers.Web.Image
 import Handlers.Web.Image.Get (existingImages)
 import Network.Wai (Request, Response, rawPathInfo)
 
@@ -14,5 +13,5 @@ endPointImages h req = do
   case rawPathInfo req of
     "/images" -> existingImages imageHandle req
     _ -> do
-      logMessage logHandle  Warning "End point not found"
+      logMessage logHandle Warning "End point not found"
       pure $ Handlers.Web.Image.response404 imageHandle

@@ -1,10 +1,10 @@
 module Handlers.Web.User.UserApi (endPointUsers) where
 
-import qualified Handlers.Database.User
-import qualified Handlers.Web.User
-import Handlers.Logger (logMessage, Log(Warning))
-import Handlers.Web.Base (Handle (..))
 import Handlers.Database.Auth (Client (..))
+import qualified Handlers.Database.User
+import Handlers.Logger (Log (Warning), logMessage)
+import Handlers.Web.Base (Handle (..))
+import qualified Handlers.Web.User
 import Handlers.Web.User.Create (createUser)
 import Handlers.Web.User.Get (existingUsers)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
@@ -27,7 +27,7 @@ endPointUsers h req = do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPaginate queryLimit
       let newBaseUserHandle = baseUserHandle {Handlers.Database.User.userOffset = userOffset, Handlers.Database.User.userLimit = userLimit}
-      existingUsers (userHandle {Handlers.Web.User.base = newBaseUserHandle} ) req
+      existingUsers (userHandle {Handlers.Web.User.base = newBaseUserHandle}) req
     _ -> do
       logMessage logHandle Warning "End point Users not found"
       pure $ Handlers.Web.User.response404 userHandle

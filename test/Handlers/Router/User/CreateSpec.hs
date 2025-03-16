@@ -7,8 +7,11 @@ import Data.Binary.Builder as BU (Builder)
 import Data.Maybe (listToMaybe, mapMaybe)
 import qualified Data.Text.Encoding as E
 import Database.Data.FillTables (time4, user1test, user2test, user3test)
+import Handlers.Database.Base (Success (..))
+import qualified Handlers.Database.User
 import qualified Handlers.Logger
 import Handlers.Web.Base (UserInternal (..))
+import qualified Handlers.Web.User (Handle (..))
 import Handlers.Web.User.Create (createUser)
 import Network.HTTP.Types (status200)
 import Network.Wai (defaultRequest, rawPathInfo, responseBuilder)
@@ -16,10 +19,7 @@ import Network.Wai.Internal (Response (..))
 import Schema (User (..))
 import Test.Hspec (Spec, it, shouldBe, shouldNotBe)
 import Types (Login (..))
-import qualified Handlers.Database.User
-import qualified Handlers.Web.User (Handle(..))
 import qualified Web.Utils as WU
-import Handlers.Database.Base ( Success (..))
 
 spec :: Spec
 spec = do
@@ -30,7 +30,7 @@ spec = do
         Handlers.Logger.Handle
           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
             Handlers.Logger.writeLog = \_ -> pure ()
-            }
+          }
       baseUserHandle =
         Handlers.Database.User.Handle
           { Handlers.Database.User.logger = logHandle,
@@ -41,27 +41,28 @@ spec = do
             Handlers.Database.User.pullAllUsers = \_ _ -> pure $ Right [],
             Handlers.Database.User.findUserByLogin =
               \(MkLogin login) ->
-              gets
-                ( Right
-                    . listToMaybe
-                    . mapMaybe
-                      ( \user@(User _ l _ _ _ _ _) ->
-                          if l == login then Just user else Nothing
-                      )
-                ),
+                gets
+                  ( Right
+                      . listToMaybe
+                      . mapMaybe
+                        ( \user@(User _ l _ _ _ _ _) ->
+                            if l == login then Just user else Nothing
+                        )
+                  ),
             Handlers.Database.User.putUser = \(UserInternal _name _login _pass _admin _publish) _time -> pure $ Right Put
           }
-      userHandle = Handlers.Web.User.Handle {
-          Handlers.Web.User.logger = logHandle,
-          Handlers.Web.User.base = baseUserHandle,
-          Handlers.Web.User.response400 = WU.response400,
-          Handlers.Web.User.response500 = WU.response500,
-          Handlers.Web.User.response200 = WU.response200,
-          Handlers.Web.User.response404 = WU.response404,
-          Handlers.Web.User.mkGoodResponse = testBuilder,
-          Handlers.Web.User.getBody = \_ -> pure "" 
-        } :: 
-         Handlers.Web.User.Handle (State [User])
+      userHandle =
+        Handlers.Web.User.Handle
+          { Handlers.Web.User.logger = logHandle,
+            Handlers.Web.User.base = baseUserHandle,
+            Handlers.Web.User.response400 = WU.response400,
+            Handlers.Web.User.response500 = WU.response500,
+            Handlers.Web.User.response200 = WU.response200,
+            Handlers.Web.User.response404 = WU.response404,
+            Handlers.Web.User.mkGoodResponse = testBuilder,
+            Handlers.Web.User.getBody = \_ -> pure ""
+          } ::
+          Handlers.Web.User.Handle (State [User])
 
   it "Can create new user" $ do
     let bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"Dager\",\"name\":\"Petr\",\"password\":\"qwerty\"}"
@@ -72,8 +73,7 @@ spec = do
       `shouldBe` test200
 
   it "Can't create a new user with login that already exists in the databse" $ do
-    let 
-        oldUser = E.encodeUtf8 . userLogin $ user1test
+    let oldUser = E.encodeUtf8 . userLogin $ user1test
         bodyReq = "{\"isAdmin\":true,\"isPublisher\":true,\"login\":\"" <> oldUser <> "\",\"name\":\"\",\"password\":\"qwerty\"}"
         userHandle' =
           userHandle {Handlers.Web.User.getBody = const . pure $ bodyReq}

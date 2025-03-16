@@ -1,4 +1,3 @@
--- {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE DataKinds #-}
 
 module Handlers.Web.User (Handle (..)) where
@@ -6,13 +5,12 @@ module Handlers.Web.User (Handle (..)) where
 import Data.Binary.Builder (Builder)
 import qualified Data.ByteString as B
 import Data.Text (Text)
+import qualified Handlers.Database.User
 import qualified Handlers.Logger
 import Network.Wai (Request, Response)
-import qualified Handlers.Database.User
 
 data Handle m = Handle
-  { 
-    logger :: Handlers.Logger.Handle m,
+  { logger :: Handlers.Logger.Handle m,
     base :: Handlers.Database.User.Handle m,
     getBody :: Request -> m B.ByteString,
     response200 :: Response,

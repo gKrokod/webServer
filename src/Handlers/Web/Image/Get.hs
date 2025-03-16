@@ -3,7 +3,7 @@ module Handlers.Web.Image.Get (existingImages) where
 import Data.ByteString.Char8 as BC (readInt)
 import Handlers.Database.Api (getImage)
 import qualified Handlers.Logger
-import Handlers.Web.Image (Handle(..))
+import Handlers.Web.Image (Handle (..))
 import Network.Wai (Request, Response, queryString)
 import Types (NumberImage (..))
 

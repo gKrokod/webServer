@@ -4,21 +4,20 @@ module Handlers.Router.User.GetSpec (spec) where
 
 import Control.Monad.State (State, evalState, get)
 import Data.Binary.Builder as BU (Builder)
-import Database.Data.FillTables (user1test, user2test, user3test, time4)
+import Database.Data.FillTables (time4, user1test, user2test, user3test)
+import Handlers.Database.Base (Success (..))
 import qualified Handlers.Database.Base as DB
+import qualified Handlers.Database.User
 import qualified Handlers.Logger
+import Handlers.Web.User (Handle (..))
+import Handlers.Web.User.Get (existingUsers)
 import Network.HTTP.Types (status200)
 import Network.Wai (defaultRequest, queryString, rawPathInfo, responseBuilder)
 import Network.Wai.Internal (Response (..))
-import Handlers.Web.User.Get (existingUsers)
 import Schema (User (..))
 import Test.Hspec (Spec, it, shouldBe)
 import Web.DTO.User (userToWeb)
 import qualified Web.Utils as WU
-import Handlers.Database.Base ( Success (..))
-
-import Handlers.Web.User (Handle(..))
-import qualified Handlers.Database.User
 
 spec :: Spec
 spec = do
@@ -29,7 +28,7 @@ spec = do
         Handlers.Logger.Handle
           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
             Handlers.Logger.writeLog = \_ -> pure ()
-            }
+          }
       baseUserHandle =
         Handlers.Database.User.Handle
           { Handlers.Database.User.logger = logHandle,
@@ -41,26 +40,26 @@ spec = do
             Handlers.Database.User.findUserByLogin = \_ -> pure $ Right Nothing,
             Handlers.Database.User.putUser = \_ _ -> pure $ Right Put
           }
-      userHandle = Handlers.Web.User.Handle {
-          Handlers.Web.User.logger = logHandle,
-          Handlers.Web.User.base = baseUserHandle,
-          Handlers.Web.User.response400 = WU.response400,
-          Handlers.Web.User.response500 = WU.response500,
-          Handlers.Web.User.response200 = WU.response200,
-          Handlers.Web.User.response404 = WU.response404,
-          Handlers.Web.User.mkGoodResponse = testBuilder,
-          Handlers.Web.User.getBody = \_ -> pure "" 
-        } :: 
-         Handlers.Web.User.Handle (State [User])
+      userHandle =
+        Handlers.Web.User.Handle
+          { Handlers.Web.User.logger = logHandle,
+            Handlers.Web.User.base = baseUserHandle,
+            Handlers.Web.User.response400 = WU.response400,
+            Handlers.Web.User.response500 = WU.response500,
+            Handlers.Web.User.response200 = WU.response200,
+            Handlers.Web.User.response404 = WU.response404,
+            Handlers.Web.User.mkGoodResponse = testBuilder,
+            Handlers.Web.User.getBody = \_ -> pure ""
+          } ::
+          Handlers.Web.User.Handle (State [User])
 
   it "Can get a list of users" $ do
     evalState (existingUsers userHandle req') usersInBase
       `shouldBe` (testBuilder . userToWeb $ usersInBase)
-      
+
   it "Client can paginate" $ do
-    let
-      baseUserHandle' = baseUserHandle {Handlers.Database.User.userOffset = 1, Handlers.Database.User.userLimit = 1}
-      userHandle' = userHandle {Handlers.Web.User.base = baseUserHandle'}
+    let baseUserHandle' = baseUserHandle {Handlers.Database.User.userOffset = 1, Handlers.Database.User.userLimit = 1}
+        userHandle' = userHandle {Handlers.Web.User.base = baseUserHandle'}
     evalState (existingUsers userHandle' req') usersInBase
       `shouldBe` (testBuilder . userToWeb $ take 1 $ drop 1 usersInBase)
 

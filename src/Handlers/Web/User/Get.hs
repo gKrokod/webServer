@@ -10,10 +10,9 @@ existingUsers :: (Monad m) => Handle m -> Request -> m Response
 existingUsers h _req = do
   let logHandle = logger h
       baseHandle = base h
-  getUsers <- getAllUsers baseHandle 
+  getUsers <- getAllUsers baseHandle
   case getUsers of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
       pure $ response500 h
     Right users -> pure . mkGoodResponse h . userToWeb $ users
-

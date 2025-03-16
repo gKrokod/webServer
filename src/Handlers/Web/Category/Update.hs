@@ -6,8 +6,8 @@ module Handlers.Web.Category.Update (updateCategory) where
 import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import Handlers.Database.Api (updateCategoryBase)
-import qualified Handlers.Logger
 import Handlers.Database.Auth (ClientRole (..))
+import qualified Handlers.Logger
 import Handlers.Web.Category (Handle (..))
 import Handlers.Web.Category.Types (CategoryInternal (..))
 import Network.Wai (Request, Response)

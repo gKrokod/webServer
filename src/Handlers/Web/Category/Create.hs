@@ -6,8 +6,8 @@ module Handlers.Web.Category.Create (createCategory) where
 import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import Handlers.Database.Api (createCategoryBase)
-import qualified Handlers.Logger
 import Handlers.Database.Auth (ClientRole (..))
+import qualified Handlers.Logger
 import Handlers.Web.Category (Handle (..))
 import Handlers.Web.Category.Types (CategoryInternal (..))
 import Network.Wai (Request, Response)

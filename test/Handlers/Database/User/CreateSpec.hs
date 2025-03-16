@@ -2,7 +2,7 @@ module Handlers.Database.User.CreateSpec where
 
 import Control.Monad.State (State, execState, modify)
 import Database.Data.FillTables (time4, user1test, user2test, user3test)
-import Handlers.Database.Base ( Success (..))
+import Handlers.Database.Base (Success (..))
 import Handlers.Database.User (Handle (..))
 import Handlers.Database.User.Create (createUserBase)
 import qualified Handlers.Logger
@@ -28,11 +28,12 @@ spec = do
             Handlers.Database.User.makeHashPassword = \_ _ -> "",
             Handlers.Database.User.pullAllUsers = \_ _ -> pure $ Right [],
             Handlers.Database.User.findUserByLogin = \_ -> pure $ Right $ Just user1test,
-            Handlers.Database.User.putUser = 
+            Handlers.Database.User.putUser =
               \(UserInternal (MkName name) (MkLogin login) _pass admin publish) time -> do
                 modify (User name login undefined time admin publish undefined :)
                 pure $ Right Put
-          } :: Handlers.Database.User.Handle (State [User])
+          } ::
+          Handlers.Database.User.Handle (State [User])
 
   it "Sucess: user does not exdfdfist in the database" $ do
     let baseUserHandle' = baseUserHandle {findUserByLogin = const (pure $ Right Nothing)}

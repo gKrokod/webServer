@@ -6,9 +6,9 @@ module Handlers.Web.User.Create (createUser) where
 import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import Handlers.Database.Api (createUserBase)
-import qualified Handlers.Logger
 import Handlers.Database.Auth (ClientRole (..))
-import Handlers.Web.User (Handle(..))
+import qualified Handlers.Logger
+import Handlers.Web.User (Handle (..))
 import Handlers.Web.User.Types (UserInternal (..))
 import Network.Wai (Request, Response)
 import Types (Login (..), Name (..), PasswordUser (..))

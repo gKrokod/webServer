@@ -6,7 +6,7 @@ import Control.Exception (displayException)
 import Control.Monad (when)
 import Data.Either (isLeft)
 import qualified Data.Text as T
-import Handlers.Database.Base ( Success (..))
+import Handlers.Database.Base (Success (..))
 import Handlers.Database.Category (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
 import Handlers.Web.Base (CategoryInternal (..))

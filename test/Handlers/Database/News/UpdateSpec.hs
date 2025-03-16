@@ -2,15 +2,14 @@ module Handlers.Database.News.UpdateSpec where
 
 import Control.Monad.State (State, evalState, get)
 import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9, news1, news2, news3, news4, time4, user1test, user2test, user3test)
-import Handlers.Database.News.Update (updateNewsBase)
-import qualified Handlers.Logger
 import Handlers.Database.Base (Success (..))
 import Handlers.Database.News (Handle (..))
+import Handlers.Database.News.Update (updateNewsBase)
+import qualified Handlers.Logger
 import Handlers.Web.Base (NewsEditInternal (..))
-import Schema (Category (..), News (..), User (..))
+import Schema (Category (..), ColumnType (..), News (..), SortOrder (..), User (..))
 import Test.Hspec
 import Types (Label (..), Login (..), Title (..))
-import Schema (ColumnType (..), SortOrder (..))
 
 spec :: Spec
 spec = do
@@ -19,17 +18,17 @@ spec = do
       usersInBase = [user1test, user2test, user3test]
       base = (newsInBase, usersInBase, categoriesInBase)
       logHandle =
-          Handlers.Logger.Handle
-            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
-              Handlers.Logger.writeLog = \_ -> pure ()
-            }
+        Handlers.Logger.Handle
+          { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+            Handlers.Logger.writeLog = \_ -> pure ()
+          }
       baseNewsHandle =
         Handlers.Database.News.Handle
           { Handlers.Database.News.logger = logHandle,
             Handlers.Database.News.userOffset = 0,
             Handlers.Database.News.userLimit = maxBound,
             Handlers.Database.News.getTime = pure time4,
-            Handlers.Database.News.findUserByLogin = 
+            Handlers.Database.News.findUserByLogin =
               \(MkLogin login) -> do
                 (_n, u, _c) <- get
                 let users = map userLogin u
@@ -53,7 +52,7 @@ spec = do
                       else Nothing,
             Handlers.Database.News.putNews =
               \_ _ -> pure $ Right Put,
-            Handlers.Database.News.findNewsByTitle = 
+            Handlers.Database.News.findNewsByTitle =
               \(MkTitle title) -> do
                 (n, _u, _c) <- get
                 let news' = map newsTitle n
@@ -63,10 +62,10 @@ spec = do
                       then Just (News title undefined undefined undefined undefined undefined)
                       else Nothing,
             Handlers.Database.News.pullAllNews = \_ _ _ _ _ _ -> pure $ Right [],
-            Handlers.Database.News.editNews = 
+            Handlers.Database.News.editNews =
               \_titleOld _time (NewsEditInternal _mbTitle _mbLogin _mbLabel _mbContent _images _mbPublish) -> pure $ Right Change
-          } :: 
-            Handlers.Database.News.Handle (State ([News], [User], [Category]))
+          } ::
+          Handlers.Database.News.Handle (State ([News], [User], [Category]))
 
   it "Success: The news being edited exists, the new news title is not contained in the database" $ do
     evalState

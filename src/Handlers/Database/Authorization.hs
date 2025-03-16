@@ -33,7 +33,7 @@ type IsPublisher = Bool
 getPrivilege :: (Monad m) => Handle m -> Login -> m (Either T.Text (IsAdmin, IsPublisher))
 getPrivilege h login = do
   let logHandle = logger h
-  tryFindUser <- findUserByLogin h login -- findUserBYLogin берется из общего handle base.
+  tryFindUser <- findUserByLogin h login
   when (isLeft tryFindUser) (logMessage logHandle Error "function findUserByLogin fail")
   case tryFindUser of
     Left e -> pure . Left . T.pack . displayException $ e
@@ -41,7 +41,3 @@ getPrivilege h login = do
       pure $ Right (userIsAdmin, userIsPublisher)
     _ ->
       pure $ Right (False, False)
-  -- let logHandle = Handlers.Web.Base.logger h
-  --     userHandle = Handlers.Web.Base.user h
-  --     baseUserHandle = Handlers.Web.User.base userHandle
-  --     clientHandle = Handlers.Web.Base.client h

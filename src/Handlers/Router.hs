@@ -10,11 +10,11 @@ import Data.Maybe (isNothing)
 import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import Handlers.Database.Api (getPrivilege, getResultValid)
+import Handlers.Database.Auth (Client (..))
 import qualified Handlers.Logger
 import Handlers.Web.Api (endPointCategories, endPointImages, endPointNews, endPointUsers)
 import Handlers.Web.Base (Handle (..))
 import qualified Handlers.Web.News
-import Handlers.Database.Auth (Client (..))
 import Network.Wai (Request, Response, rawPathInfo, requestHeaders)
 import Schema (IsValidPassword (..))
 import Types (Login (..), PasswordUser (..))
@@ -40,7 +40,8 @@ doLogic h req = do
   case rawPathInfo req of
     path
       | B.isPrefixOf "/news" path -> endPointNews h req
-      | B.isPrefixOf "/users" path -> endPointUsers h req
+      | B.isPrefixOf "/users" path ->
+          endPointUsers h req
       | B.isPrefixOf "/categories" path -> endPointCategories h req
       | B.isPrefixOf "/images" path -> endPointImages h req
       | otherwise -> do
@@ -50,7 +51,6 @@ doLogic h req = do
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
   let baseHandle = auth h
-  -- let baseHandle = base h
       secureData = headersToLoginAndPassword . requestHeaders $ req
   when (isNothing secureData) (Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "Request don't have Login and Password")
   runExceptT $ do

@@ -6,6 +6,8 @@ import Control.Monad.State (State, evalState, gets)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Data.Proxy (Proxy (..))
 import Database.Data.FillTables (user1test, user2test, user3test)
+import Handlers.Database.Auth (Client (..))
+import qualified Handlers.Database.Auth
 import qualified Handlers.Database.Auth as Auth
 import qualified Handlers.Logger
 import Handlers.Router (doAuthorization)
@@ -15,12 +17,10 @@ import Network.Wai.Internal (Response (..))
 import Schema (User (..))
 import Test.Hspec (Spec, it, shouldBe, shouldNotBe)
 import Types (Login (..))
-import Handlers.Database.Auth (Client (..))
-import qualified Handlers.Database.Auth
 
 spec :: Spec
 spec = do
-  let req = defaultRequest 
+  let req = defaultRequest
       usersInBase = [user1test, user2test, user3test]
       logHandle =
         Handlers.Logger.Handle
@@ -30,34 +30,32 @@ spec = do
       authHandle =
         Handlers.Database.Auth.Handle
           { Handlers.Database.Auth.logger = logHandle,
-            Handlers.Database.Auth.findUserByLogin
-            = \(MkLogin login) ->
-              gets
-                ( Right
-                    . listToMaybe
-                    . mapMaybe
-                      ( \user@(User _ l _ _ _ _ _) ->
-                          if l == login then Just user else Nothing
-                      )
-                ),
+            Handlers.Database.Auth.findUserByLogin =
+              \(MkLogin login) ->
+                gets
+                  ( Right
+                      . listToMaybe
+                      . mapMaybe
+                        ( \user@(User _ l _ _ _ _ _) ->
+                            if l == login then Just user else Nothing
+                        )
+                  ),
             Handlers.Database.Auth.validPassword = \_login _password -> pure $ Right True,
             Handlers.Database.Auth.client = Client Nothing Nothing Nothing,
             Handlers.Database.Auth.validCopyRight = \_ _ -> pure $ Right True
           }
       handle =
         Handlers.Web.Base.Handle
-          {  
-            Handlers.Web.Base.logger = logHandle,
+          { Handlers.Web.Base.logger = logHandle,
             Handlers.Web.Base.auth = authHandle,
-            Handlers.Web.Base.connectionString = undefined, 
-            Handlers.Web.Base.base = undefined, 
+            Handlers.Web.Base.connectionString = undefined,
             Handlers.Web.Base.user = undefined,
             Handlers.Web.Base.category = undefined,
             Handlers.Web.Base.image = undefined,
-            Handlers.Web.Base.news = undefined, 
-            Handlers.Web.Base.client = undefined 
+            Handlers.Web.Base.news = undefined,
+            Handlers.Web.Base.client = undefined
           } ::
-         Handlers.Web.Base.Handle (State [User])
+          Handlers.Web.Base.Handle (State [User])
 
   it "Unknown user does not received privileges" $ do
     let req' = req {requestHeaders = []}

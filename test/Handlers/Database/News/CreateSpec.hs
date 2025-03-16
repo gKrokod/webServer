@@ -7,19 +7,18 @@ import Handlers.Database.News (Handle (..))
 import Handlers.Database.News.Create (createNewsBase)
 import qualified Handlers.Logger
 import Handlers.Web.Base (NewsInternal (..))
-import Schema (News (..))
+import Schema (ColumnType (..), News (..), SortOrder (..))
 import Test.Hspec
 import Types (Content (..), Label (..), Login (..), Title (..))
-import Schema (ColumnType (..), SortOrder (..))
 
 spec :: Spec
 spec = do
   let newsInBase = [news1, news2, news3, news4]
       logHandle =
-          Handlers.Logger.Handle
-            { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
-              Handlers.Logger.writeLog = \_ -> pure ()
-            }
+        Handlers.Logger.Handle
+          { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
+            Handlers.Logger.writeLog = \_ -> pure ()
+          }
       baseNewsHandle =
         Handlers.Database.News.Handle
           { Handlers.Database.News.logger = logHandle,
@@ -39,8 +38,8 @@ spec = do
             Handlers.Database.News.findNewsByTitle = \_ -> pure $ Right Nothing,
             Handlers.Database.News.pullAllNews = \_ _ _ _ _ _ -> pure $ Right [],
             Handlers.Database.News.editNews = \_ _ _ -> pure $ Right Change
-          } :: 
-            Handlers.Database.News.Handle (State [News])
+          } ::
+          Handlers.Database.News.Handle (State [News])
 
   it "Success: title does not exist in the database, user exists in the database, category exists in the database" $ do
     let baseNewsHandle' =

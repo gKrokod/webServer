@@ -1,10 +1,10 @@
 module Handlers.Web.News.NewsApi (endPointNews) where
 
+import qualified Handlers.Database.Auth as A (Client (..))
 import qualified Handlers.Database.News
-import qualified Handlers.Web.News
 import qualified Handlers.Logger
-import qualified Handlers.Database.Auth as A (Client (..), Handle (..))
 import Handlers.Web.Base (Handle (..))
+import qualified Handlers.Web.News
 import Handlers.Web.News.Create (createNews)
 import Handlers.Web.News.Get (existingNews)
 import Handlers.Web.News.Update (updateNews)
@@ -18,7 +18,6 @@ endPointNews :: (Monad m) => Handle m -> Request -> m Response
 endPointNews h req = do
   let logHandle = Handlers.Web.Base.logger h
       newsHandle = Handlers.Web.Base.news h
-      -- baseNewsHandle = Handlers.Web.News.base newsHandle
       userRole = Handlers.Web.Base.client h
   case rawPathInfo req of
     "/news/create" -> do
@@ -36,7 +35,13 @@ endPointNews h req = do
           pure $ Handlers.Web.News.response403 newsHandle
     "/news" -> do
       let queryLimit = queryString req
-      existingNews (foldSets queryLimit newsHandle [setFilters, setFind, setSort, setPaginate]) req
+          newsHandle' = foldSets queryLimit newsHandle [setFind, setSort, setPaginate]
+          baseHandle = Handlers.Web.News.base newsHandle'
+          filters = queryToFilters queryLimit
+          filterVisible = FilterPublishOrAuthor (fmap getLogin $ A.author userRole)
+          newBaseHandle' = baseHandle {Handlers.Database.News.filtersNews = filterVisible : filters}
+          h' = newsHandle {Handlers.Web.News.base = newBaseHandle'}
+      existingNews h' req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
       pure $ Handlers.Web.News.response404 newsHandle
@@ -63,14 +68,4 @@ endPointNews h req = do
       let baseHandle = Handlers.Web.News.base h'
           mbFind = queryToFind q
           newBaseHandle = baseHandle {Handlers.Database.News.findSubString = mbFind}
-       in h' {Handlers.Web.News.base = newBaseHandle}
-
-    setFilters :: (Monad m) => Handlers.Web.News.Handle m -> Query -> Handlers.Web.News.Handle m
-    setFilters h' q =
-      let baseHandle = Handlers.Web.News.base h'
-          authHandle = Handlers.Web.News.auth h'
-          filters = queryToFilters q
-          filterVisible = FilterPublishOrAuthor (fmap getLogin $ A.author $ A.client authHandle)
-          -- filterVisible = FilterPublishOrAuthor (fmap getLogin $ author $ undefined)
-          newBaseHandle = baseHandle {Handlers.Database.News.filtersNews = filterVisible : filters}
        in h' {Handlers.Web.News.base = newBaseHandle}

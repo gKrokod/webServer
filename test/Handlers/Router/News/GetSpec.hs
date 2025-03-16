@@ -5,9 +5,13 @@ module Handlers.Router.News.GetSpec (spec) where
 import Control.Monad.State (State, evalState, get)
 import Data.Binary.Builder as BU (Builder)
 import Database.Data.FillTables (time4)
+import qualified Handlers.Database.Auth
+import Handlers.Database.Base (Success (..))
 import qualified Handlers.Database.Base as DB
+import qualified Handlers.Database.News
 import qualified Handlers.Logger
 import Handlers.Web.Base (NewsOut (..))
+import Handlers.Web.News (Handle (..))
 import Handlers.Web.News.Get (existingNews)
 import Network.HTTP.Types (status200)
 import Network.Wai (defaultRequest, queryString, rawPathInfo, responseBuilder)
@@ -16,11 +20,7 @@ import Schema (ColumnType (..), SortOrder (..))
 import Test.Hspec (Spec, it, shouldBe)
 import Types (Content (..), Label (..), Name (..), Title (..), URI_Image (..))
 import Web.DTO.News (newsToWeb)
-import Handlers.Web.News (Handle (..))
-import qualified Handlers.Database.Auth
-import qualified Handlers.Database.News
 import qualified Web.Utils as WU
-import Handlers.Database.Base ( Success (..))
 
 spec :: Spec
 spec = do
@@ -68,20 +68,20 @@ spec = do
         Handlers.Logger.Handle
           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
             Handlers.Logger.writeLog = \_ -> pure ()
-            }
-      client = 
-              Handlers.Database.Auth.Client
-                { Handlers.Database.Auth.clientAdminToken = Nothing,
-                  Handlers.Database.Auth.clientPublisherToken = Nothing,
-                  Handlers.Database.Auth.author = Nothing
-                }
+          }
+      client =
+        Handlers.Database.Auth.Client
+          { Handlers.Database.Auth.clientAdminToken = Nothing,
+            Handlers.Database.Auth.clientPublisherToken = Nothing,
+            Handlers.Database.Auth.author = Nothing
+          }
       authHandle =
         Handlers.Database.Auth.Handle
           { Handlers.Database.Auth.logger = logHandle,
             Handlers.Database.Auth.findUserByLogin = \_ -> pure $ Right Nothing,
             Handlers.Database.Auth.validPassword = \_ _ -> pure $ Right True,
             Handlers.Database.Auth.client = client,
-            Handlers.Database.Auth.validCopyRight = \_ _ -> pure $ Right True 
+            Handlers.Database.Auth.validCopyRight = \_ _ -> pure $ Right True
           }
       baseNewsHandle =
         Handlers.Database.News.Handle
@@ -101,31 +101,31 @@ spec = do
             Handlers.Database.News.editNews = \_ _ _ -> pure $ Right Change
           }
 
-      newsHandle = Handlers.Web.News.Handle {
-          Handlers.Web.News.logger = logHandle,
-          Handlers.Web.News.base = baseNewsHandle,
-          Handlers.Web.News.auth = authHandle,
-          Handlers.Web.News.client = client,
-          Handlers.Web.News.response400 = WU.response400,
-          Handlers.Web.News.response500 = WU.response500,
-          Handlers.Web.News.response200 = WU.response200,
-          Handlers.Web.News.response404 = WU.response404,
-          Handlers.Web.News.response403 = WU.response403,
-          Handlers.Web.News.mkGoodResponse = testBuilder,
-          Handlers.Web.News.getBody = \_ -> pure ""
-        } ::
-         Handlers.Web.News.Handle (State [NewsOut])
+      newsHandle =
+        Handlers.Web.News.Handle
+          { Handlers.Web.News.logger = logHandle,
+            Handlers.Web.News.base = baseNewsHandle,
+            Handlers.Web.News.auth = authHandle,
+            Handlers.Web.News.client = client,
+            Handlers.Web.News.response400 = WU.response400,
+            Handlers.Web.News.response500 = WU.response500,
+            Handlers.Web.News.response200 = WU.response200,
+            Handlers.Web.News.response404 = WU.response404,
+            Handlers.Web.News.response403 = WU.response403,
+            Handlers.Web.News.mkGoodResponse = testBuilder,
+            Handlers.Web.News.getBody = \_ -> pure ""
+          } ::
+          Handlers.Web.News.Handle (State [NewsOut])
 
   it "Clients can get list of news" $ do
-    evalState (existingNews newsHandle req')  newsInBase
+    evalState (existingNews newsHandle req') newsInBase
       `shouldBe` (testBuilder . newsToWeb $ newsInBase)
 
   it "Client can paginate" $ do
-    let
-      baseNewsHandle' = baseNewsHandle {Handlers.Database.News.userOffset = 1, Handlers.Database.News.userLimit = 1}
-      newsHandle' = newsHandle {Handlers.Web.News.base = baseNewsHandle'}
+    let baseNewsHandle' = baseNewsHandle {Handlers.Database.News.userOffset = 1, Handlers.Database.News.userLimit = 1}
+        newsHandle' = newsHandle {Handlers.Web.News.base = baseNewsHandle'}
 
-    evalState (existingNews newsHandle' req')  newsInBase
+    evalState (existingNews newsHandle' req') newsInBase
       `shouldBe` (testBuilder . newsToWeb $ take 1 $ drop 1 newsInBase)
 
 testBuilder :: Builder -> Response

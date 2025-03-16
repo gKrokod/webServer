@@ -3,8 +3,8 @@ module Handlers.Database.Category.UpdateSpec where
 import Control.Monad.State (State, execState, gets, modify)
 import Database.Data.FillTables (cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9)
 import Handlers.Database.Base (Success (..))
-import Handlers.Database.Category.Update (updateCategoryBase)
 import Handlers.Database.Category (Handle (..))
+import Handlers.Database.Category.Update (updateCategoryBase)
 import qualified Handlers.Logger
 import Handlers.Web.Base (CategoryInternal (..))
 import Schema (Category (..))
@@ -14,7 +14,7 @@ import Types (Label (..))
 spec :: Spec
 spec = do
   let categoriesInBase = [cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9]
-                     -- "Man" "Woman" "Warrior" "Archer" "Neutral" "Evil" "Good" "Witch"
+      -- "Man" "Woman" "Warrior" "Archer" "Neutral" "Evil" "Good" "Witch"
       giveParent label = case label of
         "Man" -> categoryParent cat5
         "Abstract" -> categoryParent cat2
@@ -31,19 +31,19 @@ spec = do
             Handlers.Database.Category.userOffset = 0,
             Handlers.Database.Category.userLimit = maxBound,
             Handlers.Database.Category.findCategoryByLabel =
-             \(MkLabel label) -> do
-              categories <- gets (map categoryLabel)
-              pure $
-                Right $
-                  if label `elem` categories
-                    then Just (Category label undefined)
-                    else Nothing,
+              \(MkLabel label) -> do
+                categories <- gets (map categoryLabel)
+                pure $
+                  Right $
+                    if label `elem` categories
+                      then Just (Category label undefined)
+                      else Nothing,
             Handlers.Database.Category.putCategory =
-               \(CategoryInternal (MkLabel label) _parent) -> do
+              \(CategoryInternal (MkLabel label) _parent) -> do
                 modify (Category label undefined :)
                 pure $ Right Put,
-            Handlers.Database.Category.editCategory = 
-               \(MkLabel label) (CategoryInternal (MkLabel newlabel) parent) -> do
+            Handlers.Database.Category.editCategory =
+              \(MkLabel label) (CategoryInternal (MkLabel newlabel) parent) -> do
                 -- _categories <- get
                 modify
                   ( map
@@ -56,11 +56,10 @@ spec = do
                 pure $ Right Change,
             Handlers.Database.Category.pullAllCategories = \_ _ -> pure $ Right []
           } ::
-            Handlers.Database.Category.Handle (State [Category])
+          Handlers.Database.Category.Handle (State [Category])
 
   it "Success: The category being edited exists, the new category label is not contained in the database, and the \"parent\" category is not changed." $ do
-    let 
-        -- archerKey = categoryParent cat5 -- Archer Man
+    let -- archerKey = categoryParent cat5 -- Archer Man
         archerKey = categoryParent cat5
     Category "Archer" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
       `shouldBe` True
@@ -70,8 +69,7 @@ spec = do
       `shouldBe` True
 
   it "Success: The category being edited exists, the new category label is not contained in the database, the \"parent\" category is being edited." $ do
-    let 
-        archerKey = categoryParent cat5 --  Man
+    let archerKey = categoryParent cat5 --  Man
         newArcherKey = categoryParent cat2 -- Abstract
     Category "Archer" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
       `shouldBe` True
@@ -83,8 +81,7 @@ spec = do
       `shouldBe` True
   --
   it "Failure: The category being edited does not exist, the new category label is not contained in the database, and the \"parent\" category is not changed." $ do
-    let 
-        archerKey = categoryParent cat5 --  Man
+    let archerKey = categoryParent cat5 --  Man
     Category "Archer" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
       `shouldBe` True
     Category "Archer1" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase
@@ -93,8 +90,7 @@ spec = do
       `shouldNotBe` True
 
   it "Failure: The category being edited does not exist, the new category label is contained in the database, and the \"parent\" category is not changed." $ do
-    let 
-        archerKey = categoryParent cat5
+    let archerKey = categoryParent cat5
         evilKey = categoryParent cat7
 
     Category "Archer" archerKey `elem` categoriesInBase --  == cat5 `elem` categoriesInBase

@@ -1,11 +1,10 @@
 module Handlers.Web.Category.CategoryApi (endPointCategories) where
 
+import Handlers.Database.Auth (Client (..))
 import qualified Handlers.Database.Category
-import qualified Handlers.Web.Category
 import qualified Handlers.Logger
 import Handlers.Web.Base (Handle (..))
--- import Handlers.Web.Base (Client (..), Handle (..))
-import Handlers.Database.Auth (Client (..))
+import qualified Handlers.Web.Category
 import Handlers.Web.Category.Create (createCategory)
 import Handlers.Web.Category.Get (existingCategories)
 import Handlers.Web.Category.Update (updateCategory)

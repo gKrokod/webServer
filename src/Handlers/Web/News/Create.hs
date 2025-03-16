@@ -6,9 +6,9 @@ module Handlers.Web.News.Create (createNews) where
 import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
 import Handlers.Database.Api (createNewsBase)
-import qualified Handlers.Logger
 import Handlers.Database.Auth (ClientRole (..))
-import Handlers.Web.News (Handle(..))
+import qualified Handlers.Logger
+import Handlers.Web.News (Handle (..))
 import Handlers.Web.News.Types (NewsInternal (..))
 import Network.Wai (Request, Response)
 import Types (Content (..), Label (..), Login (..), Title (..))

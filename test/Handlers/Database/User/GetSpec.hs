@@ -1,13 +1,12 @@
 module Handlers.Database.User.GetSpec where
 
 import Control.Monad.Identity (Identity (..))
-import Handlers.Database.Base (Limit (..), Offset (..))
-import Handlers.Database.User.Get (getAllUsers)
-import Handlers.Database.User (Handle (..))
-import qualified Handlers.Logger
 import Database.Data.FillTables (time4, user1test)
+import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
+import Handlers.Database.User (Handle (..))
+import Handlers.Database.User.Get (getAllUsers)
+import qualified Handlers.Logger
 import Schema (User (..))
-import Handlers.Database.Base ( Success (..))
 import Test.Hspec
 import Test.QuickCheck (property)
 
@@ -28,8 +27,8 @@ spec = do
               Handlers.Database.User.userLimit = maxBound,
               Handlers.Database.User.getTime = pure time4,
               Handlers.Database.User.makeHashPassword = \_ _ -> "",
-              Handlers.Database.User.pullAllUsers = 
-               \(MkOffset userOffset_) (MkLimit userLimit_) ->
+              Handlers.Database.User.pullAllUsers =
+                \(MkOffset userOffset_) (MkLimit userLimit_) ->
                   pure $
                     Right $
                       take (min userLimit_ serverLimit) $
@@ -38,9 +37,9 @@ spec = do
                             (const (User "" "" undefined undefined undefined undefined undefined))
                             [1 .. numberUserInBase],
               Handlers.Database.User.findUserByLogin = \_ -> pure $ Right $ Just user1test,
-              Handlers.Database.User.putUser = \_ _ -> pure $ Right Put 
+              Handlers.Database.User.putUser = \_ _ -> pure $ Right Put
             } ::
-              Handlers.Database.User.Handle Identity
+            Handlers.Database.User.Handle Identity
     it "Random offset and limit" $ do
       property $ \offset limit -> do
         let offset' = max 0 offset
