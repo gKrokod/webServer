@@ -5,6 +5,7 @@ import qualified Handlers.Logger
 import Handlers.Web.User (Handle (..))
 import Network.Wai (Request, Response)
 import Web.DTO.User (userToWeb)
+import qualified Web.Utils as WU
 
 existingUsers :: (Monad m) => Handle m -> Request -> m Response
 existingUsers h _req = do
@@ -14,5 +15,5 @@ existingUsers h _req = do
   case getUsers of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure $ response500 h
-    Right users -> pure . mkGoodResponse h . userToWeb $ users
+      pure $ WU.response500
+    Right users -> pure . WU.mkGoodResponse . userToWeb $ users

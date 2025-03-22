@@ -110,12 +110,7 @@ makeSetup cfg = do
       imageHandle =
         Handlers.Web.Image.Handle
           { Handlers.Web.Image.logger = logHandle,
-            Handlers.Web.Image.base = baseImageHandle,
-            Handlers.Web.Image.response404 = WU.response404,
-            Handlers.Web.Image.response400 = WU.response400,
-            Handlers.Web.Image.response500 = WU.response500,
-            Handlers.Web.Image.mkGoodResponse = WU.mkGoodResponse,
-            Handlers.Web.Image.mkResponseForImage = WU.mkResponseForImage
+            Handlers.Web.Image.base = baseImageHandle
           }
       baseCategoryHandle =
         Handlers.Database.Category.Handle
@@ -131,11 +126,6 @@ makeSetup cfg = do
         Handlers.Web.Category.Handle
           { Handlers.Web.Category.logger = logHandle,
             Handlers.Web.Category.base = baseCategoryHandle,
-            Handlers.Web.Category.response400 = WU.response400,
-            Handlers.Web.Category.response500 = WU.response500,
-            Handlers.Web.Category.response200 = WU.response200,
-            Handlers.Web.Category.response404 = WU.response404,
-            Handlers.Web.Category.mkGoodResponse = WU.mkGoodResponse,
             Handlers.Web.Category.getBody = WU.getBody
           }
       baseUserHandle =
@@ -153,11 +143,6 @@ makeSetup cfg = do
         Handlers.Web.User.Handle
           { Handlers.Web.User.logger = logHandle,
             Handlers.Web.User.base = baseUserHandle,
-            Handlers.Web.User.response400 = WU.response400,
-            Handlers.Web.User.response500 = WU.response500,
-            Handlers.Web.User.response200 = WU.response200,
-            Handlers.Web.User.response404 = WU.response404,
-            Handlers.Web.User.mkGoodResponse = WU.mkGoodResponse,
             Handlers.Web.User.getBody = WU.getBody
           }
       baseNewsHandle =
@@ -183,12 +168,6 @@ makeSetup cfg = do
             Handlers.Web.News.base = baseNewsHandle,
             Handlers.Web.News.auth = authHandle,
             Handlers.Web.News.client = client,
-            Handlers.Web.News.response400 = WU.response400,
-            Handlers.Web.News.response500 = WU.response500,
-            Handlers.Web.News.response200 = WU.response200,
-            Handlers.Web.News.response404 = WU.response404,
-            Handlers.Web.News.response403 = WU.response403,
-            Handlers.Web.News.mkGoodResponse = WU.mkGoodResponse,
             Handlers.Web.News.getBody = WU.getBody
           }
       handle =

@@ -13,6 +13,7 @@ import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Schema (FilterItem (FilterPublishOrAuthor))
 import Types (Login (..))
 import Web.Query (queryToFilters, queryToFind, queryToPaginate, queryToSort)
+import qualified Web.Utils as WU
 
 endPointNews :: (Monad m) => Handle m -> Request -> m Response
 endPointNews h req = do
@@ -25,14 +26,14 @@ endPointNews h req = do
         A.Client {A.clientPublisherToken = (Just publisherRole)} -> createNews publisherRole newsHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ Handlers.Web.News.response403 newsHandle
+          pure $ WU.response403
     "/news/edit" ->
       case userRole of
         A.Client {A.author = (Just author_)} -> do
           updateNews author_ newsHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ Handlers.Web.News.response403 newsHandle
+          pure $ WU.response403
     "/news" -> do
       let queryLimit = queryString req
           newsHandle' = foldSets queryLimit newsHandle [setFind, setSort, setPaginate]
@@ -44,7 +45,7 @@ endPointNews h req = do
       existingNews h' req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-      pure $ Handlers.Web.News.response404 newsHandle
+      pure $ WU.response404
   where
     foldSets :: (Monad m) => Query -> Handlers.Web.News.Handle m -> [Handlers.Web.News.Handle m -> Query -> Handlers.Web.News.Handle m] -> Handlers.Web.News.Handle m
     foldSets query = foldr (\set h' -> set h' query)

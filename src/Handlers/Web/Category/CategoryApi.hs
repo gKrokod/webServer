@@ -10,6 +10,7 @@ import Handlers.Web.Category.Get (existingCategories)
 import Handlers.Web.Category.Update (updateCategory)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Web.Query (queryToPaginate)
+import qualified Web.Utils as WU
 
 endPointCategories :: (Monad m) => Handle m -> Request -> m Response
 endPointCategories h req = do
@@ -23,13 +24,13 @@ endPointCategories h req = do
         Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole categoryHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ Handlers.Web.Category.response404 categoryHandle
+          pure $ WU.response404
     "/categories/edit" -> do
       case userRole of
         Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole categoryHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ Handlers.Web.Category.response404 categoryHandle
+          pure $ WU.response404
     "/categories" -> do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPaginate queryLimit
@@ -38,4 +39,4 @@ endPointCategories h req = do
       existingCategories (categoryHandle {Handlers.Web.Category.base = newBaseCategoryHandle}) req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-      pure $ Handlers.Web.Category.response404 categoryHandle
+      pure $ WU.response404 

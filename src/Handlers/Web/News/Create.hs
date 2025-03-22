@@ -13,6 +13,7 @@ import Handlers.Web.News.Types (NewsInternal (..))
 import Network.Wai (Request, Response)
 import Types (Content (..), Label (..), Login (..), Title (..))
 import Web.DTO.News (NewsFromWeb (..), webToNews)
+import qualified Web.Utils as WU
 
 createNews :: (Monad m) => Proxy 'PublisherRole -> Handle m -> Request -> m Response
 createNews _ h req = do
@@ -22,7 +23,7 @@ createNews _ h req = do
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
-      pure (response400 h . T.pack $ e)
+      pure (WU.response400 . T.pack $ e)
     Right (NewsFromWeb {..}) -> do
       tryCreateNews <-
         createNewsBase
@@ -38,7 +39,7 @@ createNews _ h req = do
           )
       case tryCreateNews of
         Right _ ->
-          pure $ response200 h
+          pure $ WU.response200
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ response500 h
+          pure $ WU.response500

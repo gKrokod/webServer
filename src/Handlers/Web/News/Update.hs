@@ -12,6 +12,7 @@ import Network.Wai (Request, Response)
 import Schema (IsValidPassword (..))
 import Types (Content (..), Label (..), Login (..), Title (..))
 import Web.DTO.News (EditNewsFromWeb (..), webToEditNews)
+import qualified Web.Utils as WU
 
 type Author = Login
 
@@ -24,7 +25,7 @@ updateNews author_ h req = do
   case body of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error (T.pack e)
-      pure (response400 h . T.pack $ e)
+      pure (WU.response400 . T.pack $ e)
     Right (EditNewsFromWeb {..}) -> do
       checkCopyright <- getCopyRight authHandle author_ (MkTitle title)
       case checkCopyright of
@@ -44,8 +45,8 @@ updateNews author_ h req = do
               )
           case tryEditNews of
             Right _ ->
-              pure $ response200 h
-            _ -> pure $ response500 h
+              pure $ WU.response200
+            _ -> pure $ WU.response500
         Right NotValid ->
-          pure $ response403 h
-        _ -> pure $ response500 h
+          pure $ WU.response403
+        _ -> pure $ WU.response500

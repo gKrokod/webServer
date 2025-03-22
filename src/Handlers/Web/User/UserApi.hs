@@ -9,6 +9,7 @@ import Handlers.Web.User.Create (createUser)
 import Handlers.Web.User.Get (existingUsers)
 import Network.Wai (Request, Response, queryString, rawPathInfo)
 import Web.Query (queryToPaginate)
+import qualified Web.Utils as WU
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m Response
 endPointUsers h req = do
@@ -22,7 +23,7 @@ endPointUsers h req = do
         Client {clientAdminToken = (Just adminRole)} -> createUser adminRole userHandle req
         _ -> do
           logMessage logHandle Warning "Access denied"
-          pure $ Handlers.Web.User.response404 userHandle
+          pure $ WU.response404
     "/users" -> do
       let queryLimit = queryString req
           (userOffset, userLimit) = queryToPaginate queryLimit
@@ -30,4 +31,4 @@ endPointUsers h req = do
       existingUsers (userHandle {Handlers.Web.User.base = newBaseUserHandle}) req
     _ -> do
       logMessage logHandle Warning "End point Users not found"
-      pure $ Handlers.Web.User.response404 userHandle
+      pure $ WU.response404

@@ -14,39 +14,34 @@ import Handlers.Database.Auth (Client (..))
 import qualified Handlers.Logger
 import Handlers.Web.Api (endPointCategories, endPointImages, endPointNews, endPointUsers)
 import Handlers.Web.Base (Handle (..))
-import qualified Handlers.Web.News
 import Network.Wai (Request, Response, rawPathInfo, requestHeaders)
 import Schema (IsValidPassword (..))
 import Types (Login (..), PasswordUser (..))
 import Web.Query (headersToLoginAndPassword)
+import qualified Web.Utils as WU
 
 doAuthorization :: (Monad m) => Handle m -> Request -> m (Either Response (Handle m))
 doAuthorization h req = do
-  let logHandle = logger h
-      newsHandle = news h
   userRole <- getClient h req
   case userRole of
     Left e -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure . Left $ Handlers.Web.News.response403 newsHandle
+      Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
+      pure . Left $ WU.response403
     Right clientRole -> do
       let h' = h {client = clientRole}
       pure $ Right h'
 
 doLogic :: (Monad m) => Handle m -> Request -> m Response
 doLogic h req = do
-  let logHandle = logger h
-      newsHandle = news h
   case rawPathInfo req of
     path
       | B.isPrefixOf "/news" path -> endPointNews h req
-      | B.isPrefixOf "/users" path ->
-          endPointUsers h req
+      | B.isPrefixOf "/users" path -> endPointUsers h req
       | B.isPrefixOf "/categories" path -> endPointCategories h req
       | B.isPrefixOf "/images" path -> endPointImages h req
       | otherwise -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-          pure $ Handlers.Web.News.response404 newsHandle
+          Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"
+          pure $ WU.response404
 
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do
