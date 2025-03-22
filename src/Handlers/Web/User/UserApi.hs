@@ -5,7 +5,7 @@ import Handlers.Logger (Log (Warning), logMessage)
 import Handlers.Web.Base (Handle (..))
 import Handlers.Web.User.Create (createUser)
 import Handlers.Web.User.Get (existingUsers)
-import Network.Wai (Request, Response,  rawPathInfo)
+import Network.Wai (Request, Response, rawPathInfo)
 import qualified Web.Utils as WU
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m Response
@@ -19,8 +19,8 @@ endPointUsers h req = do
         Client {clientAdminToken = (Just adminRole)} -> createUser adminRole userHandle req
         _ -> do
           logMessage logHandle Warning "Access denied"
-          pure $ WU.response404
+          pure WU.response404
     "/users" -> existingUsers userHandle req
     _ -> do
       logMessage logHandle Warning "End point Users not found"
-      pure $ WU.response404
+      pure WU.response404

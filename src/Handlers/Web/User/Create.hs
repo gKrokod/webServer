@@ -38,7 +38,7 @@ createUser _ h req = do
           )
       case tryCreateUser of
         Right _ ->
-          pure $ WU.response200
+          pure WU.response200
         Left e -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-          pure $ WU.response500
+          pure WU.response500

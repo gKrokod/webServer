@@ -39,7 +39,7 @@ createNews _ h req = do
           )
       case tryCreateNews of
         Right _ ->
-          pure $ WU.response200
+          pure WU.response200
         Left e -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Error e
-          pure $ WU.response500
+          pure WU.response500

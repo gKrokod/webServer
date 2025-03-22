@@ -1,15 +1,14 @@
 module Handlers.Web.News.Get (existingNews) where
 
 import Handlers.Database.Api (getAllNews)
+import Handlers.Database.Base (Limit (..), Offset (..))
 import qualified Handlers.Logger
 import Handlers.Web.News (Handle (..))
-import Network.Wai (Request, Response)
+import Network.Wai (Request, Response, queryString)
+import Schema (FilterItem (..))
 import Web.DTO.News (newsToWeb)
-import qualified Web.Utils as WU
-import Schema (FilterItem(..))
-import Network.Wai (queryString) 
 import Web.Query (queryToFilters, queryToFind, queryToPaginate, queryToSort)
-import Handlers.Database.Base (Limit (..), Offset (..))
+import qualified Web.Utils as WU
 
 existingNews :: (Monad m) => FilterItem -> Handle m -> Request -> m Response
 existingNews filterAuthor h req = do
@@ -24,5 +23,5 @@ existingNews filterAuthor h req = do
   case news of
     Left e -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-      pure $ WU.response500
+      pure WU.response500
     Right news' -> pure . WU.mkGoodResponse . newsToWeb $ news'

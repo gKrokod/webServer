@@ -20,14 +20,14 @@ endPointCategories h req = do
         Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole categoryHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ WU.response404
+          pure WU.response404
     "/categories/edit" -> do
       case userRole of
         Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole categoryHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ WU.response404
+          pure WU.response404
     "/categories" -> existingCategories categoryHandle req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-      pure $ WU.response404 
+      pure WU.response404

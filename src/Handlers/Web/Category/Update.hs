@@ -36,8 +36,8 @@ updateCategory _ h req = do
           )
       case tryEditCategory of
         Right _ ->
-          pure $ WU.response200
-        Left _ -> pure $ WU.response500
+          pure WU.response200
+        Left _ -> pure WU.response500
     Right (EditCategoryFromWeb {newlabel = Nothing, ..}) -> do
       tryEditCategory <-
         updateCategoryBase
@@ -50,5 +50,5 @@ updateCategory _ h req = do
           )
       case tryEditCategory of
         Right _ ->
-          pure $ WU.response200
-        Left _ -> pure $ WU.response500
+          pure WU.response200
+        Left _ -> pure WU.response500

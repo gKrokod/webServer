@@ -22,17 +22,17 @@ endPointNews h req = do
         A.Client {A.clientPublisherToken = (Just publisherRole)} -> createNews publisherRole newsHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ WU.response403
+          pure WU.response403
     "/news/edit" ->
       case userRole of
         A.Client {A.author = (Just author_)} -> do
           updateNews author_ newsHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ WU.response403
+          pure WU.response403
     "/news" -> do
-        let filterAuthor = FilterPublishOrAuthor (fmap getLogin . A.author $ userRole)
-        existingNews filterAuthor newsHandle req
+      let filterAuthor = FilterPublishOrAuthor (fmap getLogin . A.author $ userRole)
+      existingNews filterAuthor newsHandle req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-      pure $ WU.response404
+      pure WU.response404

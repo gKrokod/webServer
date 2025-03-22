@@ -41,7 +41,7 @@ doLogic h req = do
       | B.isPrefixOf "/images" path -> endPointImages h req
       | otherwise -> do
           Handlers.Logger.logMessage (logger h) Handlers.Logger.Warning "End point not found"
-          pure $ WU.response404
+          pure WU.response404
 
 getClient :: (Monad m) => Handle m -> Request -> m (Either T.Text Client)
 getClient h req = do

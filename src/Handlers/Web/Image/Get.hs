@@ -19,7 +19,7 @@ existingImages h req = do
       case eImage of
         Left e -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Error e
-          pure $ WU.response500
+          pure WU.response500
         Right img -> pure $ WU.mkResponseForImage img
       where
         idImage = maybe (-1) (fromIntegral . fst) (BC.readInt n)

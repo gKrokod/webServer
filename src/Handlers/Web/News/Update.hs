@@ -45,8 +45,8 @@ updateNews author_ h req = do
               )
           case tryEditNews of
             Right _ ->
-              pure $ WU.response200
-            _ -> pure $ WU.response500
+              pure WU.response200
+            _ -> pure WU.response500
         Right NotValid ->
-          pure $ WU.response403
-        _ -> pure $ WU.response500
+          pure WU.response403
+        _ -> pure WU.response500

@@ -8,7 +8,7 @@ import Handlers.Database.Base (Limit (..), Offset (..))
 import Handlers.Database.News (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
 import Handlers.Web.Base (NewsOut (..))
-import Schema ( ColumnType (..), FilterItem (..), Find (..), SortOrder (..))
+import Schema (ColumnType (..), FilterItem (..), Find (..), SortOrder (..))
 
 getAllNews :: (Monad m) => Handle m -> Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either T.Text [NewsOut])
 getAllNews h offset limit sortColumn sortOrder find filters = do

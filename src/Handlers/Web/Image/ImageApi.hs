@@ -14,4 +14,4 @@ endPointImages h req = do
     "/images" -> existingImages imageHandle req
     _ -> do
       logMessage logHandle Warning "End point not found"
-      pure $ WU.response404
+      pure WU.response404
