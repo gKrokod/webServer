@@ -13,8 +13,6 @@ type HashPasswordUser = T.Text
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
-    userOffset :: Int,
-    userLimit :: Int,
     getTime :: m UTCTime,
     makeHashPassword :: PasswordUser -> UTCTime -> HashPasswordUser,
     pullAllUsers :: Offset -> Limit -> m (Either SomeException [User]),

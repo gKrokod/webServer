@@ -9,8 +9,6 @@ import Types (Label)
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
-    userOffset :: Int,
-    userLimit :: Int,
     pullAllCategories :: Offset -> Limit -> m (Either SomeException [Category]),
     findCategoryByLabel :: Label -> m (Either SomeException (Maybe Category)),
     putCategory :: CategoryInternal -> m (Either SomeException Success),

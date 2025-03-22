@@ -10,17 +10,11 @@ import Types (Label (..), Login (..), Title (..))
 
 data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
-    userOffset :: Int,
     findNewsByTitle :: Title -> m (Either SomeException (Maybe News)),
     getTime :: m UTCTime,
     putNews :: NewsInternal -> UTCTime -> m (Either SomeException Success),
     editNews :: Title -> UTCTime -> NewsEditInternal -> m (Either SomeException Success),
     findUserByLogin :: Login -> m (Either SomeException (Maybe User)),
     findCategoryByLabel :: Label -> m (Either SomeException (Maybe Category)),
-    pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either SomeException [NewsOut]),
-    sortColumnNews :: ColumnType,
-    sortOrderNews :: SortOrder,
-    findSubString :: Maybe Find,
-    filtersNews :: [FilterItem],
-    userLimit :: Int
+    pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either SomeException [NewsOut])
   }

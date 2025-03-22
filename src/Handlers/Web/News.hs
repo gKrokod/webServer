@@ -10,6 +10,5 @@ data Handle m = Handle
   { logger :: Handlers.Logger.Handle m,
     base :: Handlers.Database.News.Handle m,
     auth :: Handlers.Database.Auth.Handle m,
-    client :: Handlers.Database.Auth.Client,
     getBody :: Request -> m B.ByteString
   }

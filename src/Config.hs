@@ -24,7 +24,6 @@ import qualified Handlers.Web.Image
 import qualified Handlers.Web.News
 import qualified Handlers.Web.User
 import qualified Logger
-import Schema (ColumnType (..), SortOrder (..))
 import qualified Web.Utils as WU
 
 type ServerSetup m = Handlers.Web.Base.Handle m
@@ -115,8 +114,6 @@ makeSetup cfg = do
       baseCategoryHandle =
         Handlers.Database.Category.Handle
           { Handlers.Database.Category.logger = logHandle,
-            Handlers.Database.Category.userOffset = 0,
-            Handlers.Database.Category.userLimit = maxBound,
             Handlers.Database.Category.findCategoryByLabel = DA.findCategoryByLabel pginfo,
             Handlers.Database.Category.putCategory = DA.putCategory pginfo,
             Handlers.Database.Category.editCategory = DA.editCategory pginfo,
@@ -131,8 +128,6 @@ makeSetup cfg = do
       baseUserHandle =
         Handlers.Database.User.Handle
           { Handlers.Database.User.logger = logHandle,
-            Handlers.Database.User.userOffset = 0,
-            Handlers.Database.User.userLimit = maxBound,
             Handlers.Database.User.getTime = getCurrentTime,
             Handlers.Database.User.makeHashPassword = DA.makeHashPassword,
             Handlers.Database.User.pullAllUsers = DA.pullAllUsers pginfo (cLimitData cfg),
@@ -148,14 +143,8 @@ makeSetup cfg = do
       baseNewsHandle =
         Handlers.Database.News.Handle
           { Handlers.Database.News.logger = logHandle,
-            Handlers.Database.News.userOffset = 0,
-            Handlers.Database.News.userLimit = maxBound,
             Handlers.Database.News.getTime = getCurrentTime,
             Handlers.Database.News.findUserByLogin = DA.findUserByLogin pginfo,
-            Handlers.Database.News.sortColumnNews = DataNews,
-            Handlers.Database.News.sortOrderNews = Descending,
-            Handlers.Database.News.findSubString = Nothing,
-            Handlers.Database.News.filtersNews = [],
             Handlers.Database.News.findCategoryByLabel = DA.findCategoryByLabel pginfo,
             Handlers.Database.News.putNews = DA.putNews pginfo,
             Handlers.Database.News.findNewsByTitle = DA.findNewsByTitle pginfo,
@@ -167,7 +156,6 @@ makeSetup cfg = do
           { Handlers.Web.News.logger = logHandle,
             Handlers.Web.News.base = baseNewsHandle,
             Handlers.Web.News.auth = authHandle,
-            Handlers.Web.News.client = client,
             Handlers.Web.News.getBody = WU.getBody
           }
       handle =
