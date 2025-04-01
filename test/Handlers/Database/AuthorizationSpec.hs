@@ -3,8 +3,8 @@ module Handlers.Database.AuthorizationSpec (spec) where
 import Control.Monad.State (State, evalState, gets)
 import Data.Maybe (listToMaybe, mapMaybe)
 import Database.Data.FillTables (user1test, user2test, user3test)
+import qualified Handlers.Database.Auth
 import Handlers.Database.Authorization (getPrivilege)
-import Handlers.Database.Base (Handle (..))
 import qualified Handlers.Logger
 import Schema (User (..))
 import Test.Hspec
@@ -18,33 +18,33 @@ spec = do
           { Handlers.Logger.levelLogger = Handlers.Logger.Debug,
             Handlers.Logger.writeLog = \_ -> pure ()
           }
-
-      baseHandle =
-        Handle
-          { logger = logHandle,
-            findUserByLogin = \(MkLogin login) ->
-              gets
-                ( Right
-                    . listToMaybe
-                    . mapMaybe
-                      ( \user@(User _ l _ _ _ _ _) ->
-                          if l == login then Just user else Nothing
-                      )
-                )
+      authHandle =
+        Handlers.Database.Auth.Handle
+          { Handlers.Database.Auth.logger = logHandle,
+            Handlers.Database.Auth.validPassword = \_ _ -> pure $ Right False,
+            Handlers.Database.Auth.client = Handlers.Database.Auth.Client Nothing Nothing Nothing,
+            Handlers.Database.Auth.validCopyRight = \_ _ -> pure $ Right False,
+            Handlers.Database.Auth.findUserByLogin =
+              \(MkLogin login) ->
+                gets
+                  ( Right
+                      . listToMaybe
+                      . mapMaybe
+                        ( \user@(User _ l _ _ _ _ _) ->
+                            if l == login then Just user else Nothing
+                        )
+                  )
           } ::
-          Handle (State [User])
+          Handlers.Database.Auth.Handle (State [User])
+
   it "Get no privilege for a user that is not in the database" $ do
-    let baseHandle' = baseHandle
-    evalState (getPrivilege baseHandle' (MkLogin "NoUser")) usersInBase
+    evalState (getPrivilege authHandle (MkLogin "NoUser")) usersInBase
       `shouldBe` Right (False, False)
 
   it "Get privilege for a user that is in the database" $ do
-    let baseHandle' = baseHandle
-    evalState (getPrivilege baseHandle' (MkLogin $ userLogin user1test)) usersInBase
+    evalState (getPrivilege authHandle (MkLogin $ userLogin user1test)) usersInBase
       `shouldBe` Right (userIsAdmin user1test, userIsPublisher user1test)
-    let baseHandle' = baseHandle
-    evalState (getPrivilege baseHandle' (MkLogin $ userLogin user2test)) usersInBase
+    evalState (getPrivilege authHandle (MkLogin $ userLogin user2test)) usersInBase
       `shouldBe` Right (userIsAdmin user2test, userIsPublisher user2test)
-    let baseHandle' = baseHandle
-    evalState (getPrivilege baseHandle' (MkLogin $ userLogin user3test)) usersInBase
+    evalState (getPrivilege authHandle (MkLogin $ userLogin user3test)) usersInBase
       `shouldBe` Right (userIsAdmin user3test, userIsPublisher user3test)

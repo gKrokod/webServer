@@ -4,7 +4,8 @@ import Control.Exception (displayException)
 import Control.Monad (when)
 import Data.Either (isLeft)
 import qualified Data.Text as T
-import Handlers.Database.Base (Handle (..), Success (..))
+import Handlers.Database.Base (Success (..))
+import Handlers.Database.Category (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
 import Handlers.Web.Base (CategoryInternal (..))
 import Types (Label (..))
@@ -12,10 +13,8 @@ import Types (Label (..))
 updateCategoryBase :: (Monad m) => Handle m -> Label -> CategoryInternal -> m (Either T.Text Success)
 updateCategoryBase h label newCat@(CategoryInternal newlabel parent) = do
   let logHandle = logger h
-
   exist <- findCategoryByLabel h label
   when (isLeft exist) (logMessage logHandle Handlers.Logger.Error "function findCategoryByLabel fail")
-
   existNew <- findCategoryByLabel h newlabel
   when (isLeft existNew) (logMessage logHandle Handlers.Logger.Error "function findCategoryByLabel fail")
   let existNew' = if label == newlabel then Right Nothing else existNew

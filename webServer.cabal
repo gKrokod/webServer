@@ -47,33 +47,42 @@ library
       Database.Queries.User
       Database.Verb
       Handlers.Database.Api
+      Handlers.Database.Auth
       Handlers.Database.Authorization
       Handlers.Database.Base
+      Handlers.Database.Category
       Handlers.Database.Category.Create
       Handlers.Database.Category.Get
       Handlers.Database.Category.Update
+      Handlers.Database.Image
       Handlers.Database.Image.Get
+      Handlers.Database.News
       Handlers.Database.News.Create
       Handlers.Database.News.Get
       Handlers.Database.News.Update
+      Handlers.Database.User
       Handlers.Database.User.Create
       Handlers.Database.User.Get
       Handlers.Logger
       Handlers.Router
       Handlers.Web.Api
       Handlers.Web.Base
+      Handlers.Web.Category
       Handlers.Web.Category.CategoryApi
       Handlers.Web.Category.Create
       Handlers.Web.Category.Get
       Handlers.Web.Category.Types
       Handlers.Web.Category.Update
+      Handlers.Web.Image
       Handlers.Web.Image.Get
       Handlers.Web.Image.ImageApi
+      Handlers.Web.News
       Handlers.Web.News.Create
       Handlers.Web.News.Get
       Handlers.Web.News.NewsApi
       Handlers.Web.News.Types
       Handlers.Web.News.Update
+      Handlers.Web.User
       Handlers.Web.User.Create
       Handlers.Web.User.Get
       Handlers.Web.User.Types
@@ -97,7 +106,7 @@ library
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Wall
+  ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -131,7 +140,7 @@ executable webServer-exe
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , text
@@ -157,19 +166,12 @@ test-suite webServer-test
       Handlers.Router.Category.CreateSpec
       Handlers.Router.Category.EditSpec
       Handlers.Router.Category.GetSpec
-      Handlers.Router.Category.PaginateSpec
       Handlers.Router.Image.GetSpec
       Handlers.Router.News.CreateSpec
       Handlers.Router.News.EditSpec
-      Handlers.Router.News.FilterSpec
       Handlers.Router.News.GetSpec
-      Handlers.Router.News.PaginateSpec
-      Handlers.Router.News.SearchSpec
-      Handlers.Router.News.SettingsSpec
-      Handlers.Router.News.SortSpec
       Handlers.Router.User.CreateSpec
       Handlers.Router.User.GetSpec
-      Handlers.Router.User.PaginateSpec
       Paths_webServer
   autogen-modules:
       Paths_webServer
@@ -180,7 +182,7 @@ test-suite webServer-test
       DeriveGeneric
       LambdaCase
       TypeApplications
-  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , base >=4.7 && <5

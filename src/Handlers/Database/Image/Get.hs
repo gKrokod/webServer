@@ -1,7 +1,7 @@
 module Handlers.Database.Image.Get (getImage) where
 
 import qualified Data.Text as T
-import Handlers.Database.Base (Handle (..))
+import Handlers.Database.Image (Handle (..))
 import Handlers.Logger (Log (..), logMessage)
 import Schema (Image (..))
 import Types (NumberImage (..))

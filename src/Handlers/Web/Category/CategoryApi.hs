@@ -1,37 +1,33 @@
 module Handlers.Web.Category.CategoryApi (endPointCategories) where
 
-import qualified Handlers.Database.Base
+import Handlers.Database.Auth (Client (..))
 import qualified Handlers.Logger
-import Handlers.Web.Base (Client (..), Handle (..))
+import Handlers.Web.Base (Handle (..))
 import Handlers.Web.Category.Create (createCategory)
 import Handlers.Web.Category.Get (existingCategories)
 import Handlers.Web.Category.Update (updateCategory)
-import Network.Wai (Request, Response, queryString, rawPathInfo)
-import Web.Query (queryToPaginate)
+import Network.Wai (Request, Response, rawPathInfo)
+import qualified Web.Utils as WU
 
 endPointCategories :: (Monad m) => Handle m -> Request -> m Response
 endPointCategories h req = do
-  let logHandle = logger h
-      baseHandle = base h
+  let logHandle = Handlers.Web.Base.logger h
+      categoryHandle = Handlers.Web.Base.category h
+      userRole = Handlers.Web.Base.client h
   case rawPathInfo req of
     "/categories/create" -> do
-      case client h of
-        Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole h req
+      case userRole of
+        Client {clientAdminToken = (Just adminRole)} -> createCategory adminRole categoryHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ response404 h
+          pure WU.response404
     "/categories/edit" -> do
-      case client h of
-        Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole h req
+      case userRole of
+        Client {clientAdminToken = (Just adminRole)} -> updateCategory adminRole categoryHandle req
         _ -> do
           Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ response404 h
-    "/categories" -> do
-      let queryLimit = queryString req
-          (userOffset, userLimit) = queryToPaginate queryLimit
-
-      let newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
-      existingCategories (h {base = newBaseHandle}) req
+          pure WU.response404
+    "/categories" -> existingCategories categoryHandle req
     _ -> do
       Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point not found"
-      pure $ response404 h
+      pure WU.response404

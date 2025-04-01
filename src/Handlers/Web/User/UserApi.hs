@@ -1,30 +1,26 @@
 module Handlers.Web.User.UserApi (endPointUsers) where
 
-import qualified Handlers.Database.Base
-import qualified Handlers.Logger
-import Handlers.Web.Base (Client (..), Handle (..))
+import Handlers.Database.Auth (Client (..))
+import Handlers.Logger (Log (Warning), logMessage)
+import Handlers.Web.Base (Handle (..))
 import Handlers.Web.User.Create (createUser)
 import Handlers.Web.User.Get (existingUsers)
-import Network.Wai (Request, Response, queryString, rawPathInfo)
-import Web.Query (queryToPaginate)
+import Network.Wai (Request, Response, rawPathInfo)
+import qualified Web.Utils as WU
 
 endPointUsers :: (Monad m) => Handle m -> Request -> m Response
 endPointUsers h req = do
-  let logHandle = logger h
-      baseHandle = base h
+  let logHandle = Handlers.Web.Base.logger h
+      userHandle = Handlers.Web.Base.user h
+      userRole = Handlers.Web.Base.client h
   case rawPathInfo req of
     "/users/create" -> do
-      case client h of
-        Client {clientAdminToken = (Just adminRole)} -> createUser adminRole h req
+      case userRole of
+        Client {clientAdminToken = (Just adminRole)} -> createUser adminRole userHandle req
         _ -> do
-          Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "Access denied"
-          pure $ response404 h
-    "/users" -> do
-      let queryLimit = queryString req
-          (userOffset, userLimit) = queryToPaginate queryLimit
-
-      let newBaseHandle = baseHandle {Handlers.Database.Base.userOffset = userOffset, Handlers.Database.Base.userLimit = userLimit}
-      existingUsers (h {base = newBaseHandle}) req
+          logMessage logHandle Warning "Access denied"
+          pure WU.response404
+    "/users" -> existingUsers userHandle req
     _ -> do
-      Handlers.Logger.logMessage logHandle Handlers.Logger.Warning "End point Users not found"
-      pure $ response404 h
+      logMessage logHandle Warning "End point Users not found"
+      pure WU.response404

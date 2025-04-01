@@ -36,13 +36,13 @@ validPassword :: ConnectionString -> Login -> PasswordUser -> IO (Either SomeExc
 validPassword connString login password = do
   try @SomeException (runDataBaseWithOutLog connString fetchAction)
   where
-    fetchAction :: (MonadFail m, MonadIO m) => SqlPersistT m Bool
+    fetchAction :: (MonadIO m) => SqlPersistT m Bool
     fetchAction = do
       qpass <- fetchSaltAndPassword
       case qpass of
         [Value qpass'] -> pure $ Database.Crypto.validPassword (getPasswordUser password) qpass'
         _ -> pure False
-    fetchSaltAndPassword :: (MonadFail m, MonadIO m) => SqlPersistT m [Value T.Text]
+    fetchSaltAndPassword :: (MonadIO m) => SqlPersistT m [Value T.Text]
     fetchSaltAndPassword = select $ do
       (user :& pass) <-
         from $
