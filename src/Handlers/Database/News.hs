@@ -1,6 +1,7 @@
 module Handlers.Database.News (Handle (..)) where
 
 import Control.Exception (SomeException)
+import Database.Persist.Sql (PersistentSqlException)
 import Data.Time (UTCTime)
 import Handlers.Database.Base (Limit (..), Offset (..), Success (..))
 import qualified Handlers.Logger
@@ -15,6 +16,6 @@ data Handle m = Handle
     putNews :: NewsInternal -> UTCTime -> m (Either SomeException Success),
     editNews :: Title -> UTCTime -> NewsEditInternal -> m (Either SomeException Success),
     findUserByLogin :: Login -> m (Either SomeException (Maybe User)),
-    findCategoryByLabel :: Label -> m (Either SomeException (Maybe Category)),
+    findCategoryByLabel :: Label -> m (Either PersistentSqlException (Maybe Category)),
     pullAllNews :: Offset -> Limit -> ColumnType -> SortOrder -> Maybe Find -> [FilterItem] -> m (Either SomeException [NewsOut])
   }
